@@ -1,7 +1,7 @@
 
 # python -m pip install pymongo
+# pip3 install pymongo
 
-import pymongo
 from pymongo import MongoClient
 
 if __name__ == '__main__':
