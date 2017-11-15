@@ -80,6 +80,7 @@ class P2PMqtt(object):
             + ',"id":"' + str(self._jrpc_id) + '"}'
         self._install_reply_listener(str(self._jrpc_id), listener)
         self._jrpc_id += 1
+
         logger.debug("<== publish")
         logger.debug("\t topic:" + topic)
         logger.debug("\t payload:" + payload)
