@@ -17,10 +17,22 @@ def on_stop_push_media(params):
     return "OK"
 
 
+def _listener(result):
+    print("hello_listener")
+    print("result: " + result)
+
+
 if __name__ == '__main__':
     # id = IDManager.getID()
     enable_p2p_mqtt_logger()
     p2pc = P2PMqtt(broker_url="139.224.128.15", whoami='pusher1')
     p2pc.register_request_handler(REQUEST_START_PUSH_MEDIA, on_start_push_media)
     p2pc.register_request_handler(REQUEST_START_PUSH_MEDIA, on_stop_push_media)
+
+    whoami = 'pusher1'
+    str_time = '2017/11/16'
+    params = "{\"whoami\":\"" + whoami + "\"," + \
+        "\"time\":\"" + str_time + "\"," + \
+        "\"location\":\"longi lati\"}"
+    p2pc.send_request("controller", method="online", params=params, listener=_listener)
     p2pc.loop()

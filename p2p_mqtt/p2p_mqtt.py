@@ -24,6 +24,7 @@ class ExtMqtt(mqtt.Client):
     ExtMqtt extends MqttClient to support p2p feature
     """
     def __init__(self, whoami="controller"):
+        # handlers signature : handler(jrpc)
         self.request_handlers = {}
         self.reply_handlers = {}
         self._whoami = whoami
@@ -66,25 +67,41 @@ class P2PMqtt(object):
             raise ValueError("p2p_mqtt calling sequence error for"
                              " register_request_handler ")
 
-    def send_request(self, target_node_id, method, params, listener):
+    def send_request(self, target_node_id, method, params, listener=None):
         """
         send json rpc request to target node
         :param target_node_id:
         :param method:
         :param params:
+        :param listener:
         :return:
         """
         topic = target_node_id + "/" + self._whoami + "/request"
+        """
         payload = '{"jsonrpc": "2.0", "method":"' + method + '"'\
             + ',"params":"' + params + '"'\
             + ',"id":"' + str(self._jrpc_id) + '"}'
-        self._install_reply_listener(str(self._jrpc_id), listener)
+        """
+        payload = '{"jsonrpc": "2.0", "method":"' + method + '"'\
+            + ',"params":' + params + ',"id":"' + str(self._jrpc_id) + '"}'
+
+        if listener is not None:
+            self._install_reply_listener(str(self._jrpc_id), listener)
         self._jrpc_id += 1
 
         logger.debug("<== publish")
         logger.debug("\t topic:" + topic)
         logger.debug("\t payload:" + payload)
         self._ext_mqttc.publish(topic, payload, qos=2, retain=False)
+
+    def mqtt_publish(self, topic, payload=None, qos=0, retain=False):
+        logger.debug("<== publish")
+        logger.debug("\t topic:" + topic)
+        logger.debug("\t payload:" + payload)
+        self._ext_mqttc.publish(topic, payload, qos, retain)
+
+    def mqtt_subscribe(self, topic, qos=0):
+        self._ext_mqttc.subscribe(topic, qos)
 
     def _install_reply_listener(self, id, listener):
         """ register reply handler
@@ -119,11 +136,11 @@ class P2PMqtt(object):
             if jrpc["method"] is None:
                 raise ValueError("jrpc format error")
             method = jrpc["method"]
-            params = jrpc["params"]
+            params = str(jrpc["params"])
             logger.debug("request method: " + method)
             logger.debug("request params: " + params)
             if ext_mqttc.request_handlers[method] is not None:
-                ret = ext_mqttc.request_handlers[method](params)
+                ret = ext_mqttc.request_handlers[method](jrpc)
                 if ret is None:
                     logger.error("handler should return something !")
                     ret = "OK"
@@ -146,7 +163,7 @@ class P2PMqtt(object):
                 raise ValueError("request json error")
             if jrpc["result"] is None:
                 raise ValueError("jrpc format is error")
-            json_id = jrpc["id"]
+            json_id = str(jrpc["id"])
             result = jrpc["result"]
             if ext_mqttc.reply_handlers[json_id] is not None:
                 ext_mqttc.reply_handlers[json_id](result)
