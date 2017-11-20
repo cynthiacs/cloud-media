@@ -27,6 +27,7 @@ class ExtMqtt(mqtt.Client):
         # handlers signature : handler(jrpc)
         self.request_handlers = {}
         self.reply_handlers = {}
+        self.topic_handlers = {}
         self._whoami = whoami
 
         """ the default parameters:
@@ -94,6 +95,16 @@ class P2PMqtt(object):
         logger.debug("\t payload:" + payload)
         self._ext_mqttc.publish(topic, payload, qos=2, retain=False)
 
+    def register_topic_handler(self, topic, handler, qos=2):
+        self.mqtt_subscribe(topic, qos)
+
+        if self._ext_mqttc is not None:
+            logger.debug("p2p.mqtt register_request_handler")
+            self._ext_mqttc.topic_handlers[topic] = handler
+        else:
+            raise ValueError("p2p_mqtt calling sequence error for"
+                             " register_request_handler ")
+
     def mqtt_publish(self, topic, payload=None, qos=0, retain=False):
         logger.debug("<== publish")
         logger.debug("\t topic:" + topic)
@@ -130,6 +141,9 @@ class P2PMqtt(object):
         logger.debug("\t payload" + str(msg.payload))
 
         if re.match(ext_mqttc.whoami + "/\S*/request", msg.topic) is not None:
+            if msg.payload is None:
+                logger.error("payload should not be None !")
+                raise ValueError("request json error")
             jrpc = json.loads(msg.payload)
             if jrpc is None:
                 raise ValueError("request json error")
@@ -148,7 +162,7 @@ class P2PMqtt(object):
                 whoareyou = msg.topic.split("/")[1]
                 topic = whoareyou + "/" + ext_mqttc.whoami + "/reply"
                 payload = '{"jsonrpc": "2.0", "result":"' \
-                    + ret + '", "id":"' + jrpc["id"] + '"}'
+                    + ret + '", "id":"' + str(jrpc["id"]) + '"}'
 
                 logger.debug("<== publish")
                 logger.debug("\t topic: " + topic)
@@ -168,6 +182,10 @@ class P2PMqtt(object):
             if ext_mqttc.reply_handlers[json_id] is not None:
                 ext_mqttc.reply_handlers[json_id](result)
         else:
+            if ext_mqttc.topic_handlers is not None:
+                if ext_mqttc.topic_handlers[msg.topic] is not None:
+                    ext_mqttc.topic_handlers[msg.topic](msg)
+
             logger.info("un-handed topic:" + msg.topic)
 
     def loop(self):
@@ -175,6 +193,7 @@ class P2PMqtt(object):
         self._ext_mqttc.on_message = self._on_message
 
         try:
+            self._ext_mqttc.will_set('nodes_will/' + self._whoami, self._whoami, 2, False)
             self._ext_mqttc.connect(self._broker_url, 1883, 60)
             self._ext_mqttc.subscribe(self._whoami + "/+/request", qos=2)
             self._ext_mqttc.subscribe(self._whoami + "/+/reply", qos=2)
