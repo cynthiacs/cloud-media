@@ -153,7 +153,7 @@ class P2PMqtt(object):
             params = str(jrpc["params"])
             logger.debug("request method: " + method)
             logger.debug("request params: " + params)
-            if ext_mqttc.request_handlers[method] is not None:
+            if method in ext_mqttc.request_handlers:
                 ret = ext_mqttc.request_handlers[method](jrpc)
                 if ret is None:
                     logger.error("handler should return something !")
@@ -169,8 +169,7 @@ class P2PMqtt(object):
                 logger.debug("\t qos: " + str(2))
                 logger.debug("\t payload" + str(payload))
                 ext_mqttc.publish(topic, payload, qos=2, retain=False)
-            else:
-                logger.error("handler is not registered for " + method)
+
         elif re.match(ext_mqttc.whoami + "/\S*/reply", msg.topic) is not None:
             jrpc = json.loads(msg.payload)
             if jrpc is None:
@@ -179,11 +178,13 @@ class P2PMqtt(object):
                 raise ValueError("jrpc format is error")
             json_id = str(jrpc["id"])
             result = jrpc["result"]
-            if ext_mqttc.reply_handlers[json_id] is not None:
+            if json_id in ext_mqttc.reply_handlers:
                 ext_mqttc.reply_handlers[json_id](result)
+                logger.info("delete reply lisener, NOTE, this is not same as request handler....")
+                del ext_mqttc.reply_handlers[json_id]
         else:
             if ext_mqttc.topic_handlers is not None:
-                if ext_mqttc.topic_handlers[msg.topic] is not None:
+                if msg.topic in ext_mqttc.topic_handlers:
                     ext_mqttc.topic_handlers[msg.topic](msg)
 
             logger.info("un-handed topic:" + msg.topic)
