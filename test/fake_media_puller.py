@@ -7,7 +7,7 @@ from p2p_mqtt.p2p_mqtt import enable_p2p_mqtt_logger
 
 REQUEST_START_PUSH_MEDIA = "startPushMedia"
 REQUEST_STOP_PUSH_MEDIA = "stopPushMedia"
-
+REQUEST_GET_NODES_ONLINE = 'get_nodes_online'
 
 def _listener(result):
     print("hello_listener")
@@ -15,11 +15,15 @@ def _listener(result):
 
 
 def worker(p2pc, interval):
+    """
     while True:
         time.sleep(interval)
         p2pc.send_request("pusher1", REQUEST_START_PUSH_MEDIA, "hhhhhh", _listener)
         time.sleep(interval)
         p2pc.send_request("pusher1", REQUEST_STOP_PUSH_MEDIA, "hhhhhh", _listener)
+    """
+    p2pc.send_request("pusher1", REQUEST_GET_NODES_ONLINE, "hhhhhh", _listener)
+    time.sleep(interval)
 
 
 if __name__ == '__main__':

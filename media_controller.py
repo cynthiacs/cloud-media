@@ -4,6 +4,8 @@ from p2p_mqtt.p2p_mqtt import enable_p2p_mqtt_logger
 
 _REQUEST_ONLINE = 'online'
 _REQUEST_OFFLINE = 'offline'
+_REQUEST_GET_NODES_ONLINE = 'get_nodes_online'
+
 _TOPIC_NODES_WILL = 'nodes_will/#'
 _TOPIC_NODES_ON_LINE = 'nodes_online'
 
@@ -82,6 +84,13 @@ def handle_offline(jrpc):
     return "OK"
 
 
+def handle_get_nodes_online(jrpc):
+    print(repr(jrpc))
+    # params = jrpc['params']
+    # whoami = params['whoami']
+    return _online_col.find()
+
+
 def handle_nodes_will(msg):
     print(repr(msg))
     whoami = msg.paylaod
@@ -94,6 +103,8 @@ if __name__ == '__main__':
     p2pc = P2PMqtt(broker_url="139.224.128.15", whoami='controller')
     p2pc.register_request_handler(_REQUEST_ONLINE, handle_online)
     p2pc.register_request_handler(_REQUEST_OFFLINE, handle_offline)
+    p2pc.register_request_handler(_REQUEST_GET_NODES_ONLINE, handle_get_nodes_online)
+
     p2pc.register_topic_handler(_TOPIC_NODES_WILL, handle_nodes_will)
     p2pc.loop()
 

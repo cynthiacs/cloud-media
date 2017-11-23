@@ -78,13 +78,14 @@ class P2PMqtt(object):
         :return:
         """
         topic = target_node_id + "/" + self._whoami + "/request"
-        """
-        payload = '{"jsonrpc": "2.0", "method":"' + method + '"'\
-            + ',"params":"' + params + '"'\
-            + ',"id":"' + str(self._jrpc_id) + '"}'
-        """
-        payload = '{"jsonrpc": "2.0", "method":"' + method + '"'\
-            + ',"params":' + params + ',"id":"' + str(self._jrpc_id) + '"}'
+
+        if True:
+            payload = '{"jsonrpc": "2.0", "method":"' + method + '"' \
+                ',"params":"' + params + '"' \
+                ',"id":"' + str(self._jrpc_id) + '"}'
+        else:
+            payload = '{"jsonrpc": "2.0", "method":"' + method + '"' \
+                ',"params":' + params + ',"id":"' + str(self._jrpc_id) + '"}'
 
         if listener is not None:
             self._install_reply_listener(str(self._jrpc_id), listener)
