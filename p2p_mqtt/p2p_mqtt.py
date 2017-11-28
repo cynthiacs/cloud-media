@@ -62,7 +62,7 @@ class P2PMqtt(object):
         if method is None or handler is None:
             raise ValueError("parameter error for register_request_handler")
         if self._ext_mqttc is not None:
-            logger.debug("p2p.mqtt register_request_handler")
+            logger.debug("p2p.mqtt register_request_handler: " + handler.__name__)
             self._ext_mqttc.request_handlers[method] = handler
         else:
             raise ValueError("p2p_mqtt calling sequence error for"
@@ -100,7 +100,8 @@ class P2PMqtt(object):
         self.mqtt_subscribe(topic, qos)
 
         if self._ext_mqttc is not None:
-            logger.debug("p2p.mqtt register_request_handler")
+            logger.debug("p2p.mqtt register_topic_handler: " + handler.__name__
+                         + " for topic:" + topic)
             self._ext_mqttc.topic_handlers[topic] = handler
         else:
             raise ValueError("p2p_mqtt calling sequence error for"
