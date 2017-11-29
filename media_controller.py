@@ -7,9 +7,8 @@ _REQUEST_OFFLINE = 'offline'
 _REQUEST_NODES_UPDATE = 'nodes_update'
 _REQUEST_NODES_FIND = 'nodes_find'
 
-_TOPIC_NODES_WILL = 'cm/nodes_will/+'
+_TOPIC_NODES_WILL = 'cm/nodes_will'  # /+
 _TOPIC_NODES_ON_LINE = '/nodes_online/cm'  # role +
-# id/role/nodes_update/cm
 
 p2pc = None
 
@@ -30,8 +29,7 @@ class CollectionOnLine(object):
 
     def find_all(self):
         nodes_online = self._db_col_nodes_online.find()
-        # update retain topic
-        # NOTE: this works!, but str(list(car_online)) wont
+        # NOTE: this works, but str(list(car_online)) wont
         l_nodes_online = list(nodes_online)
         return str(l_nodes_online)
 
@@ -41,18 +39,27 @@ class CollectionOnLine(object):
         return str(l_nodes_online)
 
     def find(self, filter_param):
+        """
+        :param filter_param:
+        :return: string to transfer by mqtt
+        """
+        # find return Cursor instance which can be interate over all mathing document
         find_result = self._db_col_nodes_online.find(filter_param)
+        # convert into list, take care about the memory when using this !!
         l_find_result = list(find_result)
         return str(l_find_result)
+
+    def find_one(self, filter_param):
+        """
+        :param filter_param:
+        :return:  return the first match, and the result is dict
+        """
+        return self._db_col_nodes_online.find_one(filter_param)
 
     def update(self, whoami, filed, value):
         print("update " + whoami)
         print("\t(" + filed + ":" + value + ")")
         self._db_col_nodes_online.update_one({"whoami": whoami}, {'$set': {filed: value}})
-
-    def publish(self, p2p_client):
-        print("\t  " + self.find_all())
-        p2p_client.mqtt_publish("all" + _TOPIC_NODES_ON_LINE, self.find_all(), qos=2, retain=True)
 
     def online(self, whoami, params):
         print("online:" + whoami)
@@ -65,6 +72,10 @@ class CollectionOnLine(object):
 
 
 _online_col = CollectionOnLine()
+
+
+def publish_role(role):
+    p2pc.mqtt_publish(role + _TOPIC_NODES_ON_LINE, _online_col.find_role(role=role), qos=2, retain=True)
 
 
 def handle_online(jrpc):
@@ -82,7 +93,7 @@ def handle_online(jrpc):
     role = params['role']
     _online_col.online(whoami, params)
 
-    p2pc.mqtt_publish(role + _TOPIC_NODES_ON_LINE, _online_col.find_role(role=role), qos=2, retain=True)
+    publish_role(role)
     return "OK"
 
 
@@ -101,13 +112,7 @@ def handle_offline(jrpc):
     role = params['role']
     _online_col.offline(whoami)
 
-    p2pc.mqtt_publish(role + _TOPIC_NODES_ON_LINE, _online_col.find_role(role=role), qos=2, retain=True)
-    return "OK"
-
-
-def handle_nodes_update(jrpc):
-    params = jrpc['params']
-    _online_col.update(params['whoami'], params['field'], params['value'])
+    publish_role(role)
     return "OK"
 
 
@@ -116,13 +121,28 @@ def handle_nodes_find(jrpc):
     return _online_col.find(params)
 
 
+def handle_nodes_update(jrpc):
+    params = jrpc['params']
+    _online_col.update(params['whoami'], params['field'], params['value'])
+
+    # NOTE: this is wasteful, we may only need to broadcast the specific node at all
+    result = _online_col.find_one({"whoami": params['whoami']})
+    if result and result['role'] is not None:
+        publish_role(result['role'])
+
+    return "OK"
+
+
 def handle_nodes_will(msg):
-    print("will !!!!!!!!!!!!!!!!")
     print(repr(msg))
-    whoami = msg.paylaod
-    _online_col.offline(p2pc, whoami)
-    # p2pc.mqtt_publish(role + _TOPIC_NODES_ON_LINE, _online_col.find_role(role=role), qos=2, retain=True)
-    pass
+    whoami = str(msg.payload, encoding="utf-8")
+    print("!!! who's will: " + whoami)
+    result = _online_col.find_one({"whoami": whoami})
+    role = result['role']
+    if result is not None:
+        _online_col.remove(whoami)
+        if role is not None:
+            publish_role(role)
 
 
 if __name__ == '__main__':

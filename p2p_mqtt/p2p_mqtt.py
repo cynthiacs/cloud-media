@@ -188,8 +188,8 @@ class P2PMqtt(object):
             if ext_mqttc.topic_handlers is not None:
                 if msg.topic in ext_mqttc.topic_handlers:
                     ext_mqttc.topic_handlers[msg.topic](msg)
-
-            logger.info("un-handed topic:" + msg.topic)
+            else:
+                logger.info("un-handed topic:" + msg.topic)
 
     def loop(self):
         self._ext_mqttc.on_connect = self._on_connect
@@ -200,6 +200,9 @@ class P2PMqtt(object):
             self._ext_mqttc.connect(self._broker_url, 1883, 60)
             self._ext_mqttc.subscribe(self._whoami + "/+/request", qos=2)
             self._ext_mqttc.subscribe(self._whoami + "/+/reply", qos=2)
+            for topic in self._ext_mqttc.topic_handlers.keys():
+                self._ext_mqttc.subscribe(topic, qos=2)
+
             self._ext_mqttc.loop_forever()
         except KeyboardInterrupt:
             self._ext_mqttc.disconnect()
