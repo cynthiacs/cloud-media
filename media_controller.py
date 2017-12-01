@@ -1,6 +1,8 @@
 from pymongo import MongoClient
 from p2p_mqtt.p2p_mqtt import P2PMqtt
 from p2p_mqtt.p2p_mqtt import enable_p2p_mqtt_logger
+import logging
+import logging.config
 
 _REQUEST_ONLINE = 'online'
 _REQUEST_OFFLINE = 'offline'
@@ -21,7 +23,7 @@ class CollectionOnLine(object):
 
     def remove(self, whoami):
         if self._db_col_nodes_online.find_one({'whoami': whoami}) is not None:
-            print("already in online, so i remove it and re-Online")
+            print("remove: " + whoami)
             self._db_col_nodes_online.remove({'whoami': whoami})
 
     def insert(self, params):
@@ -138,15 +140,17 @@ def handle_nodes_will(msg):
     whoami = str(msg.payload, encoding="utf-8")
     print("!!! who's will: " + whoami)
     result = _online_col.find_one({"whoami": whoami})
-    role = result['role']
     if result is not None:
+        role = result['role']
         _online_col.remove(whoami)
         if role is not None:
             publish_role(role)
 
 
 if __name__ == '__main__':
-    enable_p2p_mqtt_logger()
+    logging.config.fileConfig('logging.conf')
+    logger_mc = logging.getLogger(__name__)
+
     p2pc = P2PMqtt(broker_url="139.224.128.15", whoami='controller')
     p2pc.register_request_handler(_REQUEST_ONLINE, handle_online)
     p2pc.register_request_handler(_REQUEST_OFFLINE, handle_offline)
