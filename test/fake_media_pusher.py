@@ -8,12 +8,12 @@ REQUEST_STOP_PUSH_MEDIA = "stopPushMedia"
 
 
 def on_start_push_media(params):
-    print("params:" + params)
+    print("params:" + repr(params))
     return "OK"
 
 
 def on_stop_push_media(params):
-    print("params:" + params)
+    print("params:" + repr(params))
     return "OK"
 
 
@@ -29,10 +29,12 @@ if __name__ == '__main__':
     p2pc.register_request_handler(REQUEST_START_PUSH_MEDIA, on_start_push_media)
     p2pc.register_request_handler(REQUEST_START_PUSH_MEDIA, on_stop_push_media)
 
-    whoami = 'pusher1'
-    str_time = '2017/11/16'
-    params = "{\"whoami\":\"" + whoami + "\"," + \
-        "\"time\":\"" + str_time + "\"," + \
-        "\"location\":\"longi lati\"}"
+    #whoami = 'pusher1'
+    #str_time = '2017/11/16'
+    #params = "{\"whoami\":\"" + whoami + "\"," + \
+    #    "\"time\":\"" + str_time + "\"," + \
+    #    "\"location\":\"longi lati\"}"
+    params = r'{"whoami":"pusher1","time":"2017-12-07 16:08:32",' \
+             r'"location":"none","nick":"pusher1","role":"pusher","status":"online"}'
     p2pc.send_request("controller", method="online", params=params, listener=_listener)
     p2pc.loop()
