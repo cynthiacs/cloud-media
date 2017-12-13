@@ -1,2 +1,0 @@
-#from aliyunsdkcore import client
-
