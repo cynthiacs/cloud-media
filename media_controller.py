@@ -77,6 +77,7 @@ _online_col = CollectionOnLine()
 
 
 def publish_role(role):
+    print("publish all " + role + " 's info")
     p2pc.mqtt_publish(role + _TOPIC_NODES_ON_LINE, _online_col.find_role(role=role), qos=2, retain=True)
 
 
@@ -147,6 +148,12 @@ def handle_nodes_will(msg):
             publish_role(role)
 
 
+def handle_ali_notify(msg):
+    logger_mc.info("handle_ali_notify")
+    print(repr(msg))
+    publish_role("pusher")
+
+
 if __name__ == '__main__':
     logging.config.fileConfig('logging.conf')
     logger_mc = logging.getLogger(__name__)
@@ -158,6 +165,7 @@ if __name__ == '__main__':
     p2pc.register_request_handler(_REQUEST_NODES_FIND, handle_nodes_find)
 
     p2pc.register_topic_handler(_TOPIC_NODES_WILL, handle_nodes_will)
+    p2pc.register_topic_handler("controller/ali/notify", handle_ali_notify)
     p2pc.loop()
 
 

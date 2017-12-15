@@ -1,6 +1,7 @@
 from flask import Flask
 from flask import request
 import paho.mqtt.client as mqtt
+from pymongo import MongoClient
 
 
 app = Flask(__name__)
@@ -19,8 +20,60 @@ def _mqtt_publish(topic, payload):
     mqttc.connect("139.224.128.15", 1883, 60)
 
     mqttc.loop_start()
-    infot = mqttc.publish(topic, payload, qos=2)
+    infot = mqttc.publish(topic, payload, qos=2, retain=True)
     infot.wait_for_publish()
+
+
+class CollectionOnLine(object):
+    def __init__(self, url='mongodb://139.224.128.15'):
+        self._db_client = MongoClient(url)
+        self._db = self._db_client.extmqtt_nodes
+        self._db_col_nodes_online = self._db.nodes_online
+
+    def remove(self, whoami):
+        if self._db_col_nodes_online.find_one({'whoami': whoami}) is not None:
+            print("remove: " + whoami)
+            self._db_col_nodes_online.remove({'whoami': whoami})
+
+    def insert(self, params):
+        self._db_col_nodes_online.insert_one(params)
+
+    def find_all(self):
+        nodes_online = self._db_col_nodes_online.find()
+        # NOTE: this works, but str(list(car_online)) wont
+        l_nodes_online = list(nodes_online)
+        return str(l_nodes_online)
+
+    def find_role(self, role):
+        nodes_online = self._db_col_nodes_online.find({"role": role})
+        l_nodes_online = list(nodes_online)
+        return str(l_nodes_online)
+
+    def find(self, filter_param):
+        """
+        :param filter_param:
+        :return: string to transfer by mqtt
+        """
+        # find return Cursor instance which can be interate over all mathing document
+        find_result = self._db_col_nodes_online.find(filter_param)
+        # convert into list, take care about the memory when using this !!
+        l_find_result = list(find_result)
+        return str(l_find_result)
+
+    def find_one(self, filter_param):
+        """
+        :param filter_param:
+        :return:  return the first match, and the result is dict
+        """
+        return self._db_col_nodes_online.find_one(filter_param)
+
+    def update(self, whoami, filed, value):
+        print("update " + whoami)
+        print("\t(" + filed + ":" + value + ")")
+        self._db_col_nodes_online.update_one({"whoami": whoami}, {'$set': {filed: value}})
+
+
+_online_col = CollectionOnLine()
 
 @app.route('/cm_live_steams_notify')
 def cm_live_steams_notify():
@@ -50,12 +103,17 @@ def cm_live_steams_notify():
     print("time: ", request.args.get("time"))
     print("usrargs: ", request.args.get("usrargs"))
     """
-    topic = request.args.get("id") + "/cm/nodes"
 
-    if request.args.get("action") == "publish":
-        _mqtt_publish(topic, "publish")
-    elif request.args.get("action") == "publish_done":
-        _mqtt_publish(topic, "publish_done")
+    #topic = request.args.get("id") + "/cm/nodes"
+    #action = request.args.get("action")
+    #if action is not None:
+    #    _mqtt_publish(topic, action)
+
+    node_id = request.args.get("id")
+    status = request.args.get("action")
+    _online_col.update(node_id, "status", status)
+
+    _mqtt_publish("controller/ali/notify", "streams_notify")
 
     return ""
 
