@@ -26,8 +26,8 @@ if __name__ == '__main__':
     # id = IDManager.getID()
     enable_p2p_mqtt_logger()
     p2pc = P2PMqtt(broker_url="139.224.128.15", whoami='pusher1')
-    p2pc.register_request_handler(REQUEST_START_PUSH_MEDIA, on_start_push_media)
-    p2pc.register_request_handler(REQUEST_START_PUSH_MEDIA, on_stop_push_media)
+    p2pc.register_request_method(REQUEST_START_PUSH_MEDIA, on_start_push_media)
+    p2pc.register_request_method(REQUEST_START_PUSH_MEDIA, on_stop_push_media)
 
     #whoami = 'pusher1'
     #str_time = '2017/11/16'
