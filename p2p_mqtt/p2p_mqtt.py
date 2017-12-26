@@ -108,6 +108,8 @@ class ExtSessionManager(object):
         session_tag = ExtSession.make_session_tag_from_oport_reply(oport_reply_msg)
         if session_tag in self._ext_sessions:
             self._ext_sessions[session_tag].send_iport_reply("OK")
+            del self._ext_sessions[session_tag]
+            logger.debug("@handle_oport_reply session:%s is deleted" % session_tag)
         else:
             logger.error("@handle_oport_reply session not found!")
 
@@ -236,7 +238,7 @@ class P2PMqtt(object):
          jsonrpc: 2.0
          method: xxx
          params: xxx
-              targetid: xxx
+              target_id: xxx
          id: xxx
          }
         """

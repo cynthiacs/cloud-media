@@ -156,6 +156,12 @@ def handle_ali_notify(msg):
 
 
 def ext_hello_hook(msg):
+    """
+    :param msg:  method hello's parameters
+    :return:
+        True: the reqeust hello will be forward
+        False: the request failed directly, and reply ERROR
+    """
     logger_mc.info("handle_ali_notify")
     print(repr(msg))
     return True
