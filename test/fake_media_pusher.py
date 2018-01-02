@@ -36,5 +36,5 @@ if __name__ == '__main__':
     #    "\"location\":\"longi lati\"}"
     params = r'{"whoami":"pusher1","time":"2017-12-07 16:08:32",' \
              r'"location":"none","nick":"pusher1","role":"pusher","status":"online"}'
-    p2pc.send_request("controller", method="online", params=params, listener=_listener)
+    p2pc.send_rpc_request("controller", method="online", params=params, listener=_listener)
     p2pc.loop()

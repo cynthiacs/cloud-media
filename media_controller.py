@@ -3,6 +3,7 @@ from p2p_mqtt.p2p_mqtt import P2PMqtt
 import logging
 import logging.config
 
+
 _REQUEST_ONLINE = 'online'
 _REQUEST_OFFLINE = 'offline'
 _REQUEST_NODES_UPDATE = 'nodes_update'
@@ -26,6 +27,7 @@ class CollectionOnLine(object):
             self._db_col_nodes_online.remove({'whoami': whoami})
 
     def insert(self, params):
+        print("!!!!insert %s" % params)
         self._db_col_nodes_online.insert_one(params)
 
     def find_all(self):
@@ -77,7 +79,9 @@ _online_col = CollectionOnLine()
 
 def publish_role(role):
     print("publish all " + role + " 's info")
-    p2pc.mqtt_publish(role + _TOPIC_NODES_ON_LINE, _online_col.find_role(role=role), qos=2, retain=True)
+    role_info = _online_col.find_role(role=role)
+    print("\t %s" % role_info)
+    p2pc.mqtt_publish(role + _TOPIC_NODES_ON_LINE, role_info, qos=2, retain=True)
 
 
 def handle_online(params):
@@ -89,14 +93,21 @@ def handle_online(params):
         location: longi and lati tude
     }
     """
+    logger_mc.info("handle online!!!!!!!!!!!!!!!!")
+
+    """
     if not isinstance(params, dict):
         logger_mc.error("online: params format is incorrect.")
         return "ERROR"
+
     whoami = params['whoami']
     role = params['role']
+    print(repr(params))
+
     _online_col.online(whoami, params)
 
-    publish_role(role)
+    #publish_role(role)
+    """
     return "OK"
 
 
@@ -109,6 +120,10 @@ def handle_offline(params):
         location: longi and lati tude
     }
     """
+
+    logger_mc.info("handle offline!!!!!!!!!!!!!!!!")
+
+    """
     if not isinstance(params, dict):
         logger_mc.error("online: params format is incorrect.")
         return "ERROR"
@@ -117,6 +132,7 @@ def handle_offline(params):
     _online_col.offline(whoami)
 
     publish_role(role)
+    """
     return "OK"
 
 
@@ -155,7 +171,7 @@ def handle_ali_notify(msg):
     publish_role("pusher")
 
 
-def ext_hello_hook(msg):
+def hook_4_hello(msg):
     """
     :param msg:  method hello's parameters
     :return:
@@ -172,15 +188,15 @@ if __name__ == '__main__':
     logger_mc = logging.getLogger(__name__)
 
     p2pc = P2PMqtt(broker_url="139.224.128.15", whoami='controller')
-    p2pc.register_request_method(_REQUEST_ONLINE, handle_online)
-    p2pc.register_request_method(_REQUEST_OFFLINE, handle_offline)
-    p2pc.register_request_method(_REQUEST_NODES_UPDATE, handle_nodes_update)
-    p2pc.register_request_method(_REQUEST_NODES_FIND, handle_nodes_find)
+    p2pc.register_rpc_handler(_REQUEST_ONLINE, handle_online)
+    p2pc.register_rpc_handler(_REQUEST_OFFLINE, handle_offline)
+    p2pc.register_rpc_handler(_REQUEST_NODES_UPDATE, handle_nodes_update)
+    p2pc.register_rpc_handler(_REQUEST_NODES_FIND, handle_nodes_find)
 
     p2pc.register_topic_handler(_TOPIC_NODES_WILL, handle_nodes_will)
     p2pc.register_topic_handler("controller/ali/notify", handle_ali_notify)
 
-    p2pc.register_ext_method_hook(ext_hello_hook)
+    p2pc.register_forward_request_hook("hello", hook_4_hello)
     p2pc.loop()
 
 

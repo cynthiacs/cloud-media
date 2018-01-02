@@ -36,101 +36,193 @@ class ExtMqtt(mqtt.Client):
         # protocol = MQTTv311, transport = "tcp"
         super().__init__()
 
+    def pub(self, topic, payload, qos=2, retain=False):
+        logger.debug("publish \n\t %s \n\t %s \n\t %s \n\t %s" %
+                     ("topic: " + topic,
+                      "payload: " + payload,
+                      "qos: " + str(qos),
+                      "retain: " + str(retain)))
+        self.publish(topic, payload, qos, retain)
 
-class ExtSession(object):
-    def __init__(self, context, mqtt_msg):
-        self.context = context
-        self._msg = mqtt_msg
+    def sub(self, topic, qos=2):
+        logger.debug("subscribe \n\t %s \n\t %s" %
+                     ("topic: " + topic, "qos: " + str(qos)))
+        self.subscribe(topic, qos)
 
-        topic_split = mqtt_msg.topic.split('/')
-        self._controller_id = topic_split[0]
-        self._source_id = topic_split[1]
 
-        payload = eval(mqtt_msg.payload)
+class Session(object):
+    def __init__(self, context, reqeust_msg):
+        # all session is created from mqtt request message
+        self._context = context
+        self._msg = reqeust_msg
 
+        # all request is json RPC format
+        payload = eval(reqeust_msg.payload)
+        self._payload = payload
         self._method_name = payload['method']
         self._method_params = payload['params']
-        self._dest_id = self._method_params['target_id']
         self._method_id = payload['id']
-        # self.session_tag = self._source_id + self._dest_id + self._method_id
-        self.session_tag = self._dest_id + self._method_id
 
-        self.iport_request_topic = "%s/%s/request" % (self._controller_id, self._source_id)
-        self.iport_reply_topic = "%s/%s/reply" % (self._source_id, self._controller_id)
-        self.oport_request_topic = "%s/%s/request" % (self._dest_id, self._controller_id)
-        self.oport_reply_topic = "%s/%s/reply" % (self._controller_id, self._dest_id)
-        pass
+    def send(self, topic, payload, qos=2, retain=False):
+        self._context.ext_mqtt_client.pub(topic, payload, qos, retain)
+        #self._context.ext_mqtt_client.publish(topic, payload, qos, retain)
+
 
     @staticmethod
-    def make_session_tag_from_oport_reply(self, mqtt_msg):
+    def make_session_tag_from_reply(self, mqtt_msg):
         topic_split = mqtt_msg.topic.split('/')
         _dest_id = topic_split[1]
         payload = eval(mqtt_msg.payload)
         return _dest_id + payload['id']
 
-    def send_oport_request(self):
+
+class RpcSession(Session):
+    def __init__(self, context, mqtt_msg, reply_listener=None):
+        Session.__init__(self, context, mqtt_msg)
+        self._listener = reply_listener
+
+        topic_split = self._msg.topic.split('/')
+        self._dest_id = topic_split[0]
+        self._source_id = topic_split[1]
+        self.session_tag = self._dest_id + self._method_id
+        self.request_topic = "%s/%s/request" % (self._dest_id, self._source_id)
+        self.reply_topic = "%s/%s/reply" % (self._source_id, self._dest_id)
+
+    def send_request(self):
+        topic = self.request_topic
+        payload = self._msg.payload
+        self.send(topic, payload)
+
+    def call_listener(self, reply_msg):
+        payload = eval(reply_msg.payload)
+        result = payload['result']
+        if self._listener is not None:
+            self._listener(result)
+
+    def send_reply(self, result):
+        payload = '{"jsonrpc": "2.0", "result": "%s", "id": "%s"}' % (result, self._method_id)
+        self.send(self.reply_topic, payload)
+
+
+class ForwardSession(Session):
+    def __init__(self, context, mqtt_msg):
+        Session.__init__(self, context, mqtt_msg)
+
+        topic_split = self._msg.topic.split('/')
+        self._controller_id = topic_split[0]
+        self._source_id = topic_split[1]
+        self._dest_id = self._method_params['target_id']
+
+        # self.session_tag = self._source_id + self._dest_id + self._method_id
+        self.session_tag = self._dest_id + self._method_id
+        self.iport_request_topic = "%s/%s/request" % (self._controller_id, self._source_id)
+        self.iport_reply_topic = "%s/%s/reply" % (self._source_id, self._controller_id)
+        self.oport_request_topic = "%s/%s/request" % (self._dest_id, self._controller_id)
+        self.oport_reply_topic = "%s/%s/reply" % (self._controller_id, self._dest_id)
+
+    def send_request(self):
         topic = self.oport_request_topic
         payload = self._msg.payload
-        logger.debug("send_oport_request \n\t %s \n\t %s" %
-                     ("topic: " + topic, "payload: " + payload))
-        self.context.ext_mqtt_client.publish(topic, payload, qos=2, retain=False)
+        self.send(topic, payload)
 
-    def send_iport_reply(self, result):
+    def send_reply(self, result):
         topic = self.iport_reply_topic
         payload = '{"jsonrpc": "2.0", "result": "%s", "id": "%s"}' % (result, self._method_id)
-        logger.debug("send_iport_reply \n\t %s \n\t %s" %
-                     ("topic: " + topic, "payload: " + payload))
-        self.context.ext_mqtt_client.publish(topic, payload, qos=2, retain=False)
+        self.send(topic, payload)
 
 
-class ExtSessionManager(object):
+class SessionManager(object):
     def __init__(self, context):
         self.context = context
-        self._ext_sessions = {}
-        self._method_hook = {}
+        self._rpc_sessions = {}
+        self._rpc_handler = {}
 
-    def handle_iport_request(self, iport_request_msg):
-        s = ExtSession(self.context, iport_request_msg)
+        self._forward_sessions = {}
+        self._forward_request_hook = {}
+        self._forward_reply_hook = {}
+        self._jrpc_id = 0
 
-        ret = True
-        if s._method_name in self._method_hook:
-            ret = self._method_hook[s._method_name](s._method_params)
+    def send_rpc_request(self, target_tag, method, params, listener):
+        topic = target_tag + "/" + self._whoami + "/request"
+        method_id = str(self._jrpc_id)
+        payload = '{"jsonrpc":"2.0", "method":"%s", "params":%s,"id":"%s"}' % (
+                    method, params, method_id)
 
-        if ret:
-            self._ext_sessions[s.session_tag] = s
-            s.send_oport_request()
+        self._jrpc_id += 1
+
+        s = RpcSession(self.context, {topic, payload}, listener)
+        self._rpc_sessions[s.session_tag] = s
+        s.send_request()
+
+    def handle_request(self, iport_request_msg):
+        logger.debug("handle_request")
+        s = RpcSession(self.context, iport_request_msg)
+        ret = ""
+        if s._method_name in self._rpc_handler:
+            logger.debug("_rpc_handler")
+            logger.debug(self._rpc_handler[s._method_name].__name__)
+            ret = self._rpc_handler[s._method_name](s._method_params)
+            s.send_reply(ret)
+            return
+
+        logger.debug("_forward_handler")
+        s = ForwardSession(self.context, iport_request_msg)
+
+        if s._method_name in self._forward_request_hook:
+            ret = self._forward_request_hook[s._method_name](s._method_params)
+            if ret:
+                self._forward_sessions[s.session_tag] = s
+                s.send_request()
+            else:
+                s.send_reply("ERROR: method %s failed in controller hook" % s._method_name)
         else:
-            s.send_iport_reply("ERROR: controller cannot handle this request.")
+            logger.info("can not handle method: %s" % s._method_name)
+            s.send_reply("ERROR: unknown method")
 
-    def handle_oport_reply(self, oport_reply_msg):
-        # to handle hooked listener ?
+    def handle_reply(self, reply_msg):
+        logger.debug("handle_reply")
+        session_tag = Session.make_session_tag_from_reply(reply_msg)
+        if session_tag in self._rpc_sessions:
+            s = self._rpc_sessions[session_tag]
+            s.call_listener(reply_msg)
+        elif session_tag in self._forward_sessions:
+            s = self._forward_sessions[session_tag]
+            # reply hook has not implemented yet
+            if s._method_name in self._forward_reply_hook:
+                rpc = eval(reply_msg)
+                if 'result' not in rpc or 'id' not in rpc:
+                    raise "reqeust's format is not correct"
+                self._forward_reply_hook[s._method_name](reply_msg)
 
-        session_tag = ExtSession.make_session_tag_from_oport_reply(oport_reply_msg)
-        if session_tag in self._ext_sessions:
-            self._ext_sessions[session_tag].send_iport_reply("OK")
-            del self._ext_sessions[session_tag]
+            self._forward_sessions[session_tag].send_reply("OK")
+            del self._forward_sessions[session_tag]
             logger.debug("@handle_oport_reply session:%s is deleted" % session_tag)
         else:
             logger.error("@handle_oport_reply session not found!")
 
-    def register_iport_method_hook(self, hook):
+    def register_rpc_handler(self, method_name, handler):
+        self._rpc_handler[method_name] = handler
+
+    def register_forward_request_hook(self, method_name, hook):
         """
         :param hook:
             @handle_iport_request ret = _method_hook[s._method_name](s._method_params)
         :return:
         """
-        self._method_hook[hook.__name__] = hook
+        self._forward_request_hook[method_name] = hook
+
+    def register_forward_reply_hook(self, method_name, hook):
+        self._forward_reply_hook[method_name] = hook
 
     def register_oport_reply_hook(self, id):
         pass
+
 
 class P2PMqtt(object):
     """
     P2PMqtt supports request and response mode based on MQTT
     """
     def __init__(self, *, broker_url, whoami='controller'):
-        self.context = ExtMqttContext()
-
         self._broker_url = broker_url
         self._whoami = whoami
 
@@ -139,17 +231,10 @@ class P2PMqtt(object):
         self.topic_handlers = {}
         self.action_handlers = {}
 
-        # for action reqeust
-        self._request_methods = {}
-        self._jrpc_id = 0
-
-        # for action reply
-        self._reply_lisener = {}
-
+        self.context = ExtMqttContext()
         self.context.ext_mqtt_client = self._ext_mqttc
 
-        # for ext reqeust/reply
-        self._ext_session_manager = ExtSessionManager(self.context)
+        self._session_manager = SessionManager(self.context)
 
     @staticmethod
     def _on_connect_wrapper(ext_mqttc, obj, flags, rc):
@@ -167,162 +252,63 @@ class P2PMqtt(object):
 
         # Type 1: special topic, handle it directly
         if msg.topic in self.topic_handlers:
+            logger.debug("start handle topic")
             self.topic_handlers[msg.topic](msg)
             return
 
-        # Type 2: controller/your_id/action
+
+        # Type 2: controller_tag/your_tag/action
         #         currently, action can be request/reply
+        #         tag format: venderid_groupid_nodeid
         topic_split = msg.topic.split('/')
         whoami = topic_split[0]
         whoareyou = topic_split[1]
         action = topic_split[2]
         logger.debug("whoami:%s, whoareyou:%s, action:%s" % (whoami, whoareyou, action))
 
-        if whoami != self._whoami:
-            logger.error("this message is not for %s!!!" % self._whoami)
-        elif action in self.action_handlers:
+        if action in self.action_handlers:
+            logger.debug("start handle action")
             self.action_handlers[action](msg)
 
     def _on_action_request(self, msg):
-        topic_split = msg.topic.split('/')
-        whoami = topic_split[0]
-        whoareyou = topic_split[1]
-
-        if msg.payload is None:
-            logger.error("payload should not be None !")
-            raise ValueError("request json error")
-
-        rpc = eval(msg.payload)
-        if 'method' not in rpc or 'params' not in rpc \
-                or 'id' not in rpc:
-            raise "reqeust's format is not correct"
-
-        method = rpc['method']
-        params = rpc['params']
-        id = rpc['id']
-        logger.debug("method:%s, params:%s, id:%s" % (method, params, id))
-
-        ret = "OK"
-        if method in self._request_methods:
-            ret = self._request_methods[method](params)
-            if ret is None:
-                logger.error("handler should return something !")
-        else:
-            ret = 'ERROR: method %s is not supported'
-
-        topic = whoareyou + "/" + whoami + "/reply"
-        payload = '{"jsonrpc": "2.0", "result":"' \
-                  + ret + '", "id":"' + str(id) + '"}'
-
-        self.mqtt_publish(topic, payload, qos=2, retain=False)
+        self._session_manager.handle_request(msg)
 
     def _on_action_reply(self, msg):
-        rpc = eval(msg.payload)
-        if 'result' not in rpc or 'id' not in rpc:
-            raise "reqeust's format is not correct"
-
-        result = rpc['result']
-        id = rpc['id']
-
-        if id in self._reply_lisener:
-            self._reply_lisener[id](result)
-            del self._reply_lisener[id]
-        else:
-            logger.error("this id should not reply to me!")
-
-    def _on_action_ext_request(self, msg):
-        """
-        topic: controller/id/ext_request
-        payload:
-        {
-         jsonrpc: 2.0
-         method: xxx
-         params: xxx
-              target_id: xxx
-         id: xxx
-         }
-        """
-        self._ext_session_manager.handle_iport_request(msg)
-
-    def _on_action_ext_reply(self, msg):
-        """
-        topic: controller/id/ext_reply
-        payload:
-        {
-         jsonrpc: 2.0
-         result: xxx
-         id: xxx
-         }
-         """
-        self._ext_session_manager.handle_oport_reply(msg)
+        self._session_manager.handle_reply(msg)
 
     def register_topic_handler(self, topic, handler, qos=2):
-        self.mqtt_subscribe(topic, qos)
+        # self.mqtt_subscribe(topic, qos)
         if not callable(handler):
             raise "params error"
         self.topic_handlers[topic] = handler
 
-    def register_request_method(self, name, method):
-        """
-        :param method: the signature should be
-            str foo(mqtt_msg)
-        :return:
-        """
-        if not callable(method):
-            raise "you must register a function!"
-        self._request_methods[name] = method
+    def send_rpc_request(self, target_tag, method, params, listener=None):
+        self._session_manager.send_rpc_request(target_tag, method, params, listener)
 
-    def register_reply_lisener(self, id, lisener):
-        self._reply_lisener[id] = lisener
+    def register_rpc_handler(self, method_name, handler):
+        if not callable(handler):
+            raise "you must register a function as handler!"
+        self._session_manager.register_rpc_handler(method_name, handler)
 
-    def register_ext_method_hook(self, hook):
-        self._ext_session_manager.register_iport_method_hook(hook)
+    def register_forward_request_hook(self, method_name, hook):
+        if not callable(hook):
+            raise "you must register a function as hook!"
+        self._session_manager.register_forward_request_hook(method_name, hook)
 
-    def send_request(self, target_node_id, method, params, listener=None):
-        """
-        send json rpc request to target node
-        :param target_node_id:
-        :param method:
-        :param params:
-        :param listener:
-        :return:
-        """
-        topic = target_node_id + "/" + self._whoami + "/request"
-
-        if params[0] == "{":
-            payload = '{"jsonrpc": "2.0", "method":"' + method + '"' \
-                ',"params":' + params + ',"id":"' + str(self._jrpc_id) + '"}'
-        else:
-            payload = '{"jsonrpc": "2.0", "method":"' + method + '"' \
-                ',"params":"' + params + '"' \
-                ',"id":"' + str(self._jrpc_id) + '"}'
-
-        if listener is not None:
-            self.register_reply_lisener(str(self._jrpc_id), listener)
-
-        self._jrpc_id += 1
-
-        logger.debug("<== publish")
-        logger.debug("\t topic:" + topic)
-        logger.debug("\t payload:" + payload)
-        self._ext_mqttc.publish(topic, payload, qos=2, retain=False)
+    def register_forward_reply_hook(self, method_name, hook):
+        if not callable(hook):
+            raise "you must register a function as hook!"
+        self._session_manager.register_forward_reply_hook(method_name, hook)
 
     def mqtt_publish(self, topic, payload=None, qos=0, retain=False):
-        logger.debug("<== publish")
-        logger.debug("\t topic:" + topic)
-        logger.debug("\t payload:" + payload)
-        logger.debug("\t qos:" + str(qos))
-        logger.debug("\t retain:" + str(retain))
-        self._ext_mqttc.publish(topic, payload, qos, retain)
+        self._ext_mqttc.pub(topic, payload, qos, retain)
 
     def mqtt_subscribe(self, topic, qos=0):
-        self._ext_mqttc.subscribe(topic, qos)
+        self._ext_mqttc.sub(topic, qos)
 
     def loop(self):
         self.action_handlers = {"request": self._on_action_request,
-                                "reply": self._on_action_reply,
-                                "ext_request": self._on_action_ext_request,
-                                "ext_reply": self._on_action_ext_reply}
+                                "reply": self._on_action_reply}
 
         self._ext_mqttc.on_connect = self._on_connect_wrapper
         self._ext_mqttc.on_message = self._on_message_wrapper
@@ -330,10 +316,10 @@ class P2PMqtt(object):
         try:
             self._ext_mqttc.will_set('nodes_will/' + self._whoami, self._whoami, 2, False)
             self._ext_mqttc.connect(self._broker_url, 1883, 60)
-            self._ext_mqttc.subscribe(self._whoami + "/+/request", qos=2)
-            self._ext_mqttc.subscribe(self._whoami + "/+/reply", qos=2)
+            self._ext_mqttc.sub(self._whoami + "/+/request", qos=2)
+            self._ext_mqttc.sub(self._whoami + "/+/reply", qos=2)
             for topic in self.topic_handlers.keys():
-                self._ext_mqttc.subscribe(topic, qos=2)
+                self._ext_mqttc.sub(topic, qos=2)
 
             self._ext_mqttc.loop_forever()
         except KeyboardInterrupt:
