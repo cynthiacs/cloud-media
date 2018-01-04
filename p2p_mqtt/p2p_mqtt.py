@@ -159,8 +159,8 @@ class SessionManager(object):
         s = RpcSession(self.context, iport_request_msg)
         ret = ""
         if s._method_name in self._rpc_handler:
-            logger.debug("_rpc_handler")
-            logger.debug(self._rpc_handler[s._method_name].__name__)
+            logger.debug("_rpc_handler: %s " %
+                         self._rpc_handler[s._method_name].__name__)
             ret = self._rpc_handler[s._method_name](s._method_params)
             s.send_reply(ret)
             return

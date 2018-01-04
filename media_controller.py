@@ -3,7 +3,7 @@ from p2p_mqtt.p2p_mqtt import P2PMqtt
 import logging
 import logging.config
 
-
+_CONTROLLER_ID = "media_controller"
 _REQUEST_ONLINE = 'Online'
 _REQUEST_OFFLINE = 'Offline'
 
@@ -22,13 +22,13 @@ class CollectionOnLine(object):
         self._db = self._db_client.extmqtt_nodes
         self._db_col_nodes_online = self._db.nodes_online
 
-    def remove(self, whoami):
-        if self._db_col_nodes_online.find_one({'whoami': whoami}) is not None:
-            print("remove: " + whoami)
-            self._db_col_nodes_online.remove({'whoami': whoami})
+    def remove(self, node_id):
+        if self._db_col_nodes_online.find_one({'id': node_id}) is not None:
+            print("[DB] remove: " + node_id)
+            self._db_col_nodes_online.remove({'id': node_id})
 
     def insert(self, params):
-        print("!!!!insert %s" % params)
+        print("[DB] insert %s" % params)
         self._db_col_nodes_online.insert_one(params)
 
     def find_all(self):
@@ -60,19 +60,19 @@ class CollectionOnLine(object):
         """
         return self._db_col_nodes_online.find_one(filter_param)
 
-    def update(self, whoami, filed, value):
-        print("update " + whoami)
+    def update(self, node_id, filed, value):
+        print("[DB] update " + node_id)
         print("\t(" + filed + ":" + value + ")")
-        self._db_col_nodes_online.update_one({"whoami": whoami}, {'$set': {filed: value}})
+        self._db_col_nodes_online.update_one({"id": node_id}, {'$set': {filed: value}})
 
-    def online(self, whoami, params):
-        print("online:" + whoami)
-        self.remove(whoami)
+    def online(self, node_id, params):
+        print("[DB] online:" + node_id)
+        self.remove(node_id)
         self.insert(params=params)
 
-    def offline(self, whoami):
-        print("offline:" + whoami)
-        self.remove(whoami)
+    def offline(self, node_id):
+        print("[DB] offline:" + node_id)
+        self.remove(node_id)
 
 
 _online_col = CollectionOnLine()
@@ -86,54 +86,52 @@ def publish_role(role):
 
 
 def handle_online(params):
-    """
-    mehtod: online
-    params: {
-        whoami: my id
-        time: the time to send online request
-        location: longi and lati tude
-    }
-    """
-    logger_mc.info("handle online!!!!!!!!!!!!!!!!")
+    logger_mc.info("@handle_online")
 
-    """
     if not isinstance(params, dict):
         logger_mc.error("online: params format is incorrect.")
         return "ERROR"
 
-    whoami = params['whoami']
+    node_id = params['id']
     role = params['role']
     print(repr(params))
 
-    _online_col.online(whoami, params)
+    _online_col.online(node_id, params)
 
-    #publish_role(role)
-    """
+    if role == 'puller':
+        print("publish all role:%s 's info to node:%s" % (role, node_id))
+        role_info = _online_col.find_role(role='pusher')
+        print("\t all role: \n\t %s" % role_info)
+        p2pc.mqtt_publish("%s/%s/nodes_change" % (node_id, _CONTROLLER_ID), role_info, qos=2, retain=True)
+
     return "OK"
 
 
 def handle_offline(params):
     """
     mehtod: offline
-    params: {
-        whoami: my id
-        time: the time to send online request
-        location: longi and lati tude
-    }
+    params: null
     """
 
-    logger_mc.info("handle offline!!!!!!!!!!!!!!!!")
+    logger_mc.info("@handle offline")
 
     """
     if not isinstance(params, dict):
         logger_mc.error("online: params format is incorrect.")
         return "ERROR"
-    whoami = params['whoami']
+    
+    vendor_id = ""
+    group_id = ""
+    node_id = params['id']
     role = params['role']
-    _online_col.offline(whoami)
+    _online_col.offline(node_id)
 
-    publish_role(role)
+    if role == 'puller':
+        node_info = _online_col.find_one({id: node_id})
+        payload = '{"remove":{"id":%s}}' % node_id
+        p2pc.mqtt_publish("%s/%s/nodes_change" % (node_id, _CONTROLLER_ID), payload, qos=2, retain=True)
     """
+
     return "OK"
 
 
@@ -188,7 +186,7 @@ if __name__ == '__main__':
     logging.config.fileConfig('logging.conf')
     logger_mc = logging.getLogger(__name__)
 
-    p2pc = P2PMqtt(broker_url="139.224.128.15", whoami='controller')
+    p2pc = P2PMqtt(broker_url="139.224.128.15", whoami=_CONTROLLER_ID)
     p2pc.register_rpc_handler(_REQUEST_ONLINE, handle_online)
     p2pc.register_rpc_handler(_REQUEST_OFFLINE, handle_offline)
     p2pc.register_rpc_handler(_REQUEST_NODES_UPDATE, handle_nodes_update)
