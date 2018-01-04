@@ -85,14 +85,17 @@ def publish_role(role):
     p2pc.mqtt_publish(role + _TOPIC_NODES_ON_LINE, role_info, qos=2, retain=True)
 
 
-def handle_online(params):
+def handle_online(node_id, params):
+    """
+    mehtod: online
+    params: {k:v, ...}
+    """
     logger_mc.info("@handle_online")
 
     if not isinstance(params, dict):
         logger_mc.error("online: params format is incorrect.")
         return "ERROR"
 
-    node_id = params['id']
     role = params['role']
     print(repr(params))
 
@@ -107,30 +110,17 @@ def handle_online(params):
     return "OK"
 
 
-def handle_offline(params):
+def handle_offline(node_id, params):
     """
     mehtod: offline
     params: null
     """
-
     logger_mc.info("@handle offline")
 
-    """
-    if not isinstance(params, dict):
-        logger_mc.error("online: params format is incorrect.")
-        return "ERROR"
-    
-    vendor_id = ""
-    group_id = ""
-    node_id = params['id']
-    role = params['role']
     _online_col.offline(node_id)
 
-    if role == 'puller':
-        node_info = _online_col.find_one({id: node_id})
-        payload = '{"remove":{"id":%s}}' % node_id
-        p2pc.mqtt_publish("%s/%s/nodes_change" % (node_id, _CONTROLLER_ID), payload, qos=2, retain=True)
-    """
+    payload = '{"remove":{"id":%s}}' % node_id
+    p2pc.mqtt_publish("%s/%s/nodes_change" % ("*", _CONTROLLER_ID), payload, qos=2, retain=True)
 
     return "OK"
 
@@ -189,13 +179,13 @@ if __name__ == '__main__':
     p2pc = P2PMqtt(broker_url="139.224.128.15", whoami=_CONTROLLER_ID)
     p2pc.register_rpc_handler(_REQUEST_ONLINE, handle_online)
     p2pc.register_rpc_handler(_REQUEST_OFFLINE, handle_offline)
-    p2pc.register_rpc_handler(_REQUEST_NODES_UPDATE, handle_nodes_update)
-    p2pc.register_rpc_handler(_REQUEST_NODES_FIND, handle_nodes_find)
+    #p2pc.register_rpc_handler(_REQUEST_NODES_UPDATE, handle_nodes_update)
+    #p2pc.register_rpc_handler(_REQUEST_NODES_FIND, handle_nodes_find)
 
-    p2pc.register_topic_handler(_TOPIC_NODES_WILL, handle_nodes_will)
-    p2pc.register_topic_handler("controller/ali/notify", handle_ali_notify)
+    #p2pc.register_topic_handler(_TOPIC_NODES_WILL, handle_nodes_will)
+    #p2pc.register_topic_handler("controller/ali/notify", handle_ali_notify)
 
-    p2pc.register_forward_request_hook("hello", hook_4_hello)
+    #p2pc.register_forward_request_hook("hello", hook_4_hello)
     p2pc.loop()
 
 

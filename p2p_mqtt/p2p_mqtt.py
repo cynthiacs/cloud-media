@@ -58,7 +58,10 @@ class Session(object):
         payload = eval(request_msg.payload)
         self._payload = payload
         self._method_name = payload['method']
-        self._method_params = payload['params']
+        if 'params' in payload:
+            self._method_params = payload['params']
+        else:
+            self._method_params = None
         self._method_id = payload['id']
 
     def send(self, topic, payload, qos=2, retain=False):
@@ -161,7 +164,7 @@ class SessionManager(object):
         if s._method_name in self._rpc_handler:
             logger.debug("_rpc_handler: %s " %
                          self._rpc_handler[s._method_name].__name__)
-            ret = self._rpc_handler[s._method_name](s._method_params)
+            ret = self._rpc_handler[s._method_name](s._source_id, s._method_params)
             s.send_reply(ret)
             return
 
