@@ -7,6 +7,13 @@ _CONTROLLER_ID = "media_controller"
 _REQUEST_ONLINE = 'Online'
 _REQUEST_OFFLINE = 'Offline'
 
+_TOPIC_NODES_CHANGE = 'nodes_change'  # towho/fromwho/nodes_change
+_CHANGE_ALL_ONLINE = "all_online";
+_CHANGE_NEW_ONLINE = "new_online";
+_CHANGE_NEW_OFFLINE = "new_offline";
+_CHANGE_NEW_UPDATE = "new_update";
+
+
 _REQUEST_NODES_UPDATE = 'nodes_update'
 _REQUEST_NODES_FIND = 'nodes_find'
 
@@ -105,7 +112,8 @@ def handle_online(node_id, params):
         print("publish all role:%s 's info to node:%s" % (role, node_id))
         role_info = _online_col.find_role(role='pusher')
         print("\t all role: \n\t %s" % role_info)
-        p2pc.mqtt_publish("%s/%s/nodes_change" % (node_id, _CONTROLLER_ID), role_info, qos=2, retain=True)
+        payload = '{"%s": %s}' % (_CHANGE_ALL_ONLINE, role_info)
+        p2pc.mqtt_publish("%s/%s/%s" % (node_id, _CONTROLLER_ID, _TOPIC_NODES_CHANGE), payload, qos=2, retain=True)
 
     return "OK"
 
@@ -119,8 +127,8 @@ def handle_offline(node_id, params):
 
     _online_col.offline(node_id)
 
-    payload = '{"remove":{"id":%s}}' % node_id
-    p2pc.mqtt_publish("%s/%s/nodes_change" % ("*", _CONTROLLER_ID), payload, qos=2, retain=True)
+    payload = '{"%s":{"id":%s}}' % (_CHANGE_NEW_OFFLINE, node_id)
+    p2pc.mqtt_publish("%s/%s/%s" % ("*", _CONTROLLER_ID, _TOPIC_NODES_CHANGE), payload, qos=2, retain=True)
 
     return "OK"
 
