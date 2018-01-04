@@ -114,6 +114,12 @@ def handle_online(source_id, params):
         print("\t all role: \n\t %s" % role_info)
         payload = '{"%s": %s}' % (_CHANGE_ALL_ONLINE, role_info)
         p2pc.mqtt_publish("%s/%s/%s" % (source_id, _CONTROLLER_ID, _TOPIC_NODES_CHANGE), payload, qos=2, retain=True)
+    elif role == 'pusher':
+        source_tag_split = source_id.split('_')
+        vid = source_tag_split[0]
+        to_who = "%s_puller_*" % vid
+        payload = '"%s":[%s]' % (_CHANGE_NEW_ONLINE, params)
+        p2pc.mqtt_publish("%s/%s/%s" % (to_who, _CONTROLLER_ID, _TOPIC_NODES_CHANGE), payload, qos=2, retain=True)
 
     return "OK"
 
