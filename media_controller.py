@@ -92,7 +92,7 @@ def publish_role(role):
     p2pc.mqtt_publish(role + _TOPIC_NODES_ON_LINE, role_info, qos=2, retain=True)
 
 
-def handle_online(node_id, params):
+def handle_online(source_id, params):
     """
     mehtod: online
     params: {k:v, ...}
@@ -106,29 +106,33 @@ def handle_online(node_id, params):
     role = params['role']
     print(repr(params))
 
-    _online_col.online(node_id, params)
+    _online_col.online(source_id, params)
 
     if role == 'puller':
-        print("publish all role:%s 's info to node:%s" % (role, node_id))
+        print("publish all role:%s 's info to node:%s" % (role, source_id))
         role_info = _online_col.find_role(role='pusher')
         print("\t all role: \n\t %s" % role_info)
         payload = '{"%s": %s}' % (_CHANGE_ALL_ONLINE, role_info)
-        p2pc.mqtt_publish("%s/%s/%s" % (node_id, _CONTROLLER_ID, _TOPIC_NODES_CHANGE), payload, qos=2, retain=True)
+        p2pc.mqtt_publish("%s/%s/%s" % (source_id, _CONTROLLER_ID, _TOPIC_NODES_CHANGE), payload, qos=2, retain=True)
 
     return "OK"
 
 
-def handle_offline(node_id, params):
+def handle_offline(source_id, params):
     """
     mehtod: offline
     params: null
     """
     logger_mc.info("@handle offline")
 
-    _online_col.offline(node_id)
-
-    payload = '{"%s":{"id":%s}}' % (_CHANGE_NEW_OFFLINE, node_id)
-    p2pc.mqtt_publish("%s/%s/%s" % ("*", _CONTROLLER_ID, _TOPIC_NODES_CHANGE), payload, qos=2, retain=True)
+    _online_col.offline(source_id)
+    source_tag_split = source_id.split('_')
+    vid = source_tag_split[0]
+    # gid = source_tag_split[1]
+    # nid = source_tag_split[2]
+    to_who = "%s_puller_*" % vid
+    payload = '{"%s":[{"id":%s}]}' % (_CHANGE_NEW_OFFLINE, source_id)
+    p2pc.mqtt_publish("%s/%s/%s" % (to_who, _CONTROLLER_ID, _TOPIC_NODES_CHANGE), payload, qos=2, retain=True)
 
     return "OK"
 
