@@ -4,8 +4,9 @@ import logging
 import logging.config
 
 
-_REQUEST_ONLINE = 'online'
-_REQUEST_OFFLINE = 'offline'
+_REQUEST_ONLINE = 'Online'
+_REQUEST_OFFLINE = 'Offline'
+
 _REQUEST_NODES_UPDATE = 'nodes_update'
 _REQUEST_NODES_FIND = 'nodes_find'
 

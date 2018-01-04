@@ -2,10 +2,8 @@
 Extended MQTT module to provide a P2P message feature.
 """
 import paho.mqtt.client as mqtt
-import re
 import logging
-import sys
-import json
+
 
 __all__ = ('P2PMqtt',)
 logger = logging.getLogger(__name__)
@@ -51,13 +49,13 @@ class ExtMqtt(mqtt.Client):
 
 
 class Session(object):
-    def __init__(self, context, reqeust_msg):
+    def __init__(self, context, request_msg):
         # all session is created from mqtt request message
         self._context = context
-        self._msg = reqeust_msg
+        self._msg = request_msg
 
         # all request is json RPC format
-        payload = eval(reqeust_msg.payload)
+        payload = eval(request_msg.payload)
         self._payload = payload
         self._method_name = payload['method']
         self._method_params = payload['params']
@@ -69,7 +67,7 @@ class Session(object):
 
 
     @staticmethod
-    def make_session_tag_from_reply(self, mqtt_msg):
+    def make_session_tag_from_reply(mqtt_msg):
         topic_split = mqtt_msg.topic.split('/')
         _dest_id = topic_split[1]
         payload = eval(mqtt_msg.payload)
@@ -142,15 +140,17 @@ class SessionManager(object):
         self._forward_reply_hook = {}
         self._jrpc_id = 0
 
-    def send_rpc_request(self, target_tag, method, params, listener):
-        topic = target_tag + "/" + self._whoami + "/request"
+    def send_rpc_request(self, target_tag, source_tag, method, params, listener):
+        msg = mqtt.MQTTMessage()
+        topic = target_tag + "/" + source_tag + "/request"
+        msg.topic = topic.encode('utf-8')
         method_id = str(self._jrpc_id)
-        payload = '{"jsonrpc":"2.0", "method":"%s", "params":%s,"id":"%s"}' % (
+        msg.payload = '{"jsonrpc":"2.0", "method":"%s", "params":%s,"id":"%s"}' % (
                     method, params, method_id)
 
         self._jrpc_id += 1
 
-        s = RpcSession(self.context, {topic, payload}, listener)
+        s = RpcSession(self.context, msg, listener)
         self._rpc_sessions[s.session_tag] = s
         s.send_request()
 
@@ -283,7 +283,7 @@ class P2PMqtt(object):
         self.topic_handlers[topic] = handler
 
     def send_rpc_request(self, target_tag, method, params, listener=None):
-        self._session_manager.send_rpc_request(target_tag, method, params, listener)
+        self._session_manager.send_rpc_request(target_tag, self._whoami, method, params, listener)
 
     def register_rpc_handler(self, method_name, handler):
         if not callable(handler):
