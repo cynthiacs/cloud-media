@@ -112,7 +112,7 @@ class ForwardSession(Session):
         topic_split = self._msg.topic.split('/')
         self._controller_id = topic_split[0]
         self._source_id = topic_split[1]
-        self._dest_id = self._method_params['target_id']
+        self._dest_id = self._method_params['target-id']
 
         # self.session_tag = self._source_id + self._dest_id + self._method_id
         self.session_tag = self._dest_id + self._method_id
