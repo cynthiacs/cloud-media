@@ -1,4 +1,5 @@
 from p2p_mqtt.p2p_mqtt import P2PMqtt
+from p2p_mqtt.p2p_mqtt import ForwardSession
 from db.collection_online import CollectionOnLine
 import logging.config
 
@@ -158,15 +159,24 @@ def handle_nodes_will(msg):
                                        _CHANGE_NEW_OFFLINE, result)
 
 
-def hook_4_start_push_media(msg):
+def hook_4_start_push_media(fsession):
     """
     :param msg:  method's parameters
     :return:
         True: the request will be forward
         False: the request failed directly, and reply ERROR
     """
-    print(repr(msg))
+    # TODO: check permission
+    # add url to the forward payload
+    fsession.payload["params"]["url"] = fsession.push_url_rtmp
     return True
+
+
+def hook_4_start_push_media_reply(fsession, reply_result):
+    if reply_result == "OK":
+        return "{'url':'%s'}" % fsession.pull_url_rtmp
+    else:
+        return reply_result
 
 
 def hook_4_stop_push_media(msg):
@@ -198,6 +208,7 @@ if __name__ == '__main__':
 
     _p2pc.register_forward_request_hook(_REQUEST_START_PUSH_MEDIA, hook_4_start_push_media)
     _p2pc.register_forward_request_hook(_REQUEST_STOP_PUSH_MEDIA, hook_4_stop_push_media)
+    _p2pc.register_forward_reply_hook(_REQUEST_START_PUSH_MEDIA, hook_4_start_push_media_reply)
 
     #p2pc.register_topic_handler("controller/ali/notify", handle_ali_notify)
     _p2pc.loop()

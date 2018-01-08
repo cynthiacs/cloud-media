@@ -5,7 +5,7 @@ import paho.mqtt.client as mqtt
 import logging
 
 
-__all__ = ('P2PMqtt',)
+__all__ = ('P2PMqtt', 'ForwardSession',)
 logger = logging.getLogger(__name__)
 
 
@@ -36,8 +36,8 @@ class ExtMqtt(mqtt.Client):
 
     def pub(self, topic, payload, qos=2, retain=False):
         logger.debug("publish \n\t %s \n\t %s \n\t %s \n\t %s" %
-                     ("topic: " + topic,
-                      "payload: " + payload,
+                     ("topic: " + str(topic),
+                      "payload: " + str(payload),
                       "qos: " + str(qos),
                       "retain: " + str(retain)))
         self.publish(topic, payload, qos, retain)
@@ -56,7 +56,7 @@ class Session(object):
 
         # all request is json RPC format
         payload = eval(request_msg.payload)
-        self._payload = payload
+        self.payload = payload
         self._method_name = payload['method']
         if 'params' in payload:
             self._method_params = payload['params']
@@ -67,7 +67,6 @@ class Session(object):
     def send(self, topic, payload, qos=2, retain=False):
         self._context.ext_mqtt_client.pub(topic, payload, qos, retain)
         #self._context.ext_mqtt_client.publish(topic, payload, qos, retain)
-
 
     @staticmethod
     def make_session_tag_from_reply(mqtt_msg):
@@ -112,7 +111,12 @@ class ForwardSession(Session):
         topic_split = self._msg.topic.split('/')
         self._controller_tag = topic_split[0]
         self._source_tag = topic_split[1]
-        self._dest_tag = self._method_params['target-id']
+
+        if 'target-id' in self._method_params:
+            self._dest_tag = self._method_params['target-id']
+        else:
+            print("error: no target-id")
+            self._dest_tag = ""
 
         # self.session_tag = self._source_id + self._dest_id + self._method_id
         self.session_tag = self._dest_tag + self._method_id
@@ -121,14 +125,23 @@ class ForwardSession(Session):
         self.oport_request_topic = "%s/%s/request" % (self._dest_tag, self._controller_tag)
         self.oport_reply_topic = "%s/%s/reply" % (self._controller_tag, self._dest_tag)
 
+        app_name = self._dest_tag
+        stream_name = "c1"
+        self.push_url_rtmp = "rtmp://video-center.alivecdn.com/%s/%s?vhost=push.yangxudong.com" % (app_name, stream_name)
+        self.pull_url_rtmp = "rtmp://push.yangxudong.com/%s/%s" % (app_name, stream_name)
+        self.pull_url_flv = "http://push.yangxudong.com/%s/%s.flv" % (app_name, stream_name)
+        self.pull_url_hls = "http://push.yangxudong.com/%s/%s.m3u8" % (app_name, stream_name)
+
     def send_request(self):
         topic = self.oport_request_topic
-        payload = self._msg.payload
-        self.send(topic, payload)
+        self.send(topic, str(self.payload))
 
     def send_reply(self, result):
         topic = self.iport_reply_topic
-        payload = '{"jsonrpc": "2.0", "result": "%s", "id": "%s"}' % (result, self._method_id)
+        if result.startswith('{'):
+            payload = '{"jsonrpc": "2.0", "result": %s, "id": "%s"}' % (result, self._method_id)
+        else:
+            payload = '{"jsonrpc": "2.0", "result": "%s", "id": "%s"}' % (result, self._method_id)
         self.send(topic, payload)
 
 
@@ -160,24 +173,22 @@ class SessionManager(object):
     def handle_request(self, iport_request_msg):
         logger.debug("handle_request")
         s = RpcSession(self.context, iport_request_msg)
-        ret = ""
+
         if s._method_name in self._rpc_handler:
             logger.debug("_rpc_handler: %s " %
                          self._rpc_handler[s._method_name].__name__)
             ret = self._rpc_handler[s._method_name](s._source_tag, s._method_params)
             s.send_reply(ret)
-            return
+        elif s._method_name in self._forward_request_hook:
+            logger.debug("_forward_handler")
+            ss = ForwardSession(self.context, iport_request_msg)
 
-        logger.debug("_forward_handler")
-        s = ForwardSession(self.context, iport_request_msg)
-
-        if s._method_name in self._forward_request_hook:
-            ret = self._forward_request_hook[s._method_name](s._method_params)
+            ret = self._forward_request_hook[ss._method_name](ss)
             if ret:
-                self._forward_sessions[s.session_tag] = s
-                s.send_request()
+                self._forward_sessions[ss.session_tag] = ss
+                ss.send_request()
             else:
-                s.send_reply("ERROR: method %s failed in controller hook" % s._method_name)
+                ss.send_reply("ERROR: method %s failed in controller hook" % ss._method_name)
         else:
             logger.info("can not handle method: %s" % s._method_name)
             s.send_reply("ERROR: unknown method")
@@ -193,12 +204,14 @@ class SessionManager(object):
             s = self._forward_sessions[session_tag]
             # reply hook has not implemented yet
             if s._method_name in self._forward_reply_hook:
-                rpc = eval(reply_msg)
+                rpc = eval(reply_msg.payload)
                 if 'result' not in rpc or 'id' not in rpc:
                     raise "reqeust's format is not correct"
-                self._forward_reply_hook[s._method_name](reply_msg)
+                result = self._forward_reply_hook[s._method_name](s, rpc['result'])
+                self._forward_sessions[session_tag].send_reply(result)
+            else:
+                self._forward_sessions[session_tag].send_reply("OK")
 
-            self._forward_sessions[session_tag].send_reply("OK")
             del self._forward_sessions[session_tag]
             logger.debug("@handle_oport_reply session:%s is deleted" % session_tag)
         else:
@@ -260,16 +273,17 @@ class P2PMqtt(object):
             self.topic_handlers[msg.topic](msg)
             return
 
+        topic_split = msg.topic.split('/')
+        if topic_split[0] == 'nodes_will':
+            self.topic_handlers['nodes_will/+'](msg)
+            return
 
         # Type 2: controller_tag/your_tag/action
         #         currently, action can be request/reply
         #         tag format: venderid_groupid_nodeid
-        topic_split = msg.topic.split('/')
-        whoami = topic_split[0]
-        whoareyou = topic_split[1]
+        # dest_tag = topic_split[0]
+        # source_tag = topic_split[1]
         action = topic_split[2]
-        logger.debug("whoami:%s, whoareyou:%s, action:%s" % (whoami, whoareyou, action))
-
         if action in self.action_handlers:
             logger.debug("start handle action")
             self.action_handlers[action](msg)
