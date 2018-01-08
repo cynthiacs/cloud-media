@@ -2,9 +2,9 @@ from p2p_mqtt.p2p_mqtt import P2PMqtt
 from db.collection_online import CollectionOnLine
 import logging.config
 
-_CONTROLLER_ID = "media_controller"
+# topic format: dest_tag/source_tag/_TOPIC_XXX
+_CONTROLLER_TAG = "media_controller"
 
-# topics: towho/fromwho/_TOPIC_XXX
 _TOPIC_REQUEST = 'request'
 _TOPIC_REPLY = 'reply'
 _TOPIC_NODES_CHANGE = 'nodes_change'
@@ -50,26 +50,47 @@ _p2pc = None
 _col_online = CollectionOnLine()
 
 
-def _publish_one_pusher(source_id, add_remove_update):
-    source_tag_split = source_id.split('_')
-    vid = source_tag_split[0]
-    gid = source_tag_split[1]
-    nid = source_tag_split[2]
+def _parse_source_tag(source_id):
+    if True:
+        vid, gid, nid = source_id.split('_')
+    else:
+        source_tag_split = source_id.split('_')
+        vid = source_tag_split[0]
+        gid = source_tag_split[1]
+        nid = "%s_%s" % (source_tag_split[2], source_tag_split[3])
+
+    # code block will not introduce new scope,
+    # which is not the same as C/CPP
+    return vid, gid, nid
+
+
+def _publish_one_pusher_to_all(source_tag, add_remove_update, node_info=None):
+    vid, gid, nid = _parse_source_tag(source_tag)
+
+    if node_info is None:
+        node_info = _col_online.find_one({"id": nid})
+        if node_info is None:
+            logger_mc.debug("publish one pusher failed!")
+            return
+
+    if node_info['role'] != _ROLE_PUSHER:
+        return
 
     to_who = "%s_%s_*" % (vid, _ROLE_PULLER)
-    payload = '{"%s":[{"id":%s}]}' % (add_remove_update, source_id)
-    _p2pc.mqtt_publish("%s/%s/%s" % (to_who, _CONTROLLER_ID, _TOPIC_NODES_CHANGE),
+    #payload = '{"%s":[{"id":%s}]}' % (add_remove_update, source_id)
+    payload = '{"%s":[%s]}' % (add_remove_update, node_info)
+    _p2pc.mqtt_publish("%s/%s/%s" % (to_who, _CONTROLLER_TAG, _TOPIC_NODES_CHANGE),
                        payload, qos=2, retain=False)
 
 
-def _publish_all_pusher(source_id):
+def _publish_all_pusher_to_one(source_tag):
     role_info = _col_online.find_role(role=_ROLE_PUSHER)
     payload = '{"%s": %s}' % (_CHANGE_ALL_ONLINE, role_info)
-    _p2pc.mqtt_publish("%s/%s/%s" % (source_id, _CONTROLLER_ID, _TOPIC_NODES_CHANGE),
+    _p2pc.mqtt_publish("%s/%s/%s" % (source_tag, _CONTROLLER_TAG, _TOPIC_NODES_CHANGE),
                        payload, qos=2, retain=False)
 
 
-def handle_online(source_id, params):
+def handle_online(source_tag, params):
     """
     mehtod: online
     params: {k:v, ...}
@@ -80,53 +101,46 @@ def handle_online(source_id, params):
         logger_mc.error("online: params format is incorrect.")
         return "ERROR"
 
-    _col_online.online(source_id, params)
+    vid, gid, nid = _parse_source_tag(source_tag)
+
+    _col_online.online(nid, params)
 
     role = params['role']
     if role == _ROLE_PULLER:
-        _publish_all_pusher(source_id)
+        _publish_all_pusher_to_one(source_tag)
     elif role == _ROLE_PUSHER:
-        _publish_one_pusher(source_id, _CHANGE_NEW_ONLINE)
+        _publish_one_pusher_to_all(source_tag, _CHANGE_NEW_ONLINE, params)
 
     return "OK"
 
 
-def handle_offline(source_id, params):
+def handle_offline(source_tag, params):
     """
     mehtod: offline
     params: null
     """
     logger_mc.info("@handle offline")
 
-    _col_online.offline(source_id)
-    source_tag_split = source_id.split('_')
-    vid = source_tag_split[0]
-    # gid = source_tag_split[1]
-    nid = source_tag_split[2]
-
+    vid, gid, nid = _parse_source_tag(source_tag)
     node_info = _col_online.find_one({"id": nid})
+    _col_online.offline(nid)
+
     if node_info is not None:
         # stupid to get the role in such an inefficient way
         node_role = node_info['role']
         if node_role == _ROLE_PUSHER:
-            _publish_one_pusher(source_id, _CHANGE_NEW_OFFLINE)
+            _publish_one_pusher_to_all(source_tag, _CHANGE_NEW_OFFLINE, node_info)
 
     return "OK"
 
 
 def handle_update_field(source_id, rpc_params):
-    source_tag_split = source_id.split('_')
-    vid = source_tag_split[0]
-    gid = source_tag_split[1]
-    nid = source_tag_split[2]
+    vid, gid, nid = _parse_source_tag(source_id)
 
     params = eval(rpc_params)
     _col_online.update(nid, params['field'], params['value'])
 
-    node_info = _col_online.find_one({"id": nid})
-    if node_info is not None:
-        if node_info['role'] == _ROLE_PUSHER:
-            _publish_one_pusher(source_id, _CHANGE_NEW_UPDATE)
+    _publish_one_pusher_to_all(source_id, _CHANGE_NEW_UPDATE, None)
 
     return "OK"
 
@@ -140,8 +154,8 @@ def handle_nodes_will(msg):
         _col_online.remove(nid)
         role = result['role']
         if role == _ROLE_PUSHER:
-            _publish_one_pusher("%s_%s_%s" % (result['vendor_id'], result['group_id'], nid),
-                                _CHANGE_NEW_OFFLINE)
+            _publish_one_pusher_to_all("%s_%s_%s" % (result['vendor_id'], result['group_id'], nid),
+                                       _CHANGE_NEW_OFFLINE, result)
 
 
 def hook_4_start_push_media(msg):
@@ -168,14 +182,14 @@ def handle_ali_notify(msg):
     role_info = _col_online.find_role(role=role)
     print("\t %s" % role_info)
     to_who = "%s_%s_%s" % (_NODE_VENDORID_DEFAULT, _NODE_GROUPID_DEFAULT, _TOPIC_NODES_CHANGE)
-    _p2pc.mqtt_publish("%s/%s/%s" % (to_who, _CONTROLLER_ID, _TOPIC_NODES_CHANGE), role_info, qos=2, retain=False)
+    _p2pc.mqtt_publish("%s/%s/%s" % (to_who, _CONTROLLER_TAG, _TOPIC_NODES_CHANGE), role_info, qos=2, retain=False)
 
 
 if __name__ == '__main__':
     logging.config.fileConfig('logging.conf')
     logger_mc = logging.getLogger(__name__)
 
-    _p2pc = P2PMqtt(broker_url="139.224.128.15", whoami=_CONTROLLER_ID)
+    _p2pc = P2PMqtt(broker_url="139.224.128.15", whoami=_CONTROLLER_TAG)
     _p2pc.register_rpc_handler(_REQUEST_ONLINE, handle_online)
     _p2pc.register_rpc_handler(_REQUEST_OFFLINE, handle_offline)
     #_p2pc.register_rpc_handler(_REQUEST_UPDATE_FIELD, handle_update_field)

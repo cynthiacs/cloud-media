@@ -83,11 +83,11 @@ class RpcSession(Session):
         self._listener = reply_listener
 
         topic_split = self._msg.topic.split('/')
-        self._dest_id = topic_split[0]
-        self._source_id = topic_split[1]
-        self.session_tag = self._dest_id + self._method_id
-        self.request_topic = "%s/%s/request" % (self._dest_id, self._source_id)
-        self.reply_topic = "%s/%s/reply" % (self._source_id, self._dest_id)
+        self._dest_tag = topic_split[0]
+        self._source_tag = topic_split[1]
+        self.session_tag = self._dest_tag + self._method_id
+        self.request_topic = "%s/%s/request" % (self._dest_tag, self._source_tag)
+        self.reply_topic = "%s/%s/reply" % (self._source_tag, self._dest_tag)
 
     def send_request(self):
         topic = self.request_topic
@@ -110,16 +110,16 @@ class ForwardSession(Session):
         Session.__init__(self, context, mqtt_msg)
 
         topic_split = self._msg.topic.split('/')
-        self._controller_id = topic_split[0]
-        self._source_id = topic_split[1]
-        self._dest_id = self._method_params['target-id']
+        self._controller_tag = topic_split[0]
+        self._source_tag = topic_split[1]
+        self._dest_tag = self._method_params['target-id']
 
         # self.session_tag = self._source_id + self._dest_id + self._method_id
-        self.session_tag = self._dest_id + self._method_id
-        self.iport_request_topic = "%s/%s/request" % (self._controller_id, self._source_id)
-        self.iport_reply_topic = "%s/%s/reply" % (self._source_id, self._controller_id)
-        self.oport_request_topic = "%s/%s/request" % (self._dest_id, self._controller_id)
-        self.oport_reply_topic = "%s/%s/reply" % (self._controller_id, self._dest_id)
+        self.session_tag = self._dest_tag + self._method_id
+        self.iport_request_topic = "%s/%s/request" % (self._controller_tag, self._source_tag)
+        self.iport_reply_topic = "%s/%s/reply" % (self._source_tag, self._controller_tag)
+        self.oport_request_topic = "%s/%s/request" % (self._dest_tag, self._controller_tag)
+        self.oport_reply_topic = "%s/%s/reply" % (self._controller_tag, self._dest_tag)
 
     def send_request(self):
         topic = self.oport_request_topic
@@ -143,9 +143,9 @@ class SessionManager(object):
         self._forward_reply_hook = {}
         self._jrpc_id = 0
 
-    def send_rpc_request(self, target_tag, source_tag, method, params, listener):
+    def send_rpc_request(self, dest_tag, source_tag, method, params, listener):
         msg = mqtt.MQTTMessage()
-        topic = target_tag + "/" + source_tag + "/request"
+        topic = dest_tag + "/" + source_tag + "/request"
         msg.topic = topic.encode('utf-8')
         method_id = str(self._jrpc_id)
         msg.payload = '{"jsonrpc":"2.0", "method":"%s", "params":%s,"id":"%s"}' % (
@@ -164,7 +164,7 @@ class SessionManager(object):
         if s._method_name in self._rpc_handler:
             logger.debug("_rpc_handler: %s " %
                          self._rpc_handler[s._method_name].__name__)
-            ret = self._rpc_handler[s._method_name](s._source_id, s._method_params)
+            ret = self._rpc_handler[s._method_name](s._source_tag, s._method_params)
             s.send_reply(ret)
             return
 
@@ -188,6 +188,7 @@ class SessionManager(object):
         if session_tag in self._rpc_sessions:
             s = self._rpc_sessions[session_tag]
             s.call_listener(reply_msg)
+            del self._rpc_sessions[session_tag]
         elif session_tag in self._forward_sessions:
             s = self._forward_sessions[session_tag]
             # reply hook has not implemented yet
