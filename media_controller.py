@@ -1,5 +1,4 @@
 from p2p_mqtt.p2p_mqtt import P2PMqtt
-from p2p_mqtt.p2p_mqtt import ForwardSession
 from db.collection_online import CollectionOnLine
 import logging.config
 
@@ -190,22 +189,13 @@ def handle_nodes_will(mqtt_msg):
 def handle_ali_notify(mqtt_msg):
     logger_mc.info("handle_ali_notify")
     print(repr(mqtt_msg))
-    """
+
     payload = eval(mqtt_msg.payload)
     status = payload["action"]
-    vid, gid, nid = payload["app"]
+    node_tag = payload["app"]
+    vid, gid, nid = node_tag.split('_')
     _col_online.update(nid, "stream_status", status)
-    _publish_one_pusher_to_all(payload["app"], _CHANGE_NEW_UPDATE, None)
-    """
-
-    """
-    role = _ROLE_PUSHER
-    print("publish all " + role + " 's info")
-    role_info = _col_online.find_role(role=role)
-    print("\t %s" % role_info)
-    to_who = "%s_%s_%s" % (_NODE_VENDORID_DEFAULT, _NODE_GROUPID_DEFAULT, _TOPIC_NODES_CHANGE)
-    _p2pc.mqtt_publish("%s/%s/%s" % (to_who, _CONTROLLER_TAG, _TOPIC_NODES_CHANGE), role_info, qos=2, retain=False)
-    """
+    _publish_one_pusher_to_all(node_tag, _CHANGE_NEW_UPDATE, None)
 
 
 if __name__ == '__main__':
