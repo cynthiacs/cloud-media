@@ -109,11 +109,24 @@ def cm_live_steams_notify():
     #if action is not None:
     #    _mqtt_publish(topic, action)
 
+    action = request.args.get("action")
+    app_name = request.args.get("appname")
+    stream_name = request.args.get("id")
+
+    # let controller do this  ...
+    #vid, gid, nid = app_name.split('_')
+    #_online_col.update(nid, "status", action)
+
+    payload = '{"action": %s, "app": %s, "stream": %s}' % (action, app_name, stream_name)
+    _mqtt_publish("media_controller/ali/notify", payload)
+
+    """
     node_id = request.args.get("id")
     status = request.args.get("action")
     _online_col.update(node_id, "status", status)
 
     _mqtt_publish("controller/ali/notify", "streams_notify")
+    """
 
     return ""
 

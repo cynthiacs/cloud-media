@@ -91,31 +91,31 @@ def _publish_all_pusher_to_one(source_tag):
                        payload, qos=2, retain=False)
 
 
-def handle_online(source_tag, params):
+def handle_online(source_tag, method_params):
     """
     mehtod: online
     params: {k:v, ...}
     """
     logger_mc.debug("@handle_online")
 
-    if not isinstance(params, dict):
+    if not isinstance(method_params, dict):
         logger_mc.error("online: params format is incorrect.")
         return "ERROR"
 
     vid, gid, nid = _parse_source_tag(source_tag)
 
-    _col_online.online(nid, params)
+    _col_online.online(nid, method_params)
 
-    role = params['role']
+    role = method_params['role']
     if role == _ROLE_PULLER:
         _publish_all_pusher_to_one(source_tag)
     elif role == _ROLE_PUSHER:
-        _publish_one_pusher_to_all(source_tag, _CHANGE_NEW_ONLINE, params)
+        _publish_one_pusher_to_all(source_tag, _CHANGE_NEW_ONLINE, method_params)
 
     return "OK"
 
 
-def handle_offline(source_tag, params):
+def handle_offline(source_tag, method_params):
     """
     mehtod: offline
     params: null
@@ -135,28 +135,15 @@ def handle_offline(source_tag, params):
     return "OK"
 
 
-def handle_update_field(source_id, rpc_params):
+def handle_update_field(source_id, method_params):
     vid, gid, nid = _parse_source_tag(source_id)
 
-    params = eval(rpc_params)
+    params = eval(method_params)
     _col_online.update(nid, params['field'], params['value'])
 
     _publish_one_pusher_to_all(source_id, _CHANGE_NEW_UPDATE, None)
 
     return "OK"
-
-
-def handle_nodes_will(msg):
-    logger_mc.debug('@handle_nodes_will')
-    print(repr(msg))
-    nid = str(msg.payload, encoding="utf-8")
-    result = _col_online.find_one({"id": nid})
-    if result is not None:
-        _col_online.remove(nid)
-        role = result['role']
-        if role == _ROLE_PUSHER:
-            _publish_one_pusher_to_all("%s_%s_%s" % (result['vendor_id'], result['group_id'], nid),
-                                       _CHANGE_NEW_OFFLINE, result)
 
 
 def hook_4_start_push_media(fsession):
@@ -179,20 +166,43 @@ def hook_4_start_push_media_reply(fsession, reply_result):
         return reply_result
 
 
-def hook_4_stop_push_media(msg):
-    print(repr(msg))
+def hook_4_stop_push_media(fsession):
+    print("hook_4_stop_push_media")
     return True
 
 
-def handle_ali_notify(msg):
+def handle_nodes_will(mqtt_msg):
+    logger_mc.debug('@handle_nodes_will')
+    print(repr(mqtt_msg))
+    nid = str(mqtt_msg.payload, encoding="utf-8")
+    result = _col_online.find_one({"id": nid})
+    if result is not None:
+        _col_online.remove(nid)
+        role = result['role']
+        if role == _ROLE_PUSHER:
+            _publish_one_pusher_to_all("%s_%s_%s" % (result['vendor_id'], result['group_id'], nid),
+                                       _CHANGE_NEW_OFFLINE, result)
+
+
+def handle_ali_notify(mqtt_msg):
     logger_mc.info("handle_ali_notify")
-    print(repr(msg))
+    print(repr(mqtt_msg))
+    """
+    payload = eval(mqtt_msg.payload)
+    status = payload["action"]
+    vid, gid, nid = payload["app"]
+    _col_online.update(nid, "status", status)
+    _publish_one_pusher_to_all(payload["app"], _CHANGE_NEW_UPDATE, None)
+    """
+
+    """
     role = _ROLE_PUSHER
     print("publish all " + role + " 's info")
     role_info = _col_online.find_role(role=role)
     print("\t %s" % role_info)
     to_who = "%s_%s_%s" % (_NODE_VENDORID_DEFAULT, _NODE_GROUPID_DEFAULT, _TOPIC_NODES_CHANGE)
     _p2pc.mqtt_publish("%s/%s/%s" % (to_who, _CONTROLLER_TAG, _TOPIC_NODES_CHANGE), role_info, qos=2, retain=False)
+    """
 
 
 if __name__ == '__main__':
@@ -204,13 +214,15 @@ if __name__ == '__main__':
     _p2pc.register_rpc_handler(_REQUEST_OFFLINE, handle_offline)
     #_p2pc.register_rpc_handler(_REQUEST_UPDATE_FIELD, handle_update_field)
 
+    # media_controller/broker/nodes_will
     _p2pc.register_topic_handler('nodes_will/+', handle_nodes_will)
+    _p2pc.register_topic_handler("media_controller/ali/notify", handle_ali_notify)
 
     _p2pc.register_forward_request_hook(_REQUEST_START_PUSH_MEDIA, hook_4_start_push_media)
-    _p2pc.register_forward_request_hook(_REQUEST_STOP_PUSH_MEDIA, hook_4_stop_push_media)
     _p2pc.register_forward_reply_hook(_REQUEST_START_PUSH_MEDIA, hook_4_start_push_media_reply)
 
-    #p2pc.register_topic_handler("controller/ali/notify", handle_ali_notify)
+    _p2pc.register_forward_request_hook(_REQUEST_STOP_PUSH_MEDIA, hook_4_stop_push_media)
+
     _p2pc.loop()
 
 

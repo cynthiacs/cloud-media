@@ -2,6 +2,7 @@
 Extended MQTT module to provide a P2P message feature.
 """
 import paho.mqtt.client as mqtt
+from paho.mqtt.client import topic_matches_sub
 import logging
 
 
@@ -111,6 +112,9 @@ class ForwardSession(Session):
         topic_split = self._msg.topic.split('/')
         self._controller_tag = topic_split[0]
         self._source_tag = topic_split[1]
+
+        if self._method_params is None:
+            raise "forward session must contain target-id in rpc method params"
 
         if 'target-id' in self._method_params:
             self._dest_tag = self._method_params['target-id']
@@ -239,9 +243,9 @@ class P2PMqtt(object):
     """
     P2PMqtt supports request and response mode based on MQTT
     """
-    def __init__(self, *, broker_url, whoami='controller'):
+    def __init__(self, *, broker_url, whoami='media_controller'):
         self._broker_url = broker_url
-        self._whoami = whoami
+        self._my_tag = whoami
 
         self._ext_mqttc = ExtMqtt(self)
 
@@ -273,6 +277,9 @@ class P2PMqtt(object):
             self.topic_handlers[msg.topic](msg)
             return
 
+        #if topic_matches_sub('nodes_will/+', msg.topic):
+        #    print("this is a nodes will")
+
         topic_split = msg.topic.split('/')
         if topic_split[0] == 'nodes_will':
             self.topic_handlers['nodes_will/+'](msg)
@@ -301,7 +308,7 @@ class P2PMqtt(object):
         self.topic_handlers[topic] = handler
 
     def send_rpc_request(self, target_tag, method, params, listener=None):
-        self._session_manager.send_rpc_request(target_tag, self._whoami, method, params, listener)
+        self._session_manager.send_rpc_request(target_tag, self._my_tag, method, params, listener)
 
     def register_rpc_handler(self, method_name, handler):
         if not callable(handler):
@@ -332,10 +339,10 @@ class P2PMqtt(object):
         self._ext_mqttc.on_message = self._on_message_wrapper
 
         try:
-            self._ext_mqttc.will_set('nodes_will/' + self._whoami, self._whoami, 2, False)
+            self._ext_mqttc.will_set('nodes_will/' + self._my_tag, self._my_tag, 2, False)
             self._ext_mqttc.connect(self._broker_url, 1883, 60)
-            self._ext_mqttc.sub(self._whoami + "/+/request", qos=2)
-            self._ext_mqttc.sub(self._whoami + "/+/reply", qos=2)
+            self._ext_mqttc.sub(self._my_tag + "/+/request", qos=2)
+            self._ext_mqttc.sub(self._my_tag + "/+/reply", qos=2)
             for topic in self.topic_handlers.keys():
                 self._ext_mqttc.sub(topic, qos=2)
 
