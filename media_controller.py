@@ -18,7 +18,6 @@ _REQUEST_UPDATE_FIELD = 'UpdateField'
 _REQUEST_START_PUSH_MEDIA = 'StartPushMedia'
 _REQUEST_STOP_PUSH_MEDIA = 'StopPushMedia'
 # old definition, use DB proxy in some of the RPCs
-# _REQUEST_NODES_UPDATE = 'nodes_update'
 # _REQUEST_NODES_FIND = 'nodes_find'
 
 # node's change for _TOPIC_NODES_CHANGE
@@ -78,7 +77,6 @@ def _publish_one_pusher_to_all(source_tag, add_remove_update, node_info=None):
         return
 
     to_who = "%s_%s_*" % (vid, _ROLE_PULLER)
-    #payload = '{"%s":[{"id":%s}]}' % (add_remove_update, source_id)
     payload = '{"%s":[%s]}' % (add_remove_update, node_info)
     _p2pc.mqtt_publish("%s/%s/%s" % (to_who, _CONTROLLER_TAG, _TOPIC_NODES_CHANGE),
                        payload, qos=2, retain=False)
@@ -136,10 +134,13 @@ def handle_offline(source_tag, method_params):
 
 
 def handle_update_field(source_id, method_params):
+    if not isinstance(method_params, dict):
+        logger_mc.error("online: params format is incorrect.")
+        return "ERROR"
+
     vid, gid, nid = _parse_source_tag(source_id)
 
-    params = eval(method_params)
-    _col_online.update(nid, params['field'], params['value'])
+    _col_online.update(nid, method_params['field'], method_params['value'])
 
     _publish_one_pusher_to_all(source_id, _CHANGE_NEW_UPDATE, None)
 
@@ -182,6 +183,8 @@ def handle_nodes_will(mqtt_msg):
         if role == _ROLE_PUSHER:
             _publish_one_pusher_to_all("%s_%s_%s" % (result['vendor_id'], result['group_id'], nid),
                                        _CHANGE_NEW_OFFLINE, result)
+    else:
+        print("can not find %s" % nid)
 
 
 def handle_ali_notify(mqtt_msg):
@@ -191,7 +194,7 @@ def handle_ali_notify(mqtt_msg):
     payload = eval(mqtt_msg.payload)
     status = payload["action"]
     vid, gid, nid = payload["app"]
-    _col_online.update(nid, "status", status)
+    _col_online.update(nid, "stream_status", status)
     _publish_one_pusher_to_all(payload["app"], _CHANGE_NEW_UPDATE, None)
     """
 
@@ -212,7 +215,7 @@ if __name__ == '__main__':
     _p2pc = P2PMqtt(broker_url="139.224.128.15", whoami=_CONTROLLER_TAG)
     _p2pc.register_rpc_handler(_REQUEST_ONLINE, handle_online)
     _p2pc.register_rpc_handler(_REQUEST_OFFLINE, handle_offline)
-    #_p2pc.register_rpc_handler(_REQUEST_UPDATE_FIELD, handle_update_field)
+    _p2pc.register_rpc_handler(_REQUEST_UPDATE_FIELD, handle_update_field)
 
     # media_controller/broker/nodes_will
     _p2pc.register_topic_handler('nodes_will/+', handle_nodes_will)
