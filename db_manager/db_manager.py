@@ -42,7 +42,7 @@ class DBManager(object):
         if Key.vendor.value in vid_gid_nid:
             db = vid_gid_nid[Key.vendor.value]
         else:
-            self.logger.error("[NOTE] The DB is None, Stopping operation")
+            self.logger.error("[NOTE] The DB is None, operation NOT ALLOWED")
             return False
 
         if Key.group.value in vid_gid_nid:
@@ -50,22 +50,33 @@ class DBManager(object):
         else:
             collection = Key.default_group.value
 
-        if Key.node.value in vid_gid_nid:
-            nid = vid_gid_nid[Key.node.value]
-            if nid == document[Key.id.value]:
-                self.logger.debug(db + ", " + collection + ", " + str(nid))
-                document_list = [document]
-                self.mongodb.insert(db=db, collection=collection, document=document_list)
+        if isinstance(document, list) and len(document) > 0:
+            self.logger.debug(db + ", " + collection)
+            self.mongodb.insert(db=db, collection=collection, document=document)
+        elif isinstance(document, list) and len(document) == 0:
+            self.logger.error("[NOTE] The document list is empty, NOTHING to insert, operation NOT ALLOWED")
+            return False
+        elif not isinstance(document, list):
+            if Key.node.value in vid_gid_nid:
+                nid = vid_gid_nid[Key.node.value]
+                if nid == document[Key.id.value]:
+                    self.logger.debug(db + ", " + collection + ", " + str(nid))
+                    document_list = [document]
+                    self.mongodb.insert(db=db, collection=collection, document=document_list)
+                else:
+                    self.logger.error("[NOTE] The node ID is NOT the document's nid, operation NOT ALLOWED")
+                    return False
             else:
-                self.logger.error("[NOTE] The node ID is NOT the document's nid, Insert Database NOT ALLOWED")
-                return False
+                if Key.id.value in document:
+                    self.logger.debug(db + ", " + collection + ", " + str(document[Key.id.value]))
+                    document_list = [document]
+                    self.mongodb.insert(db=db, collection=collection, document=document_list)
+                else:
+                    self.logger.error("[NOTE] The node ID is NOT Exist, operation NOT ALLOWED")
+                    return False
         else:
-            if len(document) > 0:
-                self.logger.debug(db + ", " + collection)
-                self.mongodb.insert(db=db, collection=collection, document=document)
-            else:
-                self.logger.error("[NOTE] The document list is empty, NOTHING to insert, operation NOT ALLOWED")
-                return False
+            self.logger.error("[NOTE] The document is not standard format, operation NOT ALLOWED")
+            return False
 
         return True
 
@@ -92,7 +103,7 @@ class DBManager(object):
         if Key.vendor.value in vid_gid_nid:
             db = vid_gid_nid[Key.vendor.value]
         else:
-            self.logger.error("[NOTE] The DB is NOT exist, Stopping operation")
+            self.logger.error("[NOTE] The DB is NOT exist, operation NOT ALLOWED")
             return
 
         if Key.group.value in vid_gid_nid:
@@ -139,7 +150,7 @@ class DBManager(object):
         if Key.vendor.value in vid_gid:
             db = vid_gid[Key.vendor.value]
         else:
-            self.logger.error("[NOTE] The DB is NOT exist, Stopping operation!")
+            self.logger.error("[NOTE] The DB is NOT exist, operation NOT ALLOWED")
             return
 
         if Key.group.value in vid_gid:
@@ -165,7 +176,7 @@ class DBManager(object):
         if Key.vendor.value in vid_gid_nid:
             db = vid_gid_nid[Key.vendor.value]
         else:
-            self.logger.error("[NOTE] The DB is NOT exist, Stopping operation")
+            self.logger.error("[NOTE] The DB is NOT exist, operation NOT ALLOWED")
             return
 
         if Key.group.value in vid_gid_nid:
@@ -194,13 +205,13 @@ class DBManager(object):
         if Key.vendor.value in vid_gid_src:
             db_src = vid_gid_src[Key.vendor.value]
         else:
-            self.logger.error("[NOTE] The DB source is NOT exist, Stopping operation")
+            self.logger.error("[NOTE] The DB source is NOT exist, operation NOT ALLOWED")
             return
 
         if Key.group.value in vid_gid_src:
             collection_src = vid_gid_src[Key.group.value]
         else:
-            self.logger.error("[NOTE] The collection source is None, Stopping operation")
+            self.logger.error("[NOTE] The collection source is None, operation NOT ALLOWED")
             return
 
         db_des = vid_gid_des[Key.vendor.value]
@@ -236,7 +247,7 @@ class DBManager(object):
         if Key.vendor.value in vid_gid_nid:
             db = vid_gid_nid[Key.vendor.value]
         else:
-            self.logger.error("[NOTE] The DB is NOT exist, Stopping operation")
+            self.logger.error("[NOTE] The DB is NOT exist, operation NOT ALLOWED")
             return
 
         if Key.group.value in vid_gid_nid:

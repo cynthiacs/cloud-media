@@ -40,6 +40,13 @@ if __name__ == '__main__':
                                 Key.date.value: _current_time_()},
                                {Key.id.value: "005", Key.nick.value: "Messi", Key.role.value: 'puller',
                                 Key.date.value: _current_time_()}])
+    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
+                     document={Key.id.value: "006", Key.nick.value: "Figo", Key.role.value: 'pusher',
+                               Key.date.value: _current_time_()})
+    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
+                     document=[])
+    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
+                     document={})
 
     result = dbManager.query(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
     for i in result:
