@@ -51,16 +51,16 @@ class DBManager(object):
             collection = Key.default_group.value
 
         if Key.node.value in vid_gid_nid:
-            node = vid_gid_nid[Key.node.value]
+            nid = vid_gid_nid[Key.node.value]
         else:
             self.logger.error("[NOTE] The node ID is None, Stopping operation")
             return False
 
-        if node != document[Key.id.value]:
-            self.logger.error("[NOTE] The node ID is NOT the document's nodeID, Insert Database NOT ALLOWED")
+        if nid != document[Key.id.value]:
+            self.logger.error("[NOTE] The node ID is NOT the document's nid, Insert Database NOT ALLOWED")
             return False
 
-        self.logger.debug(db + ", " + collection + ", " + node)
+        self.logger.debug(db + ", " + collection + ", " + str(nid))
         self.mongodb.insert(db=db, collection=collection, document=document)
         return True
 
@@ -92,24 +92,24 @@ class DBManager(object):
             collection = Key.default_group.value
 
         if Key.node.value in vid_gid_nid:
-            node = vid_gid_nid[Key.node.value]
+            nid = vid_gid_nid[Key.node.value]
         else:
             self.logger.warning("[NOTE] Update ANY documents that matching conditions")
-            node = None
+            nid = None
 
-        self.logger.debug(db + ", " + str(collection) + ", " + str(node))
+        self.logger.debug(db + ", " + str(collection) + ", " + str(nid))
         """
-        may be other conditions merge nodeID and condition, issue: #000002
+        may be other conditions merge nid and condition, issue: #000002
         """
-        if node is not None:
+        if nid is not None:
             if condition is not None:
                 """
                 fixed #000002 merged conditions
                 """
-                node = {Key.id.value: node}
+                node = {Key.id.value: nid}
                 final_conditions = {**node, **condition}
             else:
-                final_conditions = {Key.id.value: node}
+                final_conditions = {Key.id.value: nid}
         else:
             final_conditions = condition
 
@@ -165,12 +165,12 @@ class DBManager(object):
             collection = Key.default_group.value
 
         if Key.node.value in vid_gid_nid:
-            node = vid_gid_nid[Key.node.value]
+            nid = vid_gid_nid[Key.node.value]
         else:
-            node = None
+            nid = None
 
-        self.logger.debug(db + ", " + collection + ", " + str(node))
-        result = self.mongodb.query(db=db, collection=collection, node=node, condition=condition)
+        self.logger.debug(db + ", " + collection + ", " + str(nid))
+        result = self.mongodb.query(db=db, collection=collection, node=nid, condition=condition)
         return list(result)
 
     def move(self, vid_gid_src=None, vid_gid_des=None, condition=None):
@@ -241,11 +241,12 @@ class DBManager(object):
             return
 
         if Key.node.value in vid_gid_nid:
-            node = vid_gid_nid[Key.node.value]
-            self.logger.debug(db + ", " + collection + ", " + node)
-            self.mongodb.remove_one(db=db, collection=collection, node=node)
+            nid = vid_gid_nid[Key.node.value]
+            self.logger.debug(db + ", " + collection + ", " + str(nid))
+            self.mongodb.remove_one(db=db, collection=collection, node=nid)
             return
         else:
+            self.logger.debug(db + ", " + collection + ", " + str(condition))
             self.mongodb.remove_collection(db=db, collection=collection, condition=condition)
             return
 
