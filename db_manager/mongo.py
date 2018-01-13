@@ -37,7 +37,10 @@ class MongoDB(object):
         """
         self._db = self.db_clint[db]
         self._db_collection = self._db[collection]
-        self._db_collection.update(condition, {"$set": {key: value}}, multi=True)
+        if condition is None:
+            self._db_collection.update({}, {"$set": {key: value}}, multi=True)
+        else:
+            self._db_collection.update(condition, {"$set": {key: value}}, multi=True)
 
     def count(self, db=None, collection=None, condition=None):
         """
@@ -83,8 +86,6 @@ class MongoDB(object):
         self._db = self.db_clint[db]
         self._db_collection = self._db[collection]
         self._db_collection.remove({Key.id.value: node}, False)
-        for i in self._db_collection.find():
-            print(i)
 
     def remove_collection(self, db=None, collection=None, condition=None):
         """
@@ -100,9 +101,6 @@ class MongoDB(object):
             self._db_collection.drop()
         else:
             self._db_collection.remove(condition)
-
-        for i in self._db_collection.find():
-            print(i)
 
     def remove_db(self, db=None):
         """

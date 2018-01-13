@@ -102,9 +102,17 @@ class DBManager(object):
         may be other conditions merge nodeID and condition, issue: #000002
         """
         if node is not None:
-            final_conditions = {Key.id.value: node}  # + condition
+            if condition is not None:
+                """
+                fixed #000002 merged conditions
+                """
+                node = {Key.id.value: node}
+                final_conditions = {**node, **condition}
+            else:
+                final_conditions = {Key.id.value: node}
         else:
             final_conditions = condition
+
         self.mongodb.update(db=db, collection=collection, condition=final_conditions, key=key, value=value)
 
     def count(self, vid_gid=None, condition=None):

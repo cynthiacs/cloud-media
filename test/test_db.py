@@ -10,6 +10,12 @@ def _current_time_():
     return date
 
 
+def _merge_(param=None):
+    d1 = {'id': '001', 'date': 'mmm'}
+    d2 = {**d1, **param}
+    print("MERGE" + str(d2))
+
+
 if __name__ == '__main__':
     print("test_DB")
     dbManager = DBManager(host='127.0.0.1', port=27017)
@@ -42,7 +48,7 @@ if __name__ == '__main__':
     print("count: " + str(result))
 
     print("update node")
-    dbManager.update(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '001'},
+    dbManager.update(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
                      key=Key.location.value, value='shanghai')
     result = dbManager.query(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
     for i in result:
@@ -73,7 +79,7 @@ if __name__ == '__main__':
     print("move: ")
     dbManager.move(vid_gid_src={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
                    vid_gid_des={Key.vendor.value: 'VendorA', Key.group.value: 'GroupB'},
-                   condition={Key.role.value: 30})
+                   condition={Key.role.value: 'puller'})
     print("moved GroupA: ")
     result = dbManager.query(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
     for i in result:
