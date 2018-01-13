@@ -224,13 +224,14 @@ class DBManager(object):
         """
           fetch and insert the documents with matching conditions to the target collection
         """
-        for i in result:
-            nid = i[Key.id.value]
-            self.insert({Key.vendor.value: db_des, Key.group.value: collection_des, Key.node.value: nid}, i)
-        """
-          remove documents with matching conditions
-        """
-        self.remove({'vendor': db_src, 'group': collection_src}, condition=condition)
+        if len(result) > 0:
+            self.insert({Key.vendor.value: db_des, Key.group.value: collection_des}, result)
+            """
+            remove documents with matching conditions
+            """
+            self.remove({'vendor': db_src, 'group': collection_src}, condition=condition)
+        else:
+            self.logger.error("[NOTE] query with matching conditions is empty, operation NOT NEED")
 
     def remove(self, vid_gid_nid=None, condition=None):
         """
