@@ -25,6 +25,7 @@ if __name__ == '__main__':
     dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '001'},
                      document={Key.id.value: "001", Key.nick.value: "Ronald", Key.role.value: 'pusher',
                                Key.date.value: _current_time_()})
+    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '001'})
 
     dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '002'},
                      document={Key.id.value: "002", Key.nick.value: "Meta", Key.role.value: 'pusher',
@@ -33,12 +34,12 @@ if __name__ == '__main__':
     dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '003'},
                      document={Key.id.value: "003", Key.nick.value: "Raul", Key.role.value: 'puller',
                                Key.date.value: _current_time_()})
-    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '004'},
-                     document={Key.id.value: "004", Key.nick.value: "Figo", Key.role.value: 'pusher',
-                               Key.date.value: _current_time_()})
-    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '005'},
-                     document={Key.id.value: "005", Key.nick.value: "Messi", Key.role.value: 'puller',
-                               Key.date.value: _current_time_()})
+
+    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
+                     document=[{Key.id.value: "004", Key.nick.value: "Figo", Key.role.value: 'pusher',
+                                Key.date.value: _current_time_()},
+                               {Key.id.value: "005", Key.nick.value: "Messi", Key.role.value: 'puller',
+                                Key.date.value: _current_time_()}])
 
     result = dbManager.query(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
     for i in result:
@@ -46,6 +47,9 @@ if __name__ == '__main__':
 
     result = dbManager.count(vid_gid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
     print("count: " + str(result))
+
+    dbManager.update(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
+                     value='shanghai')
 
     print("update node")
     dbManager.update(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
@@ -55,7 +59,7 @@ if __name__ == '__main__':
         print(str(i))
     print("update condition")
     dbManager.update(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
-                     condition={Key.location.value: "shanghai"}, key='mm', value='puller')
+                     condition={Key.role.value: 'puller'}, key='mm', value='puller')
     result = dbManager.query(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
     for i in result:
         print(str(i))

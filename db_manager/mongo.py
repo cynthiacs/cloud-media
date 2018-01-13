@@ -23,7 +23,7 @@ class MongoDB(object):
         """
         self._db = self.db_clint[db]
         self._db_collection = self._db[collection]
-        self._db_collection.insert_one(document)
+        self._db_collection.insert_many(document)
 
     def update(self, db=None, collection=None, condition=None, key=None, value=None):
         """

@@ -35,14 +35,14 @@ class DBManager(object):
             self.logger.error("[NOTE] vid_gid_nid is NOT the dic instance")
             return False
 
-        if not isinstance(document, dict):
-            self.logger.error("[NOTE] document is NOT the dic instance")
+        if document is None:
+            self.logger.error("[NOTE] The document is None, NOTHING to insert, operation NOT ALLOWED")
             return False
 
         if Key.vendor.value in vid_gid_nid:
             db = vid_gid_nid[Key.vendor.value]
         else:
-            self.logger.error("[NOTE] The DB is NOT exist, Stopping operation")
+            self.logger.error("[NOTE] The DB is None, Stopping operation")
             return False
 
         if Key.group.value in vid_gid_nid:
@@ -52,16 +52,21 @@ class DBManager(object):
 
         if Key.node.value in vid_gid_nid:
             nid = vid_gid_nid[Key.node.value]
+            if nid == document[Key.id.value]:
+                self.logger.debug(db + ", " + collection + ", " + str(nid))
+                document_list = [document]
+                self.mongodb.insert(db=db, collection=collection, document=document_list)
+            else:
+                self.logger.error("[NOTE] The node ID is NOT the document's nid, Insert Database NOT ALLOWED")
+                return False
         else:
-            self.logger.error("[NOTE] The node ID is None, Stopping operation")
-            return False
+            if len(document) > 0:
+                self.logger.debug(db + ", " + collection)
+                self.mongodb.insert(db=db, collection=collection, document=document)
+            else:
+                self.logger.error("[NOTE] The document list is empty, NOTHING to insert, operation NOT ALLOWED")
+                return False
 
-        if nid != document[Key.id.value]:
-            self.logger.error("[NOTE] The node ID is NOT the document's nid, Insert Database NOT ALLOWED")
-            return False
-
-        self.logger.debug(db + ", " + collection + ", " + str(nid))
-        self.mongodb.insert(db=db, collection=collection, document=document)
         return True
 
     def update(self, vid_gid_nid=None, condition=None, key=None, value=None):
@@ -78,6 +83,10 @@ class DBManager(object):
         self.logger.debug("update")
         if not isinstance(vid_gid_nid, dict):
             self.logger.error("[NOTE] vid_gid_nid is NOT the dic instance")
+            return
+
+        if key is None:
+            self.logger.error("[NOTE] The key is None, NOTHING to be update, operation NOT ALLOWED ")
             return
 
         if Key.vendor.value in vid_gid_nid:
