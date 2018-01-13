@@ -8,7 +8,7 @@ class DBManager(object):
     """
     DBManager:
     support external database manager
-    @:parameter host:127.0.0.1'
+    @:parameter host:127.0.0.1
     @:parameter port:27017
     """
 
@@ -73,7 +73,7 @@ class DBManager(object):
         :param condition:{Key.location.value: "shanghai"}
         :param key: exist or new
         :param value: update or insert
-        :return:
+        :return:None
         """
         self.logger.debug("update")
         if not isinstance(vid_gid_nid, dict):
@@ -99,7 +99,7 @@ class DBManager(object):
 
         self.logger.debug(db + ", " + str(collection) + ", " + str(node))
         """
-        may be other conditions merge nodeID and condition issue: #000002
+        may be other conditions merge nodeID and condition, issue: #000002
         """
         if node is not None:
             final_conditions = {Key.id.value: node}  # + condition
@@ -112,7 +112,7 @@ class DBManager(object):
         count documents with matching conditions in one collection
         :param vid_gid:{Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'}
         :param condition:{"location": "shanghai"}
-        :return:
+        :return:count
         """
         self.logger.debug("count")
         if not isinstance(vid_gid, dict):
@@ -170,8 +170,8 @@ class DBManager(object):
         move documents with matching conditions from source collection(vid_gid_src) to target collection(vid_gid_des)
         :param vid_gid_src:{Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'}
         :param vid_gid_des:{Key.vendor.value: 'VendorA', Key.group.value: 'GroupB'}
-        :param condition:{"age": 30}
-        :return:
+        :param condition:{"location": "shanghai"}
+        :return:None
         """
         self.logger.debug("move")
         if Key.vendor.value in vid_gid_src:
@@ -190,11 +190,11 @@ class DBManager(object):
         collection_des = vid_gid_des[Key.group.value]
 
         """
-          document query matching conditions
+          query documents with matching conditions
         """
         result = self.query({Key.vendor.value: db_src, Key.group.value: collection_src}, condition=condition)
         """
-          fetch documents with matching conditions，insert the target collection
+          fetch and insert the documents with matching conditions to the target collection
         """
         for i in result:
             nid = i[Key.id.value]
@@ -227,7 +227,7 @@ class DBManager(object):
         else:
             self.logger.warning("[NOTE] remove db")
             """
-            may be other conditions merge nodeID and condition issue: #000001
+            remove the whole database, issue: #000001
             """
             self.mongodb.remove_db(db=db)  # ????
             return
@@ -243,7 +243,7 @@ class DBManager(object):
 
     def close(self):
         """
-        disconnect the database host
+        disconnect the database from host
         :return: None
         """
         self.logger.debug("close")
