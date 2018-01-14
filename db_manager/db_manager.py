@@ -51,7 +51,7 @@ class DBManager(object):
             collection = Key.default_group.value
 
         if isinstance(document, list) and len(document) > 0:
-            self.logger.debug(db + ", " + collection)
+            self.logger.debug(str(db) + ", " + str(collection))
             self.mongodb.insert(db=db, collection=collection, document=document)
         elif isinstance(document, list) and len(document) == 0:
             self.logger.error("[NOTE] The document list is empty, NOTHING to insert, operation NOT ALLOWED")
@@ -60,7 +60,7 @@ class DBManager(object):
             if Key.node.value in vid_gid_nid:
                 nid = vid_gid_nid[Key.node.value]
                 if nid == document[Key.id.value]:
-                    self.logger.debug(db + ", " + collection + ", " + str(nid))
+                    self.logger.debug(str(db) + ", " + str(collection) + ", " + str(nid))
                     document_list = [document]
                     self.mongodb.insert(db=db, collection=collection, document=document_list)
                 else:
@@ -68,7 +68,7 @@ class DBManager(object):
                     return False
             else:
                 if Key.id.value in document:
-                    self.logger.debug(db + ", " + collection + ", " + str(document[Key.id.value]))
+                    self.logger.debug(str(db) + ", " + str(collection) + ", " + str(document[Key.id.value]))
                     document_list = [document]
                     self.mongodb.insert(db=db, collection=collection, document=document_list)
                 else:
@@ -109,7 +109,7 @@ class DBManager(object):
         if Key.group.value in vid_gid_nid:
             collection = vid_gid_nid[Key.group.value]
         else:
-            collection = Key.default_group.value
+            collection = None  # Key.default_group.value
 
         if Key.node.value in vid_gid_nid:
             nid = vid_gid_nid[Key.node.value]
@@ -117,7 +117,7 @@ class DBManager(object):
             self.logger.warning("[NOTE] Update ANY documents that matching conditions")
             nid = None
 
-        self.logger.debug(db + ", " + str(collection) + ", " + str(nid))
+        self.logger.debug(str(db) + ", " + str(collection) + ", " + str(nid))
         """
         may be other conditions merge nid and condition, issue: #000002
         """
@@ -156,9 +156,9 @@ class DBManager(object):
         if Key.group.value in vid_gid:
             collection = vid_gid[Key.group.value]
         else:
-            collection = Key.default_group.value
+            collection = None  # Key.default_group.value
 
-        self.logger.debug(db + ", " + collection + ", " + str(condition))
+        self.logger.debug(str(db) + ", " + str(collection) + ", " + str(condition))
         return self.mongodb.count(db, collection, condition)
 
     def query(self, vid_gid_nid=None, condition=None):
@@ -182,14 +182,14 @@ class DBManager(object):
         if Key.group.value in vid_gid_nid:
             collection = vid_gid_nid[Key.group.value]
         else:
-            collection = Key.default_group.value
+            collection = None  # Key.default_group.value
 
         if Key.node.value in vid_gid_nid:
             nid = vid_gid_nid[Key.node.value]
         else:
             nid = None
 
-        self.logger.debug(db + ", " + collection + ", " + str(nid))
+        self.logger.debug(str(db) + ", " + str(collection) + ", " + str(nid))
         result = self.mongodb.query(db=db, collection=collection, node=nid, condition=condition)
         return list(result)
 
@@ -263,11 +263,11 @@ class DBManager(object):
 
         if Key.node.value in vid_gid_nid:
             nid = vid_gid_nid[Key.node.value]
-            self.logger.debug(db + ", " + collection + ", " + str(nid))
+            self.logger.debug(str(db) + ", " + str(collection) + ", " + str(nid))
             self.mongodb.remove_one(db=db, collection=collection, node=nid)
             return
         else:
-            self.logger.debug(db + ", " + collection + ", " + str(condition))
+            self.logger.debug(str(db) + ", " + str(collection) + ", " + str(condition))
             self.mongodb.remove_collection(db=db, collection=collection, condition=condition)
             return
 

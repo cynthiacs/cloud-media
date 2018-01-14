@@ -52,6 +52,10 @@ if __name__ == '__main__':
     for i in result:
         print(str(i))
 
+    result = dbManager.query(vid_gid_nid={Key.vendor.value: 'VendorA'}, condition={Key.nick.value: "Figo"})
+    print("db query condition: ")
+    for i in result:
+        print(str(i))
     result = dbManager.count(vid_gid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
     print("count: " + str(result))
 
@@ -90,7 +94,7 @@ if __name__ == '__main__':
     print("move: ")
     dbManager.move(vid_gid_src={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
                    vid_gid_des={Key.vendor.value: 'VendorA', Key.group.value: 'GroupB'},
-                   condition={Key.role.value: 'puller'})
+                   condition={Key.nick.value: 'Figo'})
     print("moved GroupA: ")
     result = dbManager.query(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
     for i in result:
@@ -99,6 +103,16 @@ if __name__ == '__main__':
     result = dbManager.query(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupB'})
     for i in result:
         print(str(i))
+    print("query db: ")
+    result = dbManager.query(vid_gid_nid={Key.vendor.value: 'VendorA'}, condition={Key.role.value: "pusher"})
+    for i in result:
+        print(str(i))
+
+    result = dbManager.count(vid_gid={Key.vendor.value: 'VendorA'},
+                             condition={Key.nick.value: "Figo"})
+    print("db condition count: " + str(result))
+    result = dbManager.count(vid_gid={Key.vendor.value: 'VendorA'})
+    print("db count: " + str(result))
 
     result = dbManager.query(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
                              condition={Key.location.value: "shanghai"})

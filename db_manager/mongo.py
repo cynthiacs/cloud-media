@@ -36,11 +36,21 @@ class MongoDB(object):
         :return:
         """
         self._db = self.db_clint[db]
-        self._db_collection = self._db[collection]
-        if condition is None:
-            self._db_collection.update({}, {"$set": {key: value}}, multi=True)
+        if collection is not None:
+            self._db_collection = self._db[collection]
+            if condition is None:
+                self._db_collection.update({}, {"$set": {key: value}}, multi=True)
+            else:
+                self._db_collection.update(condition, {"$set": {key: value}}, multi=True)
         else:
-            self._db_collection.update(condition, {"$set": {key: value}}, multi=True)
+            collection_list = self._db.collection_names()
+            if len(collection_list) > 0:
+                for coll in collection_list:
+                    self._db_collection = self._db[coll]
+                    if condition is None:
+                        self._db_collection.update({}, {"$set": {key: value}}, multi=True)
+                    else:
+                        self._db_collection.count(condition, {"$set": {key: value}}, multi=True)
 
     def count(self, db=None, collection=None, condition=None):
         """
@@ -51,12 +61,27 @@ class MongoDB(object):
         :return:
         """
         self._db = self.db_clint[db]
-        self._db_collection = self._db[collection]
-        if condition is None:
-            result = self._db_collection.count()
+        if collection is not None:
+            self._db_collection = self._db[collection]
+            if condition is None:
+                result = self._db_collection.count()
+            else:
+                result = self._db_collection.count(condition)
+            return result
         else:
-            result = self._db_collection.count(condition)
-        return result
+            collection_list = self._db.collection_names()
+            result = 0
+            if len(collection_list) > 0:
+                for coll in collection_list:
+                    self._db_collection = self._db[coll]
+                    if condition is None:
+                        result_condition = self._db_collection.count()
+                    else:
+                        result_condition = self._db_collection.count(condition)
+                    result += result_condition
+                return result
+            else:
+                return result
 
     def query(self, db=None, collection=None, node=None, condition=None):
         """
@@ -68,12 +93,34 @@ class MongoDB(object):
         :return:
         """
         self._db = self.db_clint[db]
-        self._db_collection = self._db[collection]
-        if node is None:
-            result = self._db_collection.find(condition)
+        result = []
+        if collection is not None:
+            self._db_collection = self._db[collection]
+            if condition is not None:
+                if node is None:
+                    result = self._db_collection.find(condition)
+                else:
+                    result = self._db_collection.find({Key.id.value: node}, condition)
+                return result
+            else:
+                if node is None:
+                    result = self._db_collection.find()
+                else:
+                    result = self._db_collection.find({Key.id.value: node})
+                return result
         else:
-            result = self._db_collection.find({Key.id.value: node}, condition)
-        return result
+            collection_list = self._db.collection_names()
+            if len(collection_list) > 0:
+                for coll in collection_list:
+                    self._db_collection = self._db[coll]
+                    if condition is None:
+                        result_condition = self._db_collection.find()
+                    else:
+                        result_condition = self._db_collection.find(condition)
+                    result += result_condition
+                return result
+            else:
+                return result
 
     def remove_one(self, db=None, collection=None, node=None):
         """
