@@ -143,11 +143,23 @@ class MongoDB(object):
         :return:
         """
         self._db = self.db_clint[db]
-        self._db_collection = self._db[collection]
-        if condition is None:
-            self._db_collection.drop()
+        if collection is not None:
+            self._db_collection = self._db[collection]
+            if condition is None:
+                self._db_collection.drop()
+            else:
+                self._db_collection.remove(condition)
         else:
-            self._db_collection.remove(condition)
+            collection_list = self._db.collection_names()
+            if len(collection_list) > 0:
+                for coll in collection_list:
+                    self._db_collection = self._db[coll]
+                    if condition is None:
+                        self._db_collection.drop()
+                    else:
+                        self._db_collection.remove(condition)
+            else:
+                return
 
     def remove_db(self, db=None):
         """
@@ -156,7 +168,7 @@ class MongoDB(object):
         :return:
         """
         self._db = self.db_clint[db]
-        self._db.drop()
+        self._db.dropDatabase()
 
     def close(self):
         """

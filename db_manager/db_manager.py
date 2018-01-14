@@ -214,8 +214,16 @@ class DBManager(object):
             self.logger.error("[NOTE] The collection source is None, operation NOT ALLOWED")
             return
 
-        db_des = vid_gid_des[Key.vendor.value]
-        collection_des = vid_gid_des[Key.group.value]
+        if Key.vendor.value in vid_gid_des:
+            db_des = vid_gid_des[Key.vendor.value]
+        else:
+            self.logger.error("[NOTE] The target DB is None, operation NOT ALLOWED")
+            return
+
+        if Key.group.value in vid_gid_des:
+            collection_des = vid_gid_des[Key.group.value]
+        else:
+            collection_des = Key.default_group.value
 
         """
           query documents with matching conditions
@@ -257,9 +265,10 @@ class DBManager(object):
             self.logger.warning("[NOTE] remove db")
             """
             remove the whole database, issue: #000001
-            """
             self.mongodb.remove_db(db=db)  # ????
             return
+            """
+            collection = None
 
         if Key.node.value in vid_gid_nid:
             nid = vid_gid_nid[Key.node.value]

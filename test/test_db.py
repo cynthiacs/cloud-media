@@ -20,6 +20,7 @@ if __name__ == '__main__':
     print("test_DB")
     dbManager = DBManager(host='127.0.0.1', port=27017)
 
+    # dbManager.remove({Key.vendor.value: 'VendorA'}) issue: #000001
     dbManager.remove({Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
     dbManager.remove({Key.vendor.value: 'VendorA', Key.group.value: 'GroupB'})
     dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '001'},
