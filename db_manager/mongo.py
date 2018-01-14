@@ -25,23 +25,22 @@ class MongoDB(object):
         self._db_collection = self._db[collection]
         self._db_collection.insert_many(document)
 
-    def update(self, db=None, collection=None, condition=None, key=None, value=None):
+    def update(self, db=None, collection=None, condition=None, key_value=None):
         """
         update documents with matching conditions
         :param db:
         :param collection:
         :param condition:
-        :param key:
-        :param value:
+        :param key_value:
         :return:
         """
         self._db = self.db_clint[db]
         if collection is not None:
             self._db_collection = self._db[collection]
             if condition is None:
-                self._db_collection.update({}, {"$set": {key: value}}, multi=True)
+                self._db_collection.update({}, {"$set": key_value}, multi=True)
             else:
-                self._db_collection.update(condition, {"$set": {key: value}}, multi=True)
+                self._db_collection.update(condition, {"$set": key_value}, multi=True)
         else:
             collection_list = self._db.collection_names()
             if len(collection_list) > 0:

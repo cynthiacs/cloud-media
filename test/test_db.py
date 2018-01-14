@@ -61,23 +61,23 @@ if __name__ == '__main__':
     print("count: " + str(result))
 
     dbManager.update(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
-                     value='shanghai')
+                     key_value={})
 
     print("update node")
     dbManager.update(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
-                     key=Key.location.value, value='shanghai')
+                     key_value={Key.location.value: 'shanghai'})
     result = dbManager.query(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
     for i in result:
         print(str(i))
     print("update condition")
     dbManager.update(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
-                     condition={Key.role.value: 'puller'}, key='mm', value='puller')
+                     condition={Key.role.value: 'puller'}, key_value={'mm': 'AA', 'nn': 'BB'})
     result = dbManager.query(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
     for i in result:
         print(str(i))
     print("update condition node")
     dbManager.update(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '002'},
-                     condition={Key.location.value: "shanghai"}, key=Key.role.value, value='pusher')
+                     condition={Key.location.value: "shanghai"}, key_value={Key.role.value: 'pusher'})
     result = dbManager.query(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
     for i in result:
         print(str(i))

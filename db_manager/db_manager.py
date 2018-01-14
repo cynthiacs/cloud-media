@@ -80,24 +80,27 @@ class DBManager(object):
 
         return True
 
-    def update(self, vid_gid_nid=None, condition=None, key=None, value=None):
+    def update(self, vid_gid_nid=None, condition=None, key_value=None):
         """
         update the value of the KEY when documents with matching conditions,
         if the KEY exist, update the key'svalue
         or insert the key
         :param vid_gid_nid:{Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '001'}
         :param condition:{Key.location.value: "shanghai"}
-        :param key: exist or new
-        :param value: update or insert
+        :param key_value:exist or new
         :return:None
         """
         self.logger.debug("update")
         if not isinstance(vid_gid_nid, dict):
-            self.logger.error("[NOTE] vid_gid_nid is NOT the dic instance")
+            self.logger.error("[NOTE] vid_gid_nid is NOT the dic instance, operation NOT ALLOWED")
             return
 
-        if key is None:
-            self.logger.error("[NOTE] The key is None, NOTHING to be update, operation NOT ALLOWED ")
+        if not isinstance(key_value, dict):
+            self.logger.error("[NOTE] The key_value is NOT the dic instance, operation NOT ALLOWED")
+            return
+
+        if len(key_value) == 0:
+            self.logger.error("[NOTE] The key_value is empty, operation NOT ALLOWED")
             return
 
         if Key.vendor.value in vid_gid_nid:
@@ -133,7 +136,7 @@ class DBManager(object):
         else:
             final_conditions = condition
 
-        self.mongodb.update(db=db, collection=collection, condition=final_conditions, key=key, value=value)
+        self.mongodb.update(db=db, collection=collection, condition=final_conditions, key_value=key_value)
 
     def count(self, vid_gid=None, condition=None):
         """
