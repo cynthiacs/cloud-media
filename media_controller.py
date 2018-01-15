@@ -154,6 +154,7 @@ def hook_4_start_push_media(fsession):
         False: the request failed directly, and reply ERROR
     """
     # TODO: check permission
+    # TODO: check the status is publish or not
     # add url to the forward payload
     fsession.payload["params"]["url"] = fsession.push_url_rtmp
     return True
@@ -161,13 +162,16 @@ def hook_4_start_push_media(fsession):
 
 def hook_4_start_push_media_reply(fsession, reply_result):
     if reply_result == "OK":
-        return "{'url':'%s'}" % fsession.pull_url_rtmp
+        final_result = "{'url':'%s'}" % fsession.pull_url_rtmp
+        return fsession.async_reply('publish', final_result)
     else:
-        return reply_result
+        return fsession.sync_reply(reply_result)
 
 
 def hook_4_stop_push_media(fsession):
     print("hook_4_stop_push_media")
+    # check the count filed to determine whether forward is needed
+    #
     return True
 
 
@@ -195,7 +199,10 @@ def handle_ali_notify(mqtt_msg):
     node_tag = payload["app"]
     vid, gid, nid = node_tag.split('_')
     _col_online.update(nid, "stream_status", status)
-    _publish_one_pusher_to_all(node_tag, _CHANGE_NEW_UPDATE, None)
+
+    stag = "%s/%s" % (node_tag, status)
+    _p2pc._session_manager.signal(stag)
+    #_publish_one_pusher_to_all(node_tag, _CHANGE_NEW_UPDATE, None)
 
 
 if __name__ == '__main__':

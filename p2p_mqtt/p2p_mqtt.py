@@ -4,6 +4,7 @@ Extended MQTT module to provide a P2P message feature.
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import topic_matches_sub
 import logging
+from enum import Enum
 
 
 __all__ = ('P2PMqtt', 'ForwardSession',)
@@ -105,6 +106,9 @@ class RpcSession(Session):
         self.send(self.reply_topic, payload)
 
 
+#class ReplyType(Enum):
+
+
 class ForwardSession(Session):
     def __init__(self, context, mqtt_msg):
         Session.__init__(self, context, mqtt_msg)
@@ -136,6 +140,8 @@ class ForwardSession(Session):
         self.pull_url_flv = "http://push.yangxudong.com/%s/%s.flv" % (app_name, stream_name)
         self.pull_url_hls = "http://push.yangxudong.com/%s/%s.m3u8" % (app_name, stream_name)
 
+        self.pending_replies = {}
+
     def send_request(self):
         topic = self.oport_request_topic
         self.send(topic, str(self.payload))
@@ -148,6 +154,22 @@ class ForwardSession(Session):
             payload = '{"jsonrpc": "2.0", "result": "%s", "id": "%s"}' % (result, self._method_id)
         self.send(topic, payload)
 
+    def sync_reply(self, res):
+        self.send_reply(res)
+        return None
+
+    def async_reply(self, action, final_result):
+        signal_tag = "%s/%s" % (self._dest_tag, action)
+
+        def blocker(res):
+            yield res
+            self.send_reply(res)
+
+        co = blocker(final_result)
+        next(co)
+        self.pending_replies[signal_tag] = co
+        return signal_tag
+
 
 class SessionManager(object):
     def __init__(self, context):
@@ -156,6 +178,7 @@ class SessionManager(object):
         self._rpc_handler = {}
 
         self._forward_sessions = {}
+        self._pending_sessions = []
         self._forward_request_hook = {}
         self._forward_reply_hook = {}
         self._jrpc_id = 0
@@ -211,15 +234,32 @@ class SessionManager(object):
                 rpc = eval(reply_msg.payload)
                 if 'result' not in rpc or 'id' not in rpc:
                     raise "reqeust's format is not correct"
-                result = self._forward_reply_hook[s._method_name](s, rpc['result'])
-                self._forward_sessions[session_tag].send_reply(result)
+                stag = self._forward_reply_hook[s._method_name](s, rpc['result'])
+                if stag is not None:
+                    logger.debug("pending the reply of session: %s" % session_tag)
+                    self._pending_sessions.append(s)
             else:
-                self._forward_sessions[session_tag].send_reply("OK")
+                self._forward_sessions[session_tag].send_reply('OK')
 
             del self._forward_sessions[session_tag]
             logger.debug("@handle_oport_reply session:%s is deleted" % session_tag)
         else:
             logger.error("@handle_oport_reply session not found!")
+
+    def signal(self, stag):
+        """
+        :param stag:   dest_tag/action
+        :return:
+        """
+        for s in self._pending_sessions:
+            if stag in s.pending_replies:
+                try:
+                    s.pending_replies[stag].send(None)
+                except StopIteration:
+                    print("StopIteration")
+                del s.pending_replies[stag]
+                #if s.pending_replies is None
+                self._pending_sessions.remove(s)
 
     def register_rpc_handler(self, method_name, handler):
         self._rpc_handler[method_name] = handler
