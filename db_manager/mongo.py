@@ -47,9 +47,9 @@ class MongoDB(object):
                 for coll in collection_list:
                     self._db_collection = self._db[coll]
                     if condition is None:
-                        self._db_collection.update({}, {"$set": {key: value}}, multi=True)
+                        self._db_collection.update({}, {"$set": key_value}, multi=True)
                     else:
-                        self._db_collection.count(condition, {"$set": {key: value}}, multi=True)
+                        self._db_collection.count(condition, {"$set": key_value}, multi=True)
 
     def count(self, db=None, collection=None, condition=None):
         """
