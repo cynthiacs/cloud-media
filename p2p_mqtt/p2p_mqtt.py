@@ -4,7 +4,6 @@ Extended MQTT module to provide a P2P message feature.
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import topic_matches_sub
 import logging
-from enum import Enum
 
 
 __all__ = ('P2PMqtt', 'ForwardSession',)
@@ -104,9 +103,6 @@ class RpcSession(Session):
     def send_reply(self, result):
         payload = '{"jsonrpc": "2.0", "result": "%s", "id": "%s"}' % (result, self._method_id)
         self.send(self.reply_topic, payload)
-
-
-#class ReplyType(Enum):
 
 
 class ForwardSession(Session):
@@ -215,7 +211,8 @@ class SessionManager(object):
                 self._forward_sessions[ss.session_tag] = ss
                 ss.send_request()
             else:
-                ss.send_reply("ERROR: method %s failed in controller hook" % ss._method_name)
+                print("no need to forward! do nothing at backgroud")
+                #ss.send_reply("ERROR: method %s failed in controller hook" % ss._method_name)
         else:
             logger.info("can not handle method: %s" % s._method_name)
             s.send_reply("ERROR: unknown method")
