@@ -1,6 +1,6 @@
 from p2p_mqtt.p2p_mqtt import P2PMqtt
-from db.collection_online import CollectionOnLine
 import logging.config
+from db.collection_online import OnlineNodes
 
 # topic format: dest_tag/source_tag/_TOPIC_XXX
 _CONTROLLER_TAG = "media_controller"
@@ -46,7 +46,7 @@ _ROLE_TEST = "tester"
 
 # global module objects
 _p2pc = None
-_col_online = CollectionOnLine()
+_online_nodes = OnlineNodes()
 
 
 def _parse_source_tag(source_id):
@@ -70,7 +70,8 @@ def _publish_one_pusher_to_all(source_tag, add_remove_update, node_info=None):
     vid, gid, nid = _parse_source_tag(source_tag)
 
     if node_info is None:
-        node_info = _col_online.find_one({"id": nid})
+        node_info = _online_nodes.find_one(source_tag)
+
         if node_info is None:
             logger_mc.debug("publish one pusher failed!")
             return
@@ -85,11 +86,24 @@ def _publish_one_pusher_to_all(source_tag, add_remove_update, node_info=None):
 
 
 def _publish_all_pusher_to_one(source_tag):
-    role_info = _col_online.find_role(role=_ROLE_PUSHER)
+    role_info = _online_nodes.find_role(source_tag, _ROLE_PUSHER)
+
     payload = '{"%s": %s}' % (_CHANGE_ALL_ONLINE, role_info)
     _p2pc.mqtt_publish("%s/%s/%s" % (source_tag, _CONTROLLER_TAG, _TOPIC_NODES_CHANGE),
                        payload, qos=2, retain=False)
 
+
+def _update_the_pusher_puller_count(source_tag, field, value):
+    vid, gid, nid = _parse_source_tag(source_tag)
+    node_info = _online_nodes.find_one(source_tag)
+    if node_info is None:
+        logger_mc.debug("_update_the_pusher_puller_count failed!")
+        return
+    if node_info['role'] != _ROLE_PULLER:
+        return
+
+    # i don't know the pusher's id currently ......
+    pass
 
 def handle_online(source_tag, method_params):
     """
@@ -103,8 +117,7 @@ def handle_online(source_tag, method_params):
         return "ERROR"
 
     vid, gid, nid = _parse_source_tag(source_tag)
-
-    _col_online.online(nid, method_params)
+    _online_nodes.insert(source_tag, document=method_params)
 
     role = method_params['role']
     if role == _ROLE_PULLER:
@@ -122,12 +135,13 @@ def handle_offline(source_tag, method_params):
     """
     logger_mc.info("@handle offline")
 
-    vid, gid, nid = _parse_source_tag(source_tag)
-    node_info = _col_online.find_one({"id": nid})
-    _col_online.offline(nid)
+    node_info = _online_nodes.find_one(source_tag)
+
+    _online_nodes.remove(source_tag)
 
     if node_info is not None:
         # stupid to get the role in such an inefficient way
+        print(node_info)
         node_role = node_info['role']
         if node_role == _ROLE_PUSHER:
             _publish_one_pusher_to_all(source_tag, _CHANGE_NEW_OFFLINE, node_info)
@@ -135,16 +149,16 @@ def handle_offline(source_tag, method_params):
     return "OK"
 
 
-def handle_update_field(source_id, method_params):
+def handle_update_field(source_tag, method_params):
     if not isinstance(method_params, dict):
         logger_mc.error("online: params format is incorrect.")
         return "ERROR"
 
-    vid, gid, nid = _parse_source_tag(source_id)
+    _online_nodes.update(source_tag, method_params['field'], method_params['value'])
 
-    _col_online.update(nid, method_params['field'], method_params['value'])
+    _publish_one_pusher_to_all(source_tag, _CHANGE_NEW_UPDATE, None)
 
-    _publish_one_pusher_to_all(source_id, _CHANGE_NEW_UPDATE, None)
+    # _update_the_pusher_puller_count(source_tag, method_params['field'], method_params['value'])
 
     return "OK"
 
@@ -163,13 +177,16 @@ def hook_4_start_push_media(fsession):
     # TODO: handle the puller count of pusher node
 
     vid, gid, nid = _parse_source_tag(fsession._dest_tag)
-    result = _col_online.find_one({"id": nid})
+    result = _online_nodes.find_one(fsession._dest_tag)
     if result is None:
         fsession.sync_reply("Error: nid:%s is not online" % nid)
         return False
 
     stream_status = result['stream_status']
     if stream_status == 'publish' or stream_status == 'pushing':
+        logger_mc.debug("%s is %s, so no need forward request anymore" %
+                        (fsession._dest_tag, stream_status))
+
         reply_payload = "{'url':'%s'}" % fsession.pull_url_rtmp
         fsession.sync_reply(reply_payload)
         return False
@@ -203,9 +220,17 @@ def hook_4_stop_push_media(fsession):
         True: the request will be forward
         False: the request needn't forward
     """
-    print("hook_4_stop_push_media")
-    # TODO: check the count filed to determine whether forward is needed
-    #
+    logger_mc.debug("hook_4_stop_push_media")
+
+    vid, gid, nid = _parse_source_tag(fsession._dest_tag)
+    result = _online_nodes.find_one(fsession._dest_tag)
+    if result is None:
+        fsession.sync_reply("Error: nid:%s is not online" % nid)
+        return False
+
+    # TODO: check the count field to determine whether forward is needed
+    # or check the cloud platform ...
+
     return True
 
 
@@ -213,9 +238,9 @@ def handle_nodes_will(mqtt_msg):
     logger_mc.debug('@handle_nodes_will')
     print(repr(mqtt_msg))
     nid = str(mqtt_msg.payload, encoding="utf-8")
-    result = _col_online.find_one({"id": nid})
+    result = _online_nodes.find_one(nid)  # FIXME
     if result is not None:
-        _col_online.remove(nid)
+        _online_nodes.remove(nid)   # FIXME
         role = result['role']
         if role == _ROLE_PUSHER:
             _publish_one_pusher_to_all("%s_%s_%s" % (result['vendor_id'], result['group_id'], nid),
@@ -231,12 +256,11 @@ def handle_ali_notify(mqtt_msg):
     payload = eval(mqtt_msg.payload)
     status = payload["action"]
     node_tag = payload["app"]
-    vid, gid, nid = node_tag.split('_')
-    _col_online.update(nid, "stream_status", status)
+    _online_nodes.update(node_tag, "stream_status", status)
 
     stag = "%s/%s" % (node_tag, status)
     _p2pc._session_manager.signal(stag)
-    #_publish_one_pusher_to_all(node_tag, _CHANGE_NEW_UPDATE, None)
+    # _publish_one_pusher_to_all(node_tag, _CHANGE_NEW_UPDATE, None)
 
 
 if __name__ == '__main__':
