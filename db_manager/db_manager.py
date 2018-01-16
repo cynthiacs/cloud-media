@@ -1,7 +1,6 @@
 from db_manager.mongo import MongoDB
 from db_manager.key import Key
 import logging
-import logging.config
 
 
 class DBManager(object):
@@ -12,26 +11,20 @@ class DBManager(object):
     @:parameter port:27017
     """
 
-    def __init__(self, host=None, port=None):
+    def __init__(self, host=None, port=27017):
         self.mongodb = MongoDB(host, port)
-        console = logging.StreamHandler()
-        console.setLevel(logging.INFO)
-        formatter = logging.Formatter(
-            '%(name)s: %(levelname)-4s %(filename)s [line: %(lineno)d] [funtion: %(funcName)s] %(message)s')
-        console.setFormatter(formatter)
-        logging.getLogger('DBManager').addHandler(console)
-        self.logger = logging.getLogger('DBManager')
+        self.logger = logging.getLogger(__name__)
 
-    def insert(self, vid_gid_nid=None, document=None):
+    def insert(self, vid_gid=None, document=None):
         """
         insert documents to the target collection
-        :param vid_gid_nid:{Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '001'}
+        :param vid_gid:{Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'}
         :param document:{Key.id.value: "001", Key.nick.value: "Ronald", Key.role.value: 'pusher',
                                Key.time.value: "male"}
         :return:True;False
         """
         self.logger.debug("insert")
-        if not isinstance(vid_gid_nid, dict):
+        if not isinstance(vid_gid, dict):
             self.logger.error("[NOTE] vid_gid_nid is NOT the dic instance")
             return False
 
@@ -39,41 +32,41 @@ class DBManager(object):
             self.logger.error("[NOTE] The document is None, NOTHING to insert, operation NOT ALLOWED")
             return False
 
-        if Key.vendor.value in vid_gid_nid:
-            db = vid_gid_nid[Key.vendor.value]
+        if Key.vendor.value in vid_gid:
+            db = vid_gid[Key.vendor.value]
         else:
             self.logger.error("[NOTE] The DB is None, operation NOT ALLOWED")
             return False
 
-        if Key.group.value in vid_gid_nid:
-            collection = vid_gid_nid[Key.group.value]
+        if Key.group.value in vid_gid:
+            collection = vid_gid[Key.group.value]
         else:
             collection = Key.default_group.value
 
-        if isinstance(document, list) and len(document) > 0:
-            self.logger.debug(str(db) + ", " + str(collection))
-            self.mongodb.insert(db=db, collection=collection, document=document)
-        elif isinstance(document, list) and len(document) == 0:
-            self.logger.error("[NOTE] The document list is empty, NOTHING to insert, operation NOT ALLOWED")
-            return False
-        elif not isinstance(document, list):
-            if Key.node.value in vid_gid_nid:
-                nid = vid_gid_nid[Key.node.value]
-                if nid == document[Key.id.value]:
-                    self.logger.debug(str(db) + ", " + str(collection) + ", " + str(nid))
+        if isinstance(document, list):
+            if len(document) > 0:
+                self.logger.debug(str(db) + ", " + str(collection))
+                document_list = []
+                for doc in document:
+                    if Key.id.value in doc:
+                        document_list.append(doc)
+                    else:
+                        self.logger.error("[NOTE] The node ID KEY is NOT Exist, operation NOT ALLOWED")
+                self.mongodb.insert(db=db, collection=collection, document=document_list)
+            else:
+                self.logger.error("[NOTE] The document list is empty, NOTHING to insert, operation NOT ALLOWED")
+                return False
+        elif isinstance(document, dict):
+            if len(document) > 0:
+                if Key.id.value in document:
                     document_list = [document]
                     self.mongodb.insert(db=db, collection=collection, document=document_list)
                 else:
-                    self.logger.error("[NOTE] The node ID is NOT the document's nid, operation NOT ALLOWED")
+                    self.logger.error("[NOTE] The node ID KEY is NOT Exist, operation NOT ALLOWED")
                     return False
             else:
-                if Key.id.value in document:
-                    self.logger.debug(str(db) + ", " + str(collection) + ", " + str(document[Key.id.value]))
-                    document_list = [document]
-                    self.mongodb.insert(db=db, collection=collection, document=document_list)
-                else:
-                    self.logger.error("[NOTE] The node ID is NOT Exist, operation NOT ALLOWED")
-                    return False
+                self.logger.error("[NOTE] The document is empty, operation NOT ALLOWED")
+                return False
         else:
             self.logger.error("[NOTE] The document is not standard format, operation NOT ALLOWED")
             return False

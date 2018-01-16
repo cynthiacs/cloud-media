@@ -18,36 +18,38 @@ def _merge_(param=None):
 
 if __name__ == '__main__':
     print("test_DB")
-    dbManager = DBManager(host='127.0.0.1', port=27017)
+    dbManager = DBManager(host='127.0.0.1')
 
     # dbManager.remove({Key.vendor.value: 'VendorA'}) issue: #000001
     dbManager.remove({Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
     dbManager.remove({Key.vendor.value: 'VendorA', Key.group.value: 'GroupB'})
-    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '001'},
+    dbManager.insert(vid_gid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
                      document={Key.id.value: "001", Key.nick.value: "Ronald", Key.role.value: 'pusher',
                                Key.date.value: _current_time_()})
-    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '001'})
-
-    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '002'},
+    dbManager.insert(vid_gid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
+                     document={Key.id.value: "001", Key.nick.value: "Ronaldllllll", Key.role.value: 'pusher',
+                               Key.date.value: _current_time_()})
+    dbManager.insert(vid_gid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
                      document={Key.id.value: "002", Key.nick.value: "Meta", Key.role.value: 'pusher',
                                Key.date.value: _current_time_()})
 
-    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA', Key.node.value: '003'},
+    dbManager.insert(vid_gid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
                      document={Key.id.value: "003", Key.nick.value: "Raul", Key.role.value: 'puller',
                                Key.date.value: _current_time_()})
 
-    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
+    dbManager.insert(vid_gid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
                      document=[{Key.id.value: "004", Key.nick.value: "Figo", Key.role.value: 'pusher',
                                 Key.date.value: _current_time_()},
                                {Key.id.value: "005", Key.nick.value: "Messi", Key.role.value: 'puller',
                                 Key.date.value: _current_time_()}])
-    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
+    dbManager.insert(vid_gid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
                      document={Key.id.value: "006", Key.nick.value: "Figo", Key.role.value: 'pusher',
                                Key.date.value: _current_time_()})
-    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
-                     document=[])
-    dbManager.insert(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
-                     document={})
+    dbManager.insert(vid_gid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
+    dbManager.insert(vid_gid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'},
+                     document={Key.nick.value: "Figo", Key.role.value: 'pusher'})
+    dbManager.insert(vid_gid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'}, document=[])
+    dbManager.insert(vid_gid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'}, document={})
 
     result = dbManager.query(vid_gid_nid={Key.vendor.value: 'VendorA', Key.group.value: 'GroupA'})
     for i in result:
