@@ -63,6 +63,9 @@ def _parse_source_tag(source_id):
     return vid, gid, nid
 
 
+##################################
+# P2P, about controller's handlers
+##################################
 def _publish_one_pusher_to_all(source_tag, add_remove_update, node_info=None):
     vid, gid, nid = _parse_source_tag(source_tag)
 
@@ -146,28 +149,63 @@ def handle_update_field(source_id, method_params):
     return "OK"
 
 
+#####################################################
+# Forward, about request/reply forward by controller
+#####################################################
 def hook_4_start_push_media(fsession):
     """
-    :param msg:  method's parameters
+    :param fsession:  forward session
     :return:
         True: the request will be forward
-        False: the request failed directly, and reply ERROR
+        False: the request needn't forward
     """
     # TODO: check permission
+    # TODO: handle the puller count of pusher node
+
+    vid, gid, nid = _parse_source_tag(fsession._dest_tag)
+    result = _col_online.find_one({"id": nid})
+    if result is None:
+        fsession.sync_reply("Error: nid:%s is not online" % nid)
+        return False
+
+    stream_status = result['stream_status']
+    if stream_status == 'publish' or stream_status == 'pushing':
+        reply_payload = "{'url':'%s'}" % fsession.pull_url_rtmp
+        fsession.sync_reply(reply_payload)
+        return False
+
     # add url to the forward payload
     fsession.payload["params"]["url"] = fsession.push_url_rtmp
     return True
 
 
 def hook_4_start_push_media_reply(fsession, reply_result):
+    """
+    :param fsession: forward session
+    :param reply_result: the reply from media pusher
+    :return:
+        fsession.async_reply('publish', final_result)
+            waiting signal 'publish' and then send final_result
+        fsession.sync_reply(reply_result)
+            send reply result
+    """
     if reply_result == "OK":
-        return "{'url':'%s'}" % fsession.pull_url_rtmp
+        final_result = "{'url':'%s'}" % fsession.pull_url_rtmp
+        return fsession.async_reply('publish', final_result)
     else:
-        return reply_result
+        return fsession.sync_reply(reply_result)
 
 
 def hook_4_stop_push_media(fsession):
+    """
+    :param fsession:  forward session
+    :return:
+        True: the request will be forward
+        False: the request needn't forward
+    """
     print("hook_4_stop_push_media")
+    # TODO: check the count filed to determine whether forward is needed
+    #
     return True
 
 
@@ -195,7 +233,10 @@ def handle_ali_notify(mqtt_msg):
     node_tag = payload["app"]
     vid, gid, nid = node_tag.split('_')
     _col_online.update(nid, "stream_status", status)
-    _publish_one_pusher_to_all(node_tag, _CHANGE_NEW_UPDATE, None)
+
+    stag = "%s/%s" % (node_tag, status)
+    _p2pc._session_manager.signal(stag)
+    #_publish_one_pusher_to_all(node_tag, _CHANGE_NEW_UPDATE, None)
 
 
 if __name__ == '__main__':
