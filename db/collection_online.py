@@ -1,4 +1,6 @@
 from pymongo import MongoClient
+from db_manager.db_manager import DBManager
+from db_manager.key import Key
 
 
 class CollectionOnLine(object):
@@ -59,43 +61,46 @@ class CollectionOnLine(object):
 
 
 class OnlineNodes(object):
-    """
-    add(vid_gid_nid, {k: v, ....})
-    delete(vid_gid_nid)
-    find({k: v, ...})  key: vid, gid, nid, role....
-    update(vid_gid_nid, field, value)
-    count({k: v, ...})
-    """
-    def __init__(self, url='mongodb://139.224.128.15'):
-        self._db_client = MongoClient(url)
-        self._db = self._db_client.extmqtt_nodes
-        self._db_col_nodes_online = self._db.nodes_online
-        pass
+    def __init__(self, url='139.224.128.15', port=27017):
+        self._db_manager = DBManager(host=url, port=port)
 
-    def add(self, vid_gid_nid, jparams):
-        vid, gid, nid = vid_gid_nid.split('_')
-        self._remove(nid)
-        self._insert(jparams)
+    def find_one(self, source_tag):
+        """
 
-    def delete(self, vid_gid_nid):
-        vid, gid, nid = vid_gid_nid.split('_')
-        self._remove(nid)
+        :param source_tag:
+        :return: a dic
+        """
+        vid, gid, nid = source_tag.split('_')
+        node_info = self._db_manager.query(
+            vid_gid_nid={Key.vendor.value: vid, Key.group.value: gid, Key.node.value: nid})
+        if len(node_info) == 0:
+            return None
+        else:
+            return node_info[0]
 
-    def find(self, jparams):
-        # find return Cursor instance which can be interate over all mathing document
-        find_result = self._db_col_nodes_online.find(jparams)
-        # convert into list, take care about the memory when using this !!
-        l_find_result = list(find_result)
-        return str(l_find_result)
+    def find_role(self, source_tag, role):
+        vid, gid, nid = source_tag.split('_')
+        role_info = self._db_manager.query(
+            vid_gid_nid={Key.vendor.value: vid, Key.group.value: gid},
+            condition={Key.role.value: role})
+        return str(role_info)
 
-    def update(self, vid_gid_nid, field, value):
-        pass
+    def insert(self, source_tag, document):
+        vid, gid, nid = source_tag.split('_')
+        self._db_manager.insert(
+            vid_gid={Key.vendor.value: vid, Key.group.value: gid},
+            document=document
+        )
 
-    def _remove(self, nid):
-        if self._db_col_nodes_online.find_one({'id': nid}) is not None:
-            print("[DB] remove: " + nid)
-            self._db_col_nodes_online.remove({'id': nid})
+    def remove(self, source_tag):
+        vid, gid, nid = source_tag.split('_')
+        self._db_manager.remove(
+            vid_gid_nid={Key.vendor.value: vid, Key.group.value: gid, Key.node.value: nid})
 
-    def _insert(self, jparams):
-        print("[DB] insert %s" % jparams)
-        self._db_col_nodes_online.insert_one(jparams)
+    def update(self, source_tag, field, value):
+        vid, gid, nid = source_tag.split('_')
+        self._db_manager.update(
+            vid_gid_nid={Key.vendor.value: vid, Key.group.value: gid, Key.node.value: nid},
+            key_value={field: value}
+        )
+
