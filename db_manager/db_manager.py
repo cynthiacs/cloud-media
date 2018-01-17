@@ -1,7 +1,6 @@
 from db_manager.mongo import MongoDB
 from db_manager.key import Key
 import logging
-import os
 
 
 class DBManager(object):
