@@ -105,6 +105,7 @@ def _update_the_pusher_puller_count(source_tag, field, value):
     # i don't know the pusher's id currently ......
     pass
 
+
 def handle_online(source_tag, method_params):
     """
     mehtod: online
@@ -237,16 +238,15 @@ def hook_4_stop_push_media(fsession):
 def handle_nodes_will(mqtt_msg):
     logger_mc.debug('@handle_nodes_will')
     print(repr(mqtt_msg))
-    nid = str(mqtt_msg.payload, encoding="utf-8")
-    result = _online_nodes.find_one(nid)  # FIXME
+    node_tag = str(mqtt_msg.payload, encoding="utf-8")
+    result = _online_nodes.find_one(node_tag)  # FIXME
     if result is not None:
-        _online_nodes.remove(nid)   # FIXME
+        _online_nodes.remove(node_tag)   # FIXME
         role = result['role']
         if role == _ROLE_PUSHER:
-            _publish_one_pusher_to_all("%s_%s_%s" % (result['vendor_id'], result['group_id'], nid),
-                                       _CHANGE_NEW_OFFLINE, result)
+            _publish_one_pusher_to_all(node_tag, _CHANGE_NEW_OFFLINE, result)
     else:
-        print("can not find %s" % nid)
+        print("can not find %s" % node_tag)
 
 
 def handle_ali_notify(mqtt_msg):
@@ -273,7 +273,7 @@ if __name__ == '__main__':
     _p2pc.register_rpc_handler(_REQUEST_UPDATE_FIELD, handle_update_field)
 
     # media_controller/broker/nodes_will
-    _p2pc.register_topic_handler('nodes_will/+', handle_nodes_will)
+    _p2pc.register_topic_handler('cm/nodes_will', handle_nodes_will)
     _p2pc.register_topic_handler("media_controller/ali/notify", handle_ali_notify)
 
     _p2pc.register_forward_request_hook(_REQUEST_START_PUSH_MEDIA, hook_4_start_push_media)
