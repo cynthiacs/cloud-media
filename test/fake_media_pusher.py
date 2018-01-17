@@ -40,4 +40,4 @@ if __name__ == '__main__':
     p2pc.send_rpc_request("media_controller", method="Online", params=params, listener=_listener)
     #p2pc.send_rpc_request("controller", method="Offline", params=None, listener=_listener)
 
-    p2pc.loop()
+    p2pc.run()

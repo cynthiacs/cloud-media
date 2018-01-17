@@ -28,6 +28,6 @@ if __name__ == '__main__':
     p2pc = P2PMqtt(broker_url="139.224.128.15", whoami='v1_g1_puller1')
     t = threading.Thread(target=worker, args=(p2pc, 3))
     t.start()
-    p2pc.loop()
+    p2pc.run()
 
 

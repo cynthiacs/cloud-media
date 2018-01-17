@@ -338,37 +338,59 @@ class P2PMqtt(object):
     def _on_action_reply(self, msg):
         self._session_manager.handle_reply(msg)
 
-    def register_topic_handler(self, topic, handler, qos=2):
-        # self.mqtt_subscribe(topic, qos)
-        if not callable(handler):
-            raise "params error"
-        self.topic_handlers[topic] = handler
-
     def send_rpc_request(self, target_tag, method, params, listener=None):
         self._session_manager.send_rpc_request(target_tag, self._my_tag, method, params, listener)
 
-    def register_rpc_handler(self, method_name, handler):
-        if not callable(handler):
-            raise "you must register a function as handler!"
-        self._session_manager.register_rpc_handler(method_name, handler)
+    def topic_handler(self, topic):
+        """ A decorator to register a function as topic handler
+        :param topic:
+        :return:
+        """
+        def decorator(f):
+            self.topic_handlers[topic] = f
+            return f
+        return decorator
 
-    def register_forward_request_hook(self, method_name, hook):
-        if not callable(hook):
-            raise "you must register a function as hook!"
-        self._session_manager.register_forward_request_hook(method_name, hook)
+    def rpc_handler(self, method_name):
+        """ A decorator to register a function as rpc handler
+        :param method_name:
+        :return:
+        """
+        def decorator(f):
+            self._session_manager.register_rpc_handler(method_name, f)
+            return f
+        return decorator
 
-    def register_forward_reply_hook(self, method_name, hook):
-        if not callable(hook):
-            raise "you must register a function as hook!"
-        self._session_manager.register_forward_reply_hook(method_name, hook)
+    def forward_request_hook(self, method_name):
+        """ A decorator to register a function as forward request hook
+        :param method_name:
+        :return:
+        """
+        def decorator(f):
+            self._session_manager.register_forward_request_hook(method_name, f)
+            return f
+        return decorator
 
-    def mqtt_publish(self, topic, payload=None, qos=0, retain=False):
+    def forward_reply_hook(self, method_name):
+        """ A decorator to register a function as forward reply hook
+        :param method_name:
+        :return:
+        """
+        def decorator(f):
+            self._session_manager.register_forward_reply_hook(method_name, f)
+            return f
+        return decorator
+
+    def publish(self, topic, payload=None, qos=0, retain=False):
         self._ext_mqttc.pub(topic, payload, qos, retain)
 
-    def mqtt_subscribe(self, topic, qos=0):
+    def subscribe(self, topic, qos=0):
         self._ext_mqttc.sub(topic, qos)
 
-    def loop(self):
+    def signal(self, stag):
+        self._session_manager.signal(stag)
+
+    def run(self):
         self.action_handlers = {"request": self._on_action_request,
                                 "reply": self._on_action_reply}
 
