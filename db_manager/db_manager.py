@@ -1,6 +1,7 @@
 from db_manager.mongo import MongoDB
 from db_manager.key import Key
 import logging
+import os
 
 
 class DBManager(object):
@@ -13,7 +14,9 @@ class DBManager(object):
 
     def __init__(self, host=None, port=27017):
         self.mongodb = MongoDB(host, port)
+        logging.config.fileConfig(os.path.abspath('.') + '/logging.conf')
         self.logger = logging.getLogger(__name__)
+        self.logger.debug("connect DB host: " + str(host) + ", port: " + str(port))
 
     def insert(self, vid_gid=None, document=None):
         """
@@ -51,7 +54,7 @@ class DBManager(object):
                     if Key.id.value in doc:
                         document_list.append(doc)
                     else:
-                        self.logger.error("[NOTE] The node ID KEY is NOT Exist, operation NOT ALLOWED")
+                        self.logger.warning("[NOTE] The current node ID KEY is NOT Exist")
                 self.mongodb.insert(db=db, collection=collection, document=document_list)
             else:
                 self.logger.error("[NOTE] The document list is empty, NOTHING to insert, operation NOT ALLOWED")
@@ -233,7 +236,7 @@ class DBManager(object):
             """
             remove documents with matching conditions
             """
-            self.remove({'vendor': db_src, 'group': collection_src}, condition=condition)
+            self.remove({Key.vendor.value: db_src, Key.group.value: collection_src}, condition=condition)
         else:
             self.logger.error("[NOTE] query with matching conditions is empty, operation NOT NEED")
 
