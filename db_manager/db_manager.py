@@ -1,7 +1,6 @@
 from db_manager.mongo import MongoDB
 from db_manager.key import Key
 import logging
-import os
 
 
 class DBManager(object):
@@ -14,7 +13,6 @@ class DBManager(object):
 
     def __init__(self, host=None, port=27017):
         self.mongodb = MongoDB(host, port)
-        logging.config.fileConfig(os.path.abspath('.') + '/logging.conf')
         self.logger = logging.getLogger(__name__)
         self.logger.debug("connect DB host: " + str(host) + ", port: " + str(port))
 
@@ -158,7 +156,7 @@ class DBManager(object):
             collection = None  # Key.default_group.value
 
         self.logger.debug(str(db) + ", " + str(collection) + ", " + str(condition))
-        return self.mongodb.count(db, collection, condition)
+        return self.mongodb.count(db=db, collection=collection, condition=condition)
 
     def query(self, vid_gid_nid=None, condition=None):
         """
@@ -227,16 +225,17 @@ class DBManager(object):
         """
           query documents with matching conditions
         """
-        result = self.query({Key.vendor.value: db_src, Key.group.value: collection_src}, condition=condition)
+        result = self.query(vid_gid_nid={Key.vendor.value: db_src, Key.group.value: collection_src},
+                            condition=condition)
         """
           fetch and insert the documents with matching conditions to the target collection
         """
         if len(result) > 0:
-            self.insert({Key.vendor.value: db_des, Key.group.value: collection_des}, result)
+            self.insert(vid_gid={Key.vendor.value: db_des, Key.group.value: collection_des}, document=result)
             """
             remove documents with matching conditions
             """
-            self.remove({Key.vendor.value: db_src, Key.group.value: collection_src}, condition=condition)
+            self.remove(vid_gid_nid={Key.vendor.value: db_src, Key.group.value: collection_src}, condition=condition)
         else:
             self.logger.error("[NOTE] query with matching conditions is empty, operation NOT NEED")
 
