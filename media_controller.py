@@ -1,6 +1,8 @@
 from p2p_mqtt.p2p_mqtt import P2PMqtt
 import logging.config
 from db.collection_online import OnlineNodes
+import time
+from stream_cookie import StreamCookie
 
 # topic format: dest_tag/source_tag/_TOPIC_XXX
 _CONTROLLER_TAG = "media_controller"
@@ -49,6 +51,7 @@ logger_mc = logging.getLogger(__name__)
 
 media_controller = P2PMqtt(broker_url="139.224.128.15", whoami=_CONTROLLER_TAG)
 online_nodes = OnlineNodes()
+stream_cookie = StreamCookie(logger_mc)   # scattergun, bad practice
 
 
 def _parse_node_tag(source_id):
@@ -121,6 +124,9 @@ def handle_offline(source_tag, method_params):
         node_role = node_info['role']
         if node_role == _ROLE_PUSHER:
             _publish_one_pusher_to_all(source_tag, _CHANGE_NEW_OFFLINE, node_info)
+            stream_cookie.clean_pusher(source_tag)
+        elif node_role == _ROLE_PULLER:
+            stream_cookie.clean_puller(source_tag)
 
     return "OK"
 
@@ -145,9 +151,9 @@ def hook_4_start_push_media(fsession):
         False: the request needn't forward
     """
     # TODO: check permission
-    # TODO: handle the puller count of pusher node
-    vid, gid, nid = _parse_node_tag(fsession._dest_tag)
-    result = online_nodes.find_one(fsession._dest_tag)
+    target_node_tag = fsession._dest_tag
+    vid, gid, nid = _parse_node_tag(target_node_tag)
+    result = online_nodes.find_one(target_node_tag)
     if result is None:
         fsession.sync_reply("Error: nid:%s is not online" % nid)
         return False
@@ -155,10 +161,17 @@ def hook_4_start_push_media(fsession):
     stream_status = result['stream_status']
     if stream_status == 'publish' or stream_status == 'pushing':
         logger_mc.debug("%s is %s, so no need forward request anymore" %
-                        (fsession._dest_tag, stream_status))
+                        (target_node_tag, stream_status))
+
+        if stream_status == 'pushing':
+            logger_mc.warning("temp workaround, async reply to be done!")
+            time.sleep(1)
+            # fsession.async_reply('publish', final_result)
 
         reply_payload = "{'url':'%s'}" % fsession.pull_url_rtmp
         fsession.sync_reply(reply_payload)
+
+        stream_cookie.join_stream(fsession.stream_tag, fsession._source_tag)
         return False
 
     # add url to the forward payload
@@ -178,6 +191,8 @@ def hook_4_start_push_media_reply(fsession, reply_result):
             send reply result
     """
     if reply_result == "OK":
+        stream_cookie.join_stream(fsession.stream_tag, fsession._source_tag)
+
         final_result = "{'url':'%s'}" % fsession.pull_url_rtmp
         return fsession.async_reply('publish', final_result)
     else:
@@ -194,15 +209,21 @@ def hook_4_stop_push_media(fsession):
     """
     logger_mc.debug("hook_4_stop_push_media")
 
-    vid, gid, nid = _parse_node_tag(fsession._dest_tag)
-    result = online_nodes.find_one(fsession._dest_tag)
+    target_node_tag = fsession._dest_tag
+    vid, gid, nid = _parse_node_tag(target_node_tag)
+    result = online_nodes.find_one(target_node_tag)
     if result is None:
         fsession.sync_reply("Error: nid:%s is not online" % nid)
         return False
 
-    # TODO: check the count field to determine whether forward is needed
-    # or check the cloud platform ...
-    return True
+    stream_cookie.quit_stream(fsession.stream_tag, fsession._source_tag)
+
+    if stream_cookie.count_puller(fsession.stream_tag) == 0:
+        logger_mc.info("forward stop_push_media command to %s" % target_node_tag)
+        return True
+    else:
+        fsession.sync_reply("OK")
+        return False
 
 
 @media_controller.topic_handler("cm/nodes_will")
@@ -216,6 +237,9 @@ def handle_nodes_will(mqtt_msg):
         role = result['role']
         if role == _ROLE_PUSHER:
             _publish_one_pusher_to_all(node_tag, _CHANGE_NEW_OFFLINE, result)
+            stream_cookie.clean_pusher(node_tag)
+        elif role == _ROLE_PULLER:
+            stream_cookie.clean_puller(node_tag)
     else:
         logger_mc.warning("can not find %s" % node_tag)
 
@@ -228,7 +252,12 @@ def handle_ali_notify(mqtt_msg):
     payload = eval(mqtt_msg.payload)
     status = payload["action"]
     node_tag = payload["app"]
+    stream = payload["stream"]
     online_nodes.update(node_tag, "stream_status", status)
+
+    if status == 'publish_done':
+        stream_tag = "%s/%s" % (node_tag, stream)
+        stream_cookie.del_stream(stream_tag)
 
     stag = "%s/%s" % (node_tag, status)
     media_controller.signal(stag)

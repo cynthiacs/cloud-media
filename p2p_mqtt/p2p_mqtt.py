@@ -129,12 +129,15 @@ class ForwardSession(Session):
         self.oport_request_topic = "%s/%s/request" % (self._dest_tag, self._controller_tag)
         self.oport_reply_topic = "%s/%s/reply" % (self._controller_tag, self._dest_tag)
 
-        app_name = self._dest_tag
-        stream_name = "c1"
-        self.push_url_rtmp = "rtmp://video-center.alivecdn.com/%s/%s?vhost=push.yangxudong.com" % (app_name, stream_name)
-        self.pull_url_rtmp = "rtmp://push.yangxudong.com/%s/%s" % (app_name, stream_name)
-        self.pull_url_flv = "http://push.yangxudong.com/%s/%s.flv" % (app_name, stream_name)
-        self.pull_url_hls = "http://push.yangxudong.com/%s/%s.m3u8" % (app_name, stream_name)
+        self.pull_url_base = "push.yangxudong.com"
+        self.app_name = self._dest_tag
+        self.stream_name = "c1"
+        self.stream_tag = "%s/%s" % (self.app_name, self.stream_name)
+
+        self.push_url_rtmp = "rtmp://video-center.alivecdn.com/%s/%s?vhost=push.yangxudong.com" % (self.app_name, self.stream_name)
+        self.pull_url_rtmp = "rtmp://%s/%s/%s" % (self.pull_url_base, self.app_name, self.stream_name)
+        self.pull_url_flv = "http://%s/%s/%s.flv" % (self.pull_url_base, self.app_name, self.stream_name)
+        self.pull_url_hls = "http://%s/%s/%s.m3u8" % (self.pull_url_base, self.app_name, self.stream_name)
 
         self.pending_replies = {}
 
