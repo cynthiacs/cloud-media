@@ -17,16 +17,18 @@ class StreamCookie(object):
         """ when a new puller start to pull the stream
         """
         print("%s join stream %s" % (puller_tag, stream_tag))
-        pull_list = self._streams.setdefault(stream_tag, [])
-        pull_list.append(puller_tag)
+        stream_info = self._streams.setdefault(stream_tag,
+                                               {"pullers": [], "expire-time": 0})
+        stream_info["pullers"].append(puller_tag)
 
     def quit_stream(self, stream_tag, puller_tag):
         """ when the puller stop to pull the stream
         """
         print("%s quit stream %s" % (puller_tag, stream_tag))
-        pull_list = self._streams.setdefault(stream_tag, [])
-        if puller_tag in pull_list:
-            pull_list.remove(puller_tag)
+        stream_info = self._streams.setdefault(stream_tag,
+                                               {"pullers": [], "expire-time": 0})
+        if puller_tag in stream_info["pullers"]:
+            stream_info["pullers"].remove(puller_tag)
 
     def del_stream(self, stream_tag):
         """when the stream is done
@@ -40,23 +42,27 @@ class StreamCookie(object):
         """
         print("clean puller %s" % puller_tag)
         for k, v in self._streams.items():
-            if puller_tag in v:
-                v.remove(puller_tag)
+            if puller_tag in v["pullers"]:
+                v["pullers"].remove(puller_tag)
 
     def clean_pusher(self, pusher_tag):
         """ when the pusher die, do this
         """
         print("clean pusher %s" % pusher_tag)
+        stream_tag = None
         for k, v in self._streams.items():
             app, stream = k.split('/')
             if app == pusher_tag:
+                stream_tag = k
                 break
         # dictionary should not change size during iteration
-        del self._streams[k]
+        if stream_tag is not None:
+            del self._streams[stream_tag]
 
     def count_puller(self, stream_tag):
         """ count how many puller is attached on the stream
         """
         print("stream %s count puller" % stream_tag)
-        pull_list = self._streams.setdefault(stream_tag, [])
-        return len(pull_list)
+        stream_info = self._streams.setdefault(stream_tag,
+                                               {"pullers": [], "expire-time": 0})
+        return len(stream_info["pullers"])
