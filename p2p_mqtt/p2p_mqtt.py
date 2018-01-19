@@ -215,7 +215,6 @@ class SessionManager(object):
                 ss.send_request()
             else:
                 print("no need to forward! do nothing at backgroud")
-                #ss.send_reply("ERROR: method %s failed in controller hook" % ss._method_name)
         else:
             logger.info("can not handle method: %s" % s._method_name)
             s.send_reply("ERROR: unknown method")

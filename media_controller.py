@@ -97,6 +97,7 @@ def handle_online(source_tag, method_params):
         logger_mc.error("online: params format is incorrect.")
         return "ERROR"
 
+    online_nodes.remove(source_tag)
     online_nodes.insert(source_tag, document=method_params)
 
     role = method_params['role']

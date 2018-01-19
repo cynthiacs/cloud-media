@@ -24,8 +24,8 @@ def _mqtt_publish(topic, payload):
     infot.wait_for_publish()
 
 
-@app.route('/cm_live_steams_notify')
-def cm_live_steams_notify():
+@app.route('/cm_live_streams_notify')
+def cm_live_streams_notify():
     # print(request.data)
     """
     request.args: the key / value pairs in the URL query string

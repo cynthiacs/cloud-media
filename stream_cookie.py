@@ -50,7 +50,9 @@ class StreamCookie(object):
         for k, v in self._streams.items():
             app, stream = k.split('/')
             if app == pusher_tag:
-                del self._streams[k]
+                break
+        # dictionary should not change size during iteration
+        del self._streams[k]
 
     def count_puller(self, stream_tag):
         """ count how many puller is attached on the stream

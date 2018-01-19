@@ -30,13 +30,13 @@ def send_request(r):
     print(result)
     return result
 
-def set_live_steams_notify_url_config():
+def set_live_streams_notify_url_config():
     r = SetLiveStreamsNotifyUrlConfigRequest.SetLiveStreamsNotifyUrlConfigRequest()
     r.set_DomainName("push.yangxudong.com")
-    r.set_NotifyUrl("http://www.yangxudong.com:8085/cm_live_steams_notify")
+    r.set_NotifyUrl("http://www.yangxudong.com:8085/cm_live_streams_notify")
     send_request(r)
 
-set_live_steams_notify_url_config()
+set_live_streams_notify_url_config()
 
 def add_live_detect_notify_config():
     r = AddLiveDetectNotifyConfigRequest.AddLiveDetectNotifyConfigRequest()
