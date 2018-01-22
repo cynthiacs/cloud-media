@@ -66,3 +66,11 @@ class StreamCookie(object):
                                                {"pullers": [], "expire-time": 0})
         print("stream %s count puller: %d" % (stream_tag, len(stream_info["pullers"])))
         return len(stream_info["pullers"])
+
+    def get_pullers(self, pusher_tag):
+        for k, v in self._streams.items():
+            app, stream = k.split('/')
+            if app == pusher_tag:
+                return self._streams[k]["pullers"]
+
+        return []
