@@ -161,7 +161,7 @@ class ForwardSession(Session):
         self.pull_url_base = "push.yangxudong.com"
         self.app_name = self._dest_tag
         vid, gid, nid = self._dest_tag.split('_')
-        #self.stream_name = 'c1'
+        # self.stream_name = 'c1'
         self.stream_name = nid
         self.stream_tag = "%s/%s" % (self.app_name, self.stream_name)
 

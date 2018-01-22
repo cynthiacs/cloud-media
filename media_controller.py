@@ -37,10 +37,10 @@ _NODE_STATUS_PULLING_CLOSE = 'pulling_close'
 _NODE_STATUS_PULLING_ERROR = 'pulling_error'
 _NODE_STATUS_UNKNOWN = 'unknown'
 
-_NODE_GROUPID_DEFAULT = "00000000";
-_NODE_GROUPNICK_DEFAULT = "Default Group";
-_NODE_VENDORID_DEFAULT = "00000000";
-_NODE_VENDORNICK_DEFAULT = "CM Team";
+_NODE_GROUPID_DEFAULT = "00000000"
+_NODE_GROUPNICK_DEFAULT = "Default Group"
+_NODE_VENDORID_DEFAULT = "00000000"
+_NODE_VENDORNICK_DEFAULT = "CM Team"
 
 # node's role
 _ROLE_ALL = "all"
@@ -145,12 +145,9 @@ def handle_update_field(source_tag, method_params):
     _publish_one_pusher_to_all(source_tag, _CHANGE_NEW_UPDATE, None)
     if method_params['field'] == 'stream_status' \
             and method_params['value'] == _NODE_STATUS_PUSHING_ERROR:
-        # loop to notify the pullers is ineffecient.
-        # better to let pullers to subscribe a specific topic for each pusher
-        for puller_tag in stream_cookie.get_pullers(source_tag):
-            topic = "%s/%s/%s" % (puller_tag, CONTROLLER_TAG, _TOPIC_STREAM_EXCEPTION)
-            payload = {"stream_exception": "pusher_error"}
-            media_controller.publish(topic, str(payload), qos=2)
+        topic = "*/%s/%s" % (source_tag, _TOPIC_STREAM_EXCEPTION)
+        payload = {"stream_exception": "pusher_error"}
+        media_controller.publish(topic, str(payload), qos=2)
 
     return "OK"
 
@@ -270,13 +267,8 @@ def handle_ali_notify(mqtt_msg):
     online_nodes.update(node_tag, "stream_status", status)
 
     if status == 'publish_done':
+        # _publish_one_pusher_to_all(node_tag, _CHANGE_NEW_UPDATE, None)
         stream_tag = "%s/%s" % (node_tag, stream)
-        for puller_tag in stream_cookie.get_pullers(node_tag):
-            pass
-            # topic = "%s/%s/%s" % (puller_tag, CONTROLLER_TAG, _TOPIC_STREAM_EXCEPTION)
-            # payload = {"stream_exception": "pusher_error"}
-            # media_controller.publish(topic, str(payload), qos=2)
-
         stream_cookie.del_stream(stream_tag)
 
     stag = "%s/%s" % (node_tag, status)
