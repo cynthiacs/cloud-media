@@ -62,7 +62,7 @@ class StreamCookie(object):
     def count_puller(self, stream_tag):
         """ count how many puller is attached on the stream
         """
-        print("stream %s count puller" % stream_tag)
         stream_info = self._streams.setdefault(stream_tag,
                                                {"pullers": [], "expire-time": 0})
+        print("stream %s count puller: %d" % (stream_tag, len(stream_info["pullers"])))
         return len(stream_info["pullers"])

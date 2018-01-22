@@ -4,6 +4,9 @@ Extended MQTT module to provide a P2P message feature.
 import paho.mqtt.client as mqtt
 from paho.mqtt.client import topic_matches_sub
 import logging
+import hashlib
+import re
+import time
 
 
 __all__ = ('P2PMqtt', 'ForwardSession',)
@@ -76,6 +79,32 @@ class Session(object):
         payload = eval(mqtt_msg.payload)
         return _dest_id + payload['id']
 
+    @staticmethod
+    def md5sum(src):
+        m = hashlib.md5()
+        m.update(src.encode("utf8"))
+        return m.hexdigest()
+
+    @staticmethod
+    def get_auth_url(uri, exp, key="yangxudong"):
+        p = re.compile("^(http://|https://|rtmp://)?([^/?]+)(/[^?]*)?(\\?.*)?$")
+        if not p:
+            return None
+        m = p.match(uri)
+        scheme, host, path, args = m.groups()
+        if not scheme: scheme = "http://"
+        if not path: path = "/"
+        if not args: args = ""
+        rand = "0"      # "0" by default, other value is ok
+        uid = "0"       # "0" by default, other value is ok
+        sstring = "%s-%s-%s-%s-%s" %(path, exp, rand, uid, key)
+        hashvalue = Session.md5sum(sstring)
+        auth_key = "%s-%s-%s-%s" %(exp, rand, uid, hashvalue)
+        if args:
+            return "%s%s%s%s&auth_key=%s" %(scheme, host, path, args, auth_key)
+        else:
+            return "%s%s%s%s?auth_key=%s" %(scheme, host, path, args, auth_key)
+
 
 class RpcSession(Session):
     def __init__(self, context, mqtt_msg, reply_listener=None):
@@ -131,15 +160,23 @@ class ForwardSession(Session):
 
         self.pull_url_base = "push.yangxudong.com"
         self.app_name = self._dest_tag
-        self.stream_name = "c1"
+        vid, gid, nid = self._dest_tag.split('_')
+        self.stream_name = nid
         self.stream_tag = "%s/%s" % (self.app_name, self.stream_name)
 
-        self.push_url_rtmp = "rtmp://video-center.alivecdn.com/%s/%s?vhost=push.yangxudong.com" % (self.app_name, self.stream_name)
-        self.pull_url_rtmp = "rtmp://%s/%s/%s" % (self.pull_url_base, self.app_name, self.stream_name)
-        self.pull_url_flv = "http://%s/%s/%s.flv" % (self.pull_url_base, self.app_name, self.stream_name)
-        self.pull_url_hls = "http://%s/%s/%s.m3u8" % (self.pull_url_base, self.app_name, self.stream_name)
+        # expire_time = int(time.time()) + self.payload["params"]["expire-time"]
+        expire_time = int(time.time()) + 100
+        push_url_rtmp = "rtmp://video-center.alivecdn.com/%s/%s?vhost=push.yangxudong.com" % (self.app_name, self.stream_name)
+        self.push_url_rtmp = Session.get_auth_url(push_url_rtmp, expire_time)
+        pull_url_rtmp = "rtmp://%s/%s/%s" % (self.pull_url_base, self.app_name, self.stream_name)
+        self.pull_url_rtmp = Session.get_auth_url(pull_url_rtmp, expire_time)
+        pull_url_flv = "http://%s/%s/%s.flv" % (self.pull_url_base, self.app_name, self.stream_name)
+        self.pull_url_flv = Session.get_auth_url(pull_url_flv, expire_time)
+        pull_url_hls = "http://%s/%s/%s.m3u8" % (self.pull_url_base, self.app_name, self.stream_name)
+        self.pull_url_hls = Session.get_auth_url(pull_url_hls, expire_time)
 
         self.pending_replies = {}
+
 
     def send_request(self):
         topic = self.oport_request_topic
