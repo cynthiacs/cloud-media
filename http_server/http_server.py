@@ -53,12 +53,19 @@ def cm_live_streams_notify():
     print("usrargs: ", request.args.get("usrargs"))
     """
     action = request.args.get("action")
-    app = request.args.get("appname")
+    ip = request.args.get("ip")
     stream = request.args.get("id")
-    # if action is not None:
+    app = request.args.get("appname")
+    appname = request.args.get("appname")
+    time = request.args.get("time")
+    userargs = request.args.get("usrargs")
 
-    payload = "{'action': '%s', 'app': '%s', 'stream': '%s'}" % (action, app, stream)
-    print("payload: %s" % payload)
+
+    payload = "{'action': '%s', 'ip': '%s', 'stream': '%s', 'app': '%s', \
+                'appname':'%s', 'time':'%s', 'userargs':'%s'}" \
+                % (action, ip, stream, app, appname, time, userargs)
+
+    print("@cm_live_streams_notify payload: %s" % payload)
     _mqtt_publish("media_controller/ali/notify", payload)
 
     return ""
