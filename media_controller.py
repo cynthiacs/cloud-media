@@ -178,7 +178,7 @@ def hook_4_start_push_media(fsession):
             time.sleep(1)
             # fsession.async_reply('publish', final_result)
 
-        reply_payload = "{'url':'%s'}" % fsession.pull_url_rtmp
+        reply_payload = "{'url':'%s'}" % fsession.pull_url
         fsession.sync_reply(reply_payload)
 
         stream_cookie.join_stream(fsession.stream_tag, fsession._source_tag)
@@ -203,7 +203,7 @@ def hook_4_start_push_media_reply(fsession, reply_result):
     if reply_result == "OK":
         stream_cookie.join_stream(fsession.stream_tag, fsession._source_tag)
 
-        final_result = "{'url':'%s'}" % fsession.pull_url_rtmp
+        final_result = "{'url':'%s'}" % fsession.pull_url
         return fsession.async_reply('publish', final_result)
     else:
         return fsession.sync_reply(reply_result)

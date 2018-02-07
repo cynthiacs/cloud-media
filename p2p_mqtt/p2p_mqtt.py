@@ -7,7 +7,7 @@ import logging
 import hashlib
 import re
 import time
-
+from .config import config
 
 __all__ = ('P2PMqtt', 'ForwardSession',)
 logger = logging.getLogger(__name__)
@@ -158,16 +158,17 @@ class ForwardSession(Session):
         self.oport_request_topic = "%s/%s/request" % (self._dest_tag, self._controller_tag)
         self.oport_reply_topic = "%s/%s/reply" % (self._controller_tag, self._dest_tag)
 
-        self.pull_url_base = "push.yangxudong.com"
+        self.pull_url_base = config["PULL_BASE"]
         self.app_name = self._dest_tag
         vid, gid, nid = self._dest_tag.split('_')
         # self.stream_name = 'c1'
         self.stream_name = nid
         self.stream_tag = "%s/%s" % (self.app_name, self.stream_name)
 
-        # expire_time = int(time.time()) + self.payload["params"]["expire-time"]
+        #expire_time = int(time.time()) + int(self.payload["params"]["expire-time"])
         expire_time = int(time.time()) + 100
-        push_url_rtmp = "rtmp://video-center.alivecdn.com/%s/%s?vhost=push.yangxudong.com" % (self.app_name, self.stream_name)
+        push_url_rtmp = "rtmp://video-center.alivecdn.com/%s/%s?vhost=%s" \
+                        % (self.app_name, self.stream_name, config["PULL_BASE"])
         self.push_url_rtmp = Session.get_auth_url(push_url_rtmp, expire_time)
         pull_url_rtmp = "rtmp://%s/%s/%s" % (self.pull_url_base, self.app_name, self.stream_name)
         self.pull_url_rtmp = Session.get_auth_url(pull_url_rtmp, expire_time)
@@ -175,6 +176,16 @@ class ForwardSession(Session):
         self.pull_url_flv = Session.get_auth_url(pull_url_flv, expire_time)
         pull_url_hls = "http://%s/%s/%s.m3u8" % (self.pull_url_base, self.app_name, self.stream_name)
         self.pull_url_hls = Session.get_auth_url(pull_url_hls, expire_time)
+
+        if config["PULL_PROTOCOL"] == "RTMP":
+            self.pull_url = self.pull_url_rtmp
+        elif config["PULL_PROTOCOL"] == "HLS":
+            self.pull_url = self.pull_url_hls
+        elif config["PULL_PROTOCOL"] == "HTTP-FLV":
+            self.pull_url = self.pull_url_flv
+        else:
+            logger.warning("config pull protocol is wrong")
+            self.pull_url = self.pull_url_rtmp
 
         self.pending_replies = {}
 
