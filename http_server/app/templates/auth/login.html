@@ -1,0 +1,32 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}Flasky - Login{% endblock %}
+
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet"
+            href="https://maxcdn.bootstrapcdn.com/bootswatch/4.0.0-beta.3/darkly/bootstrap.min.css">
+{% endblock %}
+
+
+<div class="container">
+    {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        {{ message }}
+    </div>
+    {% endfor %}
+
+    {% block content %}
+    <div class="row">   
+        <div class="col-md-4 col-md-offset-3">
+            <div class="page-header">
+                <h1>Login</h1>
+            </div>
+            {{ wtf.quick_form(form) }}
+        </div>
+    </div>
+    {% endblock %}
+</div>
+

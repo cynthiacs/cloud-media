@@ -15,3 +15,6 @@ class User(db.Document, UserMixin):
     confirmed_at = db.DateTimeField()
     roles = db.ListField(db.ReferenceField(Role), default=[])
 
+    def verify_password(self, pwd):
+        return self.password == pwd
+
