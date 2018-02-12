@@ -10,20 +10,13 @@ from .forms import LoginForm
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        print("validate!!!!!!!!!!!!")
-        user = User.objects(account=form.account.data)
-        if user is not None:
-            print("user:%s, password:%s", user.account, user.password)
-        """
-        user = User.query.filter_by(email=form.email.data).first()
+        user = User.objects(account=form.account.data).first()
         if user is not None and user.verify_password(form.password.data):
-            login_user(user, form.remember_me.data)
-            next = request.args.get('next')
-            if next is None or not next.startswith('/'):
-                next = url_for('main.index')
-            return redirect(next)
-        """
-        flash('Not Implement Yet!')
+            return "OK"
+        else:
+            return "ERROR"
+
+        #flash('Not Implement Yet!')
     return render_template('auth/login.html', form=form)
 
 
