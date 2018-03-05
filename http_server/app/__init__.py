@@ -3,10 +3,13 @@ from flask_bootstrap import Bootstrap
 from flask_moment import Moment
 from flask_mongoengine import MongoEngine
 from flask_bootstrap import WebCDN, ConditionalCDN, BOOTSTRAP_VERSION, JQUERY_VERSION, HTML5SHIV_VERSION, RESPONDJS_VERSION
+from flask_mqtt import Mqtt
 
 bootstrap = Bootstrap()
 db = MongoEngine()
 moment = Moment()
+mqtt = Mqtt()
+
 
 def change_cdn_domestic(tar_app):
     static = tar_app.extensions['bootstrap']['cdns']['static']
@@ -43,9 +46,16 @@ def create_app():
     app.config['MONGODB_HOST'] = 'localhost'
     app.config['MONGODB_PORT'] = 27017
 
+    app.config['MQTT_BROKER_URL'] = '139.224.128.15'
+    app.config['MQTT_BROKER_PORT'] = 1883
+    #app.config['MQTT_USERNAME'] = 'user'
+    #app.config['MQTT_PASSWORD'] = 'secret'
+    #app.config['MQTT_REFRESH_TIME'] = 1.0  # refresh time in seconds
+
     db.init_app(app)
     bootstrap.init_app(app)
     moment.init_app(app)
+    mqtt.init_app(app)
 
     #change_cdn_domestic(app)
 
@@ -55,6 +65,9 @@ def create_app():
     app.register_blueprint(main_blueprint)
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(apis_blueprint)
+
+
+    from app.lc_mqtt import lc_mqtt
 
     return app
 
