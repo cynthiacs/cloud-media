@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, \
-    SubmitField, SelectField, DateTimeField
+    SubmitField, SelectField
 from wtforms.validators import DataRequired, Length, Email, Regexp, EqualTo
 
 
@@ -11,12 +11,15 @@ class NewUserForm(FlaskForm):
         Regexp('^[A-Za-z][A-Za-z0-9_.]*$', 0,
                'Usernames must have only letters, numbers, dots or '
                'underscores')])
+    username = StringField('Username', validators=[
+        DataRequired(), Length(1, 64),
+        Regexp('^[A-Za-z][A-Za-z0-9_.]*$', 0,
+               'Usernames must have only letters, numbers, dots or '
+               'underscores')])
     password = PasswordField('Password', validators=[Length(0, 64)])
 
-    email = StringField('Email', validators=[Length(1, 64), Email()])
     role = SelectField('Role')
     group = SelectField('Group')
-    confirmed_at = DateTimeField('Confirmed Time')
     active = BooleanField('active')
     submit = SubmitField('Submit')
 
