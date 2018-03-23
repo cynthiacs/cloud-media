@@ -32,13 +32,30 @@ class Role(db.Document, RoleMixin):
     description = db.StringField(max_length=255)
 
 
+class CmGroup(db.Document):
+    gid = db.StringField(max_length=64)
+    username = db.StringField(max_length=64)
+
+    def __repr__(self):
+        return '<Group %r>' % self.username
+
+
+class CmVendor(db.Document):
+    vid = db.StringField(max_length=64)
+    username = db.StringField(max_length=64)
+
+    def __repr__(self):
+        return '<Group %r>' % self.username
+
+
 class User(db.Document, UserMixin):
     account = db.StringField(max_length=64)
     username = db.StringField(max_length=64)
     password = db.StringField(max_length=16)
     active = db.BooleanField(default=True)
     role = db.StringField(max_length=80)
-    group = db.StringField(max_length=80)
+    # group = db.StringField(max_length=80)
+    group = db.ReferenceField(CmGroup)
     vendor = db.StringField(max_length=80)
 
     # roles = db.ListField(db.ReferenceField(Role), default=[])
@@ -48,13 +65,14 @@ class User(db.Document, UserMixin):
     def verify_password(self, pwd):
         return self.password == pwd
 
+    def is_active(self):
+        return self.active is True
+
+    def group_selected(self, gid):
+        return self.group.gid == gid
+
+    def role_radio(self):
+        return self.role == "Puller"
+
     def __repr__(self):
         return '<User %r>' % self.username
-
-
-class CmGroup(db.Document):
-    gid = db.StringField(max_length=64)
-    username = db.StringField(max_length=64)
-
-    def __repr__(self):
-        return '<Group %r>' % self.username

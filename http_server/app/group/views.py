@@ -1,12 +1,11 @@
 """
 
 """
+import random
 from flask import url_for, redirect, render_template, request, flash
-
 from .. import messages
 from . import group
-from .forms import NewGroupForm, EditGroupForm
-from ..models import CmGroup
+from ..models import CmGroup, User
 
 
 @group.route('/group/new', methods=['GET', 'POST'])
@@ -15,15 +14,21 @@ def new():
     new one group
     :return:
     """
-    print(request.method)
-    form = NewGroupForm()
-    if form.validate_on_submit():
+    if request.method == "POST":
         new_group = CmGroup()
-        new_group.gid = form.gid.data
-        new_group.username = form.username.data
+        new_group.gid = request.form["gid"]
+        new_group.username = request.form["username"]
         new_group.save()
         return redirect(url_for('group.manage'))
-    return render_template('group/new.html', form=form)
+
+    while True:
+        randomnum = random.randint(10000, 99999)
+        gid = "G" + str(randomnum)
+        cur_group = CmGroup.objects(gid=gid).first()
+        if cur_group is None:
+            break
+
+    return render_template('group/new.html', gid=gid)
 
 
 @group.route('/group/edit/<gid>', methods=['GET', 'POST'])
@@ -34,15 +39,12 @@ def edit(gid):
     :return:
     """
     cur_group = CmGroup.objects.get_or_404(gid=gid)
-    form = EditGroupForm(cur_group)
-    if form.validate_on_submit():
-        cur_group.username = form.username.data
-        cur_group.update(username=form.username.data)
+    if request.method == "POST":
+        cur_group.username = request.form["username"]
+        cur_group.update(username=cur_group.username)
         return redirect(url_for('group.manage'))
-    form.gid.data = cur_group.gid
-    form.username.data = cur_group.username
 
-    return render_template('group/edit.html', form=form, group=group)
+    return render_template('group/edit.html', group=cur_group)
 
 
 @group.route('/group/delete/<gid>')
@@ -70,3 +72,16 @@ def manage():
     pagination = CmGroup.objects.paginate(page=page, per_page=255)
     groups = pagination.items
     return render_template('group/manage.html', groups=groups)
+
+
+@group.route('/group/details/<gid>')
+def details(gid):
+    """
+    group manage table data from db
+    :return:
+    """
+    page = request.args.get('page', 1, type=int)
+    cur_group = CmGroup.objects.get_or_404(gid=gid)
+    pagination = User.objects(group=cur_group).paginate(page=page, per_page=255)
+    users = pagination.items
+    return render_template('group/details.html', group=cur_group, users=users)

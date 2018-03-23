@@ -1,13 +1,171 @@
 {% extends "base.html" %}
-{% import "bootstrap/wtf.html" as wtf %}
 
-{% block title %}创建帐号{% endblock %}
-
+{% block title %}Cloud Media{% endblock %}
 {% block page_content %}
-<div class="page-header">
-    <h1>创建帐号</h1>
-</div>
-<div class="col-md-4">
-    {{ wtf.quick_form(form) }}
-</div>
+<div class="main-content" xmlns="http://www.w3.org/1999/html">
+    <div class="main-content-inner">
+        <div class="page-content">
+            <div class="page-header">
+                <h1>
+                    创建帐号
+                    <small>
+                        <i class="ace-icon fa fa-angle-double-right"></i>
+                        user new
+                    </small>
+                </h1>
+            </div><!-- /.page-header -->
+
+            <div class="row">
+                <div class="col-xs-12">
+                    <!-- PAGE CONTENT BEGINS -->
+                    <form name="newuser" class="form-horizontal" role="form" action="" method="post">
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label no-padding-right" for="form-input-readonly">
+                                帐&nbsp;号
+                            </label>
+
+                            <div class="col-sm-9">
+                                <input name="account" readonly="" type="text" class="col-xs-10 col-sm-5"
+                                       id="form-input-readonly"
+                                       value={{ account }}
+                                />
+                                <!--
+                                <span class="help-inline col-xs-12 col-sm-7">
+                                    <label class="middle">
+                                        <input class="ace" type="checkbox" id="id-disable-check"/>
+                                        <span class="lbl"> Disable it!</span>
+                                    </label>
+                                </span>
+                                -->
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> 昵&nbsp;称 </label>
+
+                            <div class="col-sm-9">
+                                <input name="username" type="text" id="form-field-1" placeholder="昵称"
+                                       class="col-xs-10 col-sm-5"/>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label no-padding-right "> 角&nbsp;色 </label>
+                            <div class="col-sm-9">
+                                <label>
+                                    <input name="role" type="radio" checked="checked" class="ace" value="Puller"/>
+                                    <span class="lbl"> Puller </span>
+                                </label>
+                                &nbsp;&nbsp;
+                                <label>
+                                    <input name="role" type="radio" class="ace" value="Pusher"/>
+                                    <span class="lbl"> Pusher </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label no-padding-right"> 组&nbsp; </label>
+                            <div class="col-sm-9">
+                                <select name="group" id="group-select">
+                                    {% for group in groups %}
+                                    <option value={{ group.gid }}>{{ group.username }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label no-padding-right"> 激&nbsp;活 </label>
+
+                            <div class="col-sm-9">
+                                <div class="col-xs-3">
+                                    <label>
+                                        <input name="active" class="ace ace-switch ace-switch-4"
+                                               type="checkbox" checked/>
+                                        <span class="lbl"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label no-padding-right" for="form-field-2"> 密&nbsp;码</label>
+
+                            <div class="col-sm-9">
+                                <input name="password" type="password" id="form-field-2" placeholder="Password"
+                                       class="col-xs-10 col-sm-5"/>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label no-padding-right" for="form-input-readonly">
+                                Vendor
+                            </label>
+
+                            <div class="col-sm-9">
+                                <input name="vendor" readonly="" type="text" class="col-xs-10 col-sm-5"
+                                       id="form-vid-input-readonly"
+                                       value={{ vendor }}
+                                />
+                            </div>
+                        </div>
+                        <div class="space-4"></div>
+
+                        <div class="clearfix form-actions">
+                            <div class="col-md-offset-3 col-md-9">
+                                <button class="btn btn-info" type="submit" name="submit" id="submit">
+                                    <i class="ace-icon fa fa-check bigger-110"></i>
+                                    提&nbsp;交
+                                </button>
+
+                                &nbsp; &nbsp; &nbsp;
+                                <button class="btn" type="reset">
+                                    <i class="ace-icon fa fa-undo bigger-110"></i>
+                                    重&nbsp;置
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.page-content -->
+    </div>
+</div><!-- /.main-content -->
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+    window.onload = function () {
+        var submit = document.getElementById("submit");
+        submit.onclick = function () {
+            if (document.newuser.account.value == "") {
+                alert("帐号不能为空！");
+                document.newuser.account.focus();
+                return false;
+            }
+            else if (document.newuser.username.value == "") {
+                alert("昵称不能为空！");
+                document.newuser.username.focus();
+                return false;
+            }
+            else if (document.newuser.group.value == "") {
+                alert("请选择在哪一个组");
+                document.newuser.group.focus();
+                return false;
+            }
+            else if (document.newuser.password.value == "") {
+                alert("请输入原始密码");
+                document.newuser.gid.focus();
+                return false;
+            }
+            else if (document.newuser.vendor.value == "") {
+                alert("vendor不能为空!");
+                document.newuser.vendor.focus();
+                return false;
+            }
+        }
+    }
+</script>
 {% endblock %}
