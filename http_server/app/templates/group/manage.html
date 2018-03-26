@@ -54,13 +54,15 @@
                             <tr class={{ group.gid }}>
 
                                 <td>{{ group.gid }}</td>
-                                <td>{{ group.username }}</td>
+                                <td>{{ group.name }}</td>
 
                                 <td>
                                     <div class="action-buttons">
                                         <a class="blue" href="{{ url_for('group.details', gid=group.gid) }}">
                                             <i class="ace-icon fa fa-search-plus bigger-150"></i>
                                         </a>
+                                        {% if group.is_default() %}
+                                        {% else %}
                                         &nbsp;
                                         <a class="green" href="{{ url_for('group.edit', gid=group.gid) }}">
                                             <i class="ace-icon fa fa-pencil bigger-150"></i>
@@ -70,6 +72,7 @@
                                            value={{ group.gid }} data-count={{ group.count }}>
                                             <i class="ace-icon fa fa-trash-o bigger-150 red"></i>
                                         </a>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>

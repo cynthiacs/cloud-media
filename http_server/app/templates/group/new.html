@@ -36,7 +36,7 @@
                             <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> 昵&nbsp;称 </label>
 
                             <div class="col-sm-9">
-                                <input name="username" type="text" id="form-field-1" placeholder="昵称"
+                                <input name="name" type="text" id="form-field-1" placeholder="昵称"
                                        class="col-xs-10 col-sm-5"/>
                             </div>
                         </div>
@@ -70,9 +70,9 @@
     window.onload = function () {
         var submit = document.getElementById("submit");
         submit.onclick = function () {
-            if (document.newgroup.username.value == "") {
+            if (document.newgroup.name.value == "") {
                 alert("昵称不能为空!");
-                document.newgroup.username.focus();
+                document.newgroup.name.focus();
                 return false;
             }
             else if (document.newgroup.gid.value == "") {

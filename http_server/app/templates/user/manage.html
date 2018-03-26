@@ -56,7 +56,7 @@
                                         <td>未激活</td>
                                         {% endif %}
                                         <td>{{ user.role }}</td>
-                                        <td>{{ user.group.username }}</td>
+                                        <td>{{ user.group.name }}</td>
                                         <td>
                                             <div class="action-buttons">
                                                 <a href="{{ url_for('user.edit', account=user.account) }}">

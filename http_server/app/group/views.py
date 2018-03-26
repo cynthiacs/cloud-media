@@ -17,7 +17,7 @@ def new():
     if request.method == "POST":
         new_group = CmGroup()
         new_group.gid = request.form["gid"]
-        new_group.username = request.form["username"]
+        new_group.name = request.form["name"]
         new_group.count = 0
         new_group.save()
         return redirect(url_for('group.manage'))
@@ -41,8 +41,8 @@ def edit(gid):
     """
     cur_group = CmGroup.objects.get_or_404(gid=gid)
     if request.method == "POST":
-        cur_group.username = request.form["username"]
-        cur_group.update(username=cur_group.username)
+        cur_group.name = request.form["name"]
+        cur_group.update(name=cur_group.name)
         return redirect(url_for('group.manage'))
 
     return render_template('group/edit.html', group=cur_group)

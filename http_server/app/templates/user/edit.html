@@ -75,9 +75,9 @@
                                 <select name="group" id="group-select">
                                     {% for group in groups %}
                                     {% if user.group_selected(group.gid) %}
-                                    <option value={{ group.gid }} selected="selected">{{ group.username }}</option>
+                                    <option value={{ group.gid }} selected="selected">{{ group.name }}</option>
                                     {% else %}
-                                    <option value={{ group.gid }}>{{ group.username }}</option>
+                                    <option value={{ group.gid }}>{{ group.name }}</option>
                                     {% endif %}
                                     {% endfor %}
                                 </select>

@@ -36,7 +36,7 @@
                             <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> 昵&nbsp;称 </label>
 
                             <div class="col-sm-9">
-                                <input name="username" type="text" value={{ group.username }} id="form-field-1"
+                                <input name="name" type="text" value={{ group.name }} id="form-field-1"
                                        class="col-xs-10 col-sm-5"/>
                             </div>
                         </div>
@@ -70,9 +70,9 @@
     window.onload = function () {
         var submit = document.getElementById("submit");
         submit.onclick = function () {
-            if (document.editgroup.username.value == "") {
+            if (document.editgroup.name.value == "") {
                 alert("昵称不能为空!");
-                document.editgroup.username.focus();
+                document.editgroup.name.focus();
                 return false;
             }
             else if (document.editgroup.gid.value == "") {

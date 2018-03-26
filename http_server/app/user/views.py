@@ -20,6 +20,7 @@ def new():
         new_user.account = request.form["account"]
         new_user.username = request.form["username"]
         new_user.password = request.form["password"]
+        new_user.token = "token"
         if "active" in request.form and request.form["active"] == "on":
             new_user.active = True
         else:
@@ -31,6 +32,7 @@ def new():
         cur_group_count = cur_group.count + 1
         cur_group.update(count=cur_group_count)
         new_user.group = cur_group
+        new_user.vid = "V0001"
         new_user.vendor = request.form["vendor"]
         new_user.save()
         return redirect(url_for('user.manage'))
