@@ -25,8 +25,12 @@ def new():
         else:
             new_user.active = False
         new_user.role = request.form["role"]
-        # new_user.group = request.form["group"]
-        new_user.group = CmGroup.objects.get_or_404(gid=request.form["group"])
+        cur_group = CmGroup.objects.get_or_404(gid=request.form["group"])
+        if cur_group.count is None:
+            cur_group.count = 0
+        cur_group_count = cur_group.count + 1
+        cur_group.update(count=cur_group_count)
+        new_user.group = cur_group
         new_user.vendor = request.form["vendor"]
         new_user.save()
         return redirect(url_for('user.manage'))
@@ -59,8 +63,17 @@ def edit(account):
         else:
             cur_user.active = False
         cur_user.role = request.form["role"]
-        # new_user.group = request.form["group"]
-        cur_user.group = CmGroup.objects.get_or_404(gid=request.form["group"])
+        old_group = cur_user.group
+        new_group = CmGroup.objects.get_or_404(gid=request.form["group"])
+        if cur_user.group is new_group:
+            pass
+        else:
+            new_group_count = new_group.count + 1
+            new_group.update(count=new_group_count)
+            old_group_count = old_group.count - 1
+            old_group.update(count=old_group_count)
+            cur_user.group = new_group
+
         cur_user.vendor = request.form["vendor"]
         cur_user.update(username=cur_user.username, password=cur_user.password, active=cur_user.active,
                         role=cur_user.role, group=cur_user.group)
@@ -80,11 +93,16 @@ def delete(account):
     if cur_user is None:
         flash(messages.user_not_found)
     else:
+        cur_group = CmGroup.objects.get_or_404(gid=cur_user.group.gid)
+        cur_group_count = cur_group.count - 1
+        cur_group.update(count=cur_group_count)
         cur_user.delete()
-    return redirect(url_for('user.manage'))
+
+    return "success"
+    # return redirect(url_for('user.manage'))
 
 
-@user.route('/user/manage')
+@user.route('/user/manage', methods=['GET', 'POST'])
 def manage():
     """
     the user manager data from the db

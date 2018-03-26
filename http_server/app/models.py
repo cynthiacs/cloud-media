@@ -35,6 +35,7 @@ class Role(db.Document, RoleMixin):
 class CmGroup(db.Document):
     gid = db.StringField(max_length=64)
     username = db.StringField(max_length=64)
+    count = db.IntField()
 
     def __repr__(self):
         return '<Group %r>' % self.username

@@ -60,18 +60,13 @@
                                         <td>
                                             <div class="action-buttons">
                                                 <a href="{{ url_for('user.edit', account=user.account) }}">
-                                                    <i class="ace-icon fa fa-pencil bigger-130 green"></i>
+                                                    <i class="ace-icon fa fa-pencil bigger-150 green"></i>
                                                 </a>
-
-                                                <a href="{{ url_for('user.delete', account=user.account) }}">
-                                                    <i class="ace-icon fa fa-trash-o bigger-130 red"></i>
+                                                &nbsp;
+                                                <a class="delete" href=""
+                                                   value={{ user.account }}>
+                                                    <i class="ace-icon fa fa-trash-o bigger-150 red"></i>
                                                 </a>
-
-                                                <!--
-                                                <a href="" id="id-btn-dialog2" name="delete" value="FFF">
-                                                    <i class="ace-icon fa fa-trash-o bigger-130 red"></i>
-                                                </a>
-                                                -->
                                             </div>
                                         </td>
                                     </tr>
@@ -86,7 +81,7 @@
                 </div><!-- /.col -->
 
                 <div id="dialog-confirm" class="hide">
-                    <div class="alert alert-info bigger-110">
+                    <div class="alert alert-danger bigger-110">
                         帐号将永久性删除，并且不能恢复。
                     </div>
 
@@ -117,25 +112,28 @@
         }));
 
 
-        $("#id-btn-dialog2").on('click', function (e) {
+        $(".delete").on('click', function (e) {
             e.preventDefault();
 
+            var account = $(this).attr("value");
             $("#dialog-confirm").removeClass('hide').dialog({
                 resizable: false,
                 width: '320',
                 modal: true,
-                title: "<div class='widget-header'><h4 class='smaller'><i class='ace-icon fa fa-exclamation-triangle red'></i> 帐号删除？</h4></div>",
+                title: "<div class='widget-header'><h4 class='smaller'><i class='ace-icon fa fa-exclamation-triangle red'></i> 组删除？</h4></div>",
                 title_html: true,
                 buttons: [
                     {
                         html: "<i class='ace-icon fa fa-trash-o bigger-110'></i>&nbsp; 删除",
                         "class": "btn btn-danger btn-minier",
                         click: function () {
-                            //var account = document.getElementsByName("delete").value
-                            //account = document.table.delete.value
-                            //alert(account.innerHTML)
-                            //$.post("delete/account", {account: account});
                             $(this).dialog("close");
+                            $.post("delete/" + account)
+                                .success(
+                                    function (data) {
+                                        window.location.reload();
+                                    }
+                                )
                         }
                     }
                     ,

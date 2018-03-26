@@ -18,6 +18,7 @@ def new():
         new_group = CmGroup()
         new_group.gid = request.form["gid"]
         new_group.username = request.form["username"]
+        new_group.count = 0
         new_group.save()
         return redirect(url_for('group.manage'))
 
@@ -47,7 +48,7 @@ def edit(gid):
     return render_template('group/edit.html', group=cur_group)
 
 
-@group.route('/group/delete/<gid>')
+@group.route('/group/delete/<gid>', methods=['GET', 'POST'])
 def delete(gid):
     """
     delete the name gid of group
@@ -59,7 +60,8 @@ def delete(gid):
         flash(messages.group_not_found)
     else:
         cur_group.delete()
-    return redirect(url_for('group.manage'))
+    return "success"
+    # return redirect(url_for('group.manage'))
 
 
 @group.route('/group/manage')
