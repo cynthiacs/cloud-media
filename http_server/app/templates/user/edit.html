@@ -18,7 +18,7 @@
             <div class="row">
                 <div class="col-xs-12">
                     <!-- PAGE CONTENT BEGINS -->
-                    <form name="edituser" class="form-horizontal" role="form" action="" method="post">
+                    <form id="edituser" name="edituser" class="form-horizontal" role="form" action="" method="post">
                         <div class="form-group">
                             <label class="col-sm-3 control-label no-padding-right" for="form-input-readonly">
                                 帐&nbsp;号
@@ -36,7 +36,7 @@
                             <label class="col-sm-3 control-label no-padding-right" for="form-field-1"> 昵&nbsp;称 </label>
 
                             <div class="col-sm-9">
-                                <input name="username" type="text" value={{ user.username }} id="form-field-1"
+                                <input name="username" type="text" value={{ user.username }} id="name"
                                        placeholder="昵称"
                                        class="col-xs-10 col-sm-5"/>
                             </div>
@@ -107,7 +107,7 @@
                             <label class="col-sm-3 control-label no-padding-right" for="form-field-2"> 密&nbsp;码</label>
 
                             <div class="col-sm-9">
-                                <input name="password" type="password" id="form-field-2" value={{ user.password }}
+                                <input name="password" type="password" id="pswd" value={{ user.password }}
                                        class="col-xs-10 col-sm-5"/>
                             </div>
                         </div>
@@ -128,7 +128,8 @@
 
                         <div class="clearfix form-actions">
                             <div class="col-md-offset-3 col-md-9">
-                                <button class="btn btn-info" type="submit" name="submit" id="submit">
+                                <button class="btn btn-info" type="button" name="submit"
+                                        onclick="editpost()">
                                     <i class="ace-icon fa fa-check bigger-110"></i>
                                     提&nbsp;交
                                 </button>
@@ -149,35 +150,32 @@
 
 {% block script %}
 <script type="text/javascript">
-    window.onload = function () {
-        var submit = document.getElementById("submit");
-        submit.onclick = function () {
-            if (document.edituser.account.value == "") {
-                alert("帐号不能为空！");
-                document.edituser.account.focus();
-                return false;
-            }
-            else if (document.edituser.username.value == "") {
-                alert("昵称不能为空！");
-                document.edituser.username.focus();
-                return false;
-            }
-            else if (document.edituser.group.value == "") {
-                alert("请选择在哪一个组");
-                document.edituser.group.focus();
-                return false;
-            }
-            else if (document.edituser.password.value == "") {
-                alert("请输入原始密码");
-                document.edituser.gid.focus();
-                return false;
-            }
-            else if (document.edituser.vendor.value == "") {
-                alert("vendor不能为空!");
-                document.edituser.vendor.focus();
-                return false;
-            }
+
+    function editpost() {
+        if (document.edituser.username.value == "") {
+            alert("昵称不能为空！");
+            document.edituser.username.focus();
+            return false;
         }
+
+        else if (document.edituser.password.value == "") {
+            alert("请输入密码");
+            document.edituser.password.focus();
+            return false;
+        }
+
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "",
+            data: $('#edituser').serialize(),
+            success: function (data) {
+                self.location = document.referrer;
+            },
+            error: function (data) {
+                window.location.reload();
+            }
+        });
     }
 </script>
 {% endblock %}

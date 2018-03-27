@@ -2,7 +2,7 @@
 
 """
 import random
-from flask import url_for, redirect, render_template, request, flash
+from flask import url_for, redirect, render_template, request, flash, json
 from . import user
 from ..models import User, CmGroup
 from .. import messages
@@ -79,7 +79,9 @@ def edit(account):
         cur_user.vendor = request.form["vendor"]
         cur_user.update(username=cur_user.username, password=cur_user.password, active=cur_user.active,
                         role=cur_user.role, group=cur_user.group)
-        return redirect(url_for('user.manage'))
+        return json.dumps({"result": "success"})
+        # return "success"
+        # return redirect(url_for('user.manage'))
 
     return render_template('user/edit.html', user=cur_user, groups=groups)
 

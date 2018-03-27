@@ -50,7 +50,7 @@
                                         <td>{{ user.role }}</td>
                                         <td>
                                             <div class="hidden-sm hidden-xs action-buttons">
-                                                <a href="#">
+                                                <a href="{{ url_for('user.edit', account=user.account) }}">
                                                     <i class="ace-icon fa fa-pencil bigger-130 green"></i>
                                                 </a>
                                             </div>
