@@ -70,12 +70,14 @@ def create_app():
     from app.apis import apis as apis_blueprint
     from app.user import user as user_blueprint
     from app.group import group as group_blueprint
+    from app.test import bp_test as bp_test_blueprint
 
     app.register_blueprint(main_blueprint)
     app.register_blueprint(auth_blueprint)
     app.register_blueprint(apis_blueprint)
     app.register_blueprint(user_blueprint)
     app.register_blueprint(group_blueprint)
+    app.register_blueprint(bp_test_blueprint)
 
     from app.lc_mqtt import lc_mqtt
 

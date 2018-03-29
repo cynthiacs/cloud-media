@@ -1,0 +1,90 @@
+{% extends "bootstrap/base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block head %}
+    {{ super() }}
+
+    {% block mc_ace %}
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="description" content="Static &amp; Dynamic Tables" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+ 
+        <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/bootstrap.min.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='assets/font-awesome/4.5.0/css/font-awesome.min.css')}}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/fonts.googleapis.com.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/ace.min.css') }}" class="ace-main-stylesheet" id="main-ace-style" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/ace-skins.min.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/ace-rtl.min.css') }}" />
+    {% endblock mc_ace %}
+{% endblock head%}
+
+{% block content %}
+<div class="container">
+    {% for message in get_flashed_messages() %}
+        <div class="alert alert-warning">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {% block page_content %} {% endblock %}
+    
+    <h1> This is a test about mqtt js.</h1>
+    <div id="log"></div>
+    <div id="log_mqtt"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="static/assets/js/ace-extra.min.js"></script>
+
+    <script type="text/javascript">
+        if('ontouchstart' in document.documentElement) document.write("<script src='assets/js/jquery.mobile.custom.min.js'>"+"<"+"/script>");
+    </script>
+    <script src="static/assets/js/bootstrap.min.js"></script>
+
+    <!-- page specific plugin scripts -->
+    <script src="static/assets/js/jquery.dataTables.min.js"></script>
+    <script src="static/assets/js/jquery.dataTables.bootstrap.min.js"></script>
+    <script src="static/assets/js/dataTables.buttons.min.js"></script>
+    <script src="static/assets/js/buttons.flash.min.js"></script>
+    <script src="static/assets/js/buttons.html5.min.js"></script>
+    <script src="static/assets/js/buttons.print.min.js"></script>
+    <script src="static/assets/js/buttons.colVis.min.js"></script>
+    <script src="static/assets/js/dataTables.select.min.js"></script>
+
+    <!-- ace scripts -->
+    <script src="static/assets/js/ace-elements.min.js"></script>
+    <script src="static/assets/js/ace.min.js"></script>
+
+
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function() {
+            console.log("in doucment.ready...");
+
+            /*
+            namespace = '/ns_test';
+            console.log("#### %s,", location.protocol + '//' + document.domain + ':' + location.port + namespace);
+
+            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+
+            socket.on('connect', function() {
+                console.log("socket on connect ...");
+                socket.emit('my_event', {data: 'I\'m connected!'});
+            });
+
+            socket.on('my_response', function(msg) {
+                console.log("socket on my_response ...");
+                $('#log').append('<br>' + $('<div/>').text('Received : ' + msg.data).html());
+            });
+
+            socket.on('mqtt_event', function(msg) {
+                console.log("socket on mqtt_event ...");
+                $('#log').append('<br>' + $('<div/>').text('Received Mqtt: ' + msg.data).html());
+            });
+            */ 
+        });
+    </script>
+{% endblock %}
