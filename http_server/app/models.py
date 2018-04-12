@@ -90,7 +90,7 @@ class User(db.Document, UserMixin):
         return self.group.gid == gid
 
     def role_radio(self):
-        return self.role == "Puller"
+        return self.role == "puller"
 
     def __repr__(self):
         return '<User %r>' % self.username
