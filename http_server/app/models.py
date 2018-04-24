@@ -1,4 +1,5 @@
 from flask_login import login_manager, login_user
+from flask_login._compat import unicode
 from flask_security import Security, MongoEngineUserDatastore, \
     UserMixin, RoleMixin, login_required
 from werkzeug.security import generate_password_hash
@@ -24,6 +25,7 @@ class Group(db.Document):
 class Permission:
     PULL = 0x01
     PUSH = 0x02
+    ADMINISTRATOR = 0xFF
 
 
 class Role(db.Document, RoleMixin):
@@ -45,12 +47,14 @@ class CmGroup(db.Document):
         return '<Group %r>' % self.username
 
 
-class CmVendor(db.Document):
+class Vendor(db.Document, UserMixin):
     vid = db.StringField(max_length=64)
     username = db.StringField(max_length=64)
+    password = db.StringField(max_length=16)
+    active = db.BooleanField(default=True)
 
     def __repr__(self):
-        return '<Group %r>' % self.username
+        return '<Vendor %r>' % self.username
 
 
 class User(db.Document, UserMixin):
@@ -83,8 +87,17 @@ class User(db.Document, UserMixin):
     def verify_password(self, pwd):
         return self.password == pwd
 
+    def is_authenticated(self):
+        return True
+
     def is_active(self):
         return self.active is True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.id)
 
     def group_selected(self, gid):
         return self.group.gid == gid

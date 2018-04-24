@@ -11,9 +11,11 @@ bootstrap = Bootstrap()
 db = MongoEngine()
 moment = Moment()
 mqtt = Mqtt()
-login_manager = LoginManager()
-login_manager.session_protection = 'strong'
-login_manager.login_view = 'auth.login'
+
+
+# login_manager = LoginManager()
+# login_manager.session_protection = 'strong'
+# login_manager.login_view = 'auth.login'
 
 
 def change_cdn_domestic(tar_app):
@@ -61,7 +63,8 @@ def create_app():
     bootstrap.init_app(app)
     moment.init_app(app)
     mqtt.init_app(app)
-    login_manager.init_app(app)
+    init_login_manager(app)
+    # login_manager.init_app(app)
 
     # change_cdn_domestic(app)
 
@@ -82,3 +85,19 @@ def create_app():
     from app.lc_mqtt import lc_mqtt
 
     return app
+
+
+def init_login_manager(app):
+    login_manager = LoginManager()
+    login_manager.session_protection = 'strong'
+    login_manager.login_view = 'auth.login'
+    login_manager.init_app(app)
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        """
+        :param user_id:  Object ID
+        :return:
+        """
+        from app.models import User
+        return User.objects(id=user_id).first()

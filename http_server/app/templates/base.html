@@ -98,7 +98,7 @@
                     <a data-toggle="dropdown" href="#" class="dropdown-toggle">
                         <img class="nav-user-photo" src="{{ mirror_site }}/static/assets/images/avatars/avatar2.png"
                              alt="Jason's Photo"/>
-                        <span class="user-info"><small>Welcome,</small>Vendor</span>
+                        <span class="user-info"><small>Welcome,</small>{{ current_user.username }}</span>
                         <i class="ace-icon fa fa-caret-down"></i>
                     </a>
 
@@ -120,7 +120,7 @@
                         <li class="divider"></li>
 
                         <li>
-                            <a href="#">
+                            <a href="{{ url_for('auth.logout') }}">
                                 <i class="ace-icon fa fa-power-off"></i>
                                 退出
                             </a>
@@ -138,6 +138,7 @@
             ace.settings.loadState('main-container')
         } catch (e) {
         }
+
     </script>
 
     <div id="sidebar" class="sidebar responsive ace-save-state">
@@ -146,6 +147,7 @@
                 ace.settings.loadState('sidebar')
             } catch (e) {
             }
+
         </script>
 
         <ul class="nav nav-list">
@@ -210,6 +212,18 @@
 <![endif]-->
 <script type="text/javascript">
     if ('ontouchstart' in document.documentElement) document.write("<script src='{{ mirror_site }}/static/assets/js/jquery.mobile.custom.min.js'>" + "<" + "/script>");
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
 
 <script src="{{ mirror_site }}/static/assets/js/bootstrap.min.js"></script>

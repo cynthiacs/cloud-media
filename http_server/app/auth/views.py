@@ -1,6 +1,10 @@
+import datetime
+
 from flask import render_template, redirect, request, url_for, flash
 from flask_login import login_user, logout_user, login_required, \
     current_user
+
+from http_server.app import messages
 from . import auth
 from .. import db
 from ..models import User
@@ -11,10 +15,31 @@ import json
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == "POST":
-        print(request.form["username"])
-        print(request.form["password"])
-        return redirect(url_for('group.manage'))
+        user = User.objects(username=request.form["username"]).first()
 
+        if user is not None:
+            if user.verify_password(request.form["password"]):
+                remember_me = False
+                if "remember" in json.dumps(request.form):
+                    remember_me = True
+
+                # if current_user.is_authenticated:
+                #    flash(messages.user_login_already)
+                # else:
+                login_user(user, remember=remember_me, duration=datetime.timedelta(minutes=30))
+                return redirect(request.args.get('next') or url_for('group.manage'))
+            else:
+                flash(messages.wrong_username_password)
+        else:
+            flash(messages.user_not_found)
+
+    return render_template('auth/login.html')
+
+
+@auth.route('/logout')
+@login_required
+def logout():
+    logout_user()
     return render_template('auth/login.html')
 
 
@@ -27,7 +52,7 @@ def login_app():
         dict_in = json.loads(data)
         account = dict_in['account']
         password = dict_in['password']
-        print("LOGIN: account:%s, password:%s" %(account, password))
+        print("LOGIN: account:%s, password:%s" % (account, password))
 
         cur_user = User.objects(account=account).first()
         if cur_user is None:
@@ -44,7 +69,7 @@ def login_app():
         dict_return['group_id'] = cur_user.group.gid
         dict_return['group_nick'] = cur_user.group.name
 
-        #dict_return = {"result": "OK", "role": "pusher", "token": "12345678",
+        # dict_return = {"result": "OK", "role": "pusher", "token": "12345678",
         #               "vendor_id": "88888888", "vendor_nick": "CM Team",
         #               "group_id": "00000000", "group_nick": "Default Group"}
         return json.dumps(dict_return)
@@ -52,7 +77,7 @@ def login_app():
         data = request.get_data()
         dict_out = json.loads(data)
         account = dict_out["account"]
-        print("LOGOUT: account:%s" %(account))
+        print("LOGOUT: account:%s" % (account))
 
         cur_user = User.objects(account=account).first()
         if cur_user is None:

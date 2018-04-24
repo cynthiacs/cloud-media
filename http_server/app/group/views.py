@@ -3,12 +3,15 @@
 """
 import random
 from flask import url_for, redirect, render_template, request, flash
+from flask_login import login_required
+
 from .. import messages
 from . import group
 from ..models import CmGroup, User
 
 
 @group.route('/group/new', methods=['GET', 'POST'])
+@login_required
 def new():
     """
     new one group
@@ -33,6 +36,7 @@ def new():
 
 
 @group.route('/group/edit/<gid>', methods=['GET', 'POST'])
+@login_required
 def edit(gid):
     """
     edit the name gid of group
@@ -49,6 +53,7 @@ def edit(gid):
 
 
 @group.route('/group/delete/<gid>', methods=['GET', 'POST'])
+@login_required
 def delete(gid):
     """
     delete the name gid of group
@@ -65,6 +70,7 @@ def delete(gid):
 
 
 @group.route('/group/manage')
+@login_required
 def manage():
     """
     group manage table data from db
@@ -77,6 +83,7 @@ def manage():
 
 
 @group.route('/group/details/<gid>')
+@login_required
 def details(gid):
     """
     group manage table data from db

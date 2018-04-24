@@ -3,12 +3,15 @@
 """
 import random
 from flask import url_for, redirect, render_template, request, flash, json
+from flask_login import login_required
+
 from . import user
 from ..models import User, CmGroup
 from .. import messages
 
 
 @user.route('/user/new', methods=['GET', 'POST'])
+@login_required
 def new():
     """
     new one user
@@ -49,6 +52,7 @@ def new():
 
 
 @user.route('/user/edit/<account>', methods=['GET', 'POST'])
+@login_required
 def edit(account):
     """
     edit the account of the user
@@ -87,6 +91,7 @@ def edit(account):
 
 
 @user.route('/user/delete/<account>', methods=['GET', 'POST'])
+@login_required
 def delete(account):
     """
     delete the account of the user
@@ -107,6 +112,7 @@ def delete(account):
 
 
 @user.route('/user/manage', methods=['GET', 'POST'])
+@login_required
 def manage():
     """
     the user manager data from the db
@@ -115,4 +121,10 @@ def manage():
     page = request.args.get('page', 1, type=int)
     pagination = User.objects.paginate(page=page, per_page=255)
     users = pagination.items
+    for cur_user in users:
+        if cur_user.role == "administrator":
+            users.remove(cur_user)
+
+    print(users)
+
     return render_template('user/manage.html', users=users)

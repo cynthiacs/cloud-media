@@ -15,3 +15,5 @@ user_not_found = '该用户未找到！'
 group_not_found = '该组未找到！'
 
 update_profile_ok = '您的资料已更新！'
+
+user_login_already = '该用户已经登录'
