@@ -52,6 +52,22 @@ class Vendor(db.Document, UserMixin):
     username = db.StringField(max_length=64)
     password = db.StringField(max_length=16)
     active = db.BooleanField(default=True)
+    role = db.StringField(default="administrator")
+
+    def verify_password(self, pwd):
+        return self.password == pwd
+
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return self.active is True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.id)
 
     def __repr__(self):
         return '<Vendor %r>' % self.username

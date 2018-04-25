@@ -1,6 +1,6 @@
 from flask import Blueprint
 
-from http_server.app.models import User
+from ..models import Vendor
 
 auth = Blueprint('auth', __name__)
 
@@ -9,12 +9,7 @@ from . import views
 """
 create default Vendor
 """
-cur_user = User.objects(account="V0001").first()
-if cur_user is None:
-    new_user = User()
-    new_user.account = "V0001"
-    new_user.username = "Vendor"
-    new_user.password = "abcd.1234"
-    new_user.role = "administrator"
-    new_user.active = True
-    new_user.save()
+cur_vendor = Vendor.objects(vid="V0001").first()
+if cur_vendor is None:
+    cur_vendor = Vendor(vid="V0001", username="Leadcore", password="abcd.1234", role="administrator", active=True)
+    cur_vendor.save()

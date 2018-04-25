@@ -3,7 +3,7 @@
 """
 import random
 from flask import url_for, redirect, render_template, request, flash, json
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 from . import user
 from ..models import User, CmGroup
@@ -35,12 +35,13 @@ def new():
         cur_group_count = cur_group.count + 1
         cur_group.update(count=cur_group_count)
         new_user.group = cur_group
-        new_user.vid = "V0001"
+        new_user.vid = current_user.vid
         new_user.vendor = request.form["vendor"]
         new_user.save()
         return redirect(url_for('user.manage'))
 
     groups = CmGroup.objects()
+
     while True:
         randomnum = random.randint(100000, 999999)
         account = "A" + str(randomnum)
@@ -48,7 +49,7 @@ def new():
         if user is None:
             break
 
-    return render_template('user/new.html', groups=groups, account=account, vendor="Vendor")
+    return render_template('user/new.html', groups=groups, account=account, vendor=current_user)
 
 
 @user.route('/user/edit/<account>', methods=['GET', 'POST'])
@@ -121,10 +122,5 @@ def manage():
     page = request.args.get('page', 1, type=int)
     pagination = User.objects.paginate(page=page, per_page=255)
     users = pagination.items
-    for cur_user in users:
-        if cur_user.role == "administrator":
-            users.remove(cur_user)
-
-    print(users)
 
     return render_template('user/manage.html', users=users)

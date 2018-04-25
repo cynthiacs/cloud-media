@@ -6,19 +6,17 @@ from flask_login import login_user, logout_user, login_required, \
 
 from http_server.app import messages
 from . import auth
-from .. import db
-from ..models import User
-from .forms import LoginForm
+from ..models import User, Vendor
 import json
 
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == "POST":
-        user = User.objects(username=request.form["username"]).first()
+        vendor = Vendor.objects(username=request.form["username"]).first()
 
-        if user is not None:
-            if user.verify_password(request.form["password"]):
+        if vendor is not None:
+            if vendor.verify_password(request.form["password"]):
                 remember_me = False
                 if "remember" in json.dumps(request.form):
                     remember_me = True
@@ -26,7 +24,7 @@ def login():
                 # if current_user.is_authenticated:
                 #    flash(messages.user_login_already)
                 # else:
-                login_user(user, remember=remember_me, duration=datetime.timedelta(minutes=30))
+                login_user(vendor, remember=remember_me, duration=datetime.timedelta(minutes=30))
                 return redirect(request.args.get('next') or url_for('group.manage'))
             else:
                 flash(messages.wrong_username_password)

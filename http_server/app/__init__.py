@@ -99,5 +99,5 @@ def init_login_manager(app):
         :param user_id:  Object ID
         :return:
         """
-        from app.models import User
-        return User.objects(id=user_id).first()
+        from .models import Vendor
+        return Vendor.objects(id=user_id).first()
