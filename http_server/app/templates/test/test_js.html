@@ -86,5 +86,35 @@
             });
             */ 
         });
+
+        /*
+        if ('WebSocket' in window){
+            //var addr = "ws://www.yangxudong.com:9001"
+            var addr = "ws://139.224.128.15:9001"
+            console.log(addr)
+            var ws = new WebSocket(addr)
+            ws.onopen = function(){
+                console.log('Connection open!');
+                ws.send("client onopen");
+            }
+             
+            ws.onmessage = function(evt) {
+                console.log('onmessage: ' + evt.data)
+            }
+     
+            ws.onclose = function(){
+               console.log('Connection closed');
+            }
+      
+            ws.onerror = function(error){
+               console.log('Error detected: ' + error);
+            }
+
+       } else {
+           console.log('websocet is not supported')
+       }
+
+        */
+
     </script>
 {% endblock %}
