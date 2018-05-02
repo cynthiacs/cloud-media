@@ -74,7 +74,7 @@ def _publish_one_pusher_to_all(source_tag, add_remove_update, node_info=None):
     if node_info['role'] != _ROLE_PUSHER:
         return
 
-    to_who = "%s_%s_*" % (vid, _ROLE_PULLER)
+    to_who = "%s_%s_*" % (vid, gid)
     payload = '{"%s":[%s]}' % (add_remove_update, node_info)
     media_controller.publish("%s/%s/%s" % (to_who, CONTROLLER_TAG, _TOPIC_NODES_CHANGE),
                              payload, qos=2, retain=False)
@@ -267,9 +267,11 @@ def handle_ali_notify(mqtt_msg):
     online_nodes.update(node_tag, "stream_status", status)
 
     if status == 'publish_done':
-        # _publish_one_pusher_to_all(node_tag, _CHANGE_NEW_UPDATE, None)
+        _publish_one_pusher_to_all(node_tag, _CHANGE_NEW_UPDATE, None)
         stream_tag = "%s/%s" % (node_tag, stream)
         stream_cookie.del_stream(stream_tag)
+        # FIX ME
+        return
 
     stag = "%s/%s" % (node_tag, status)
     media_controller.signal(stag)
