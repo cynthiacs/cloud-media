@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_bootstrap import Bootstrap
-from flask_login import login_manager, LoginManager
+from flask_login import LoginManager
 from flask_moment import Moment
 from flask_mongoengine import MongoEngine
 from flask_bootstrap import WebCDN, ConditionalCDN, BOOTSTRAP_VERSION, JQUERY_VERSION, HTML5SHIV_VERSION, \
@@ -11,11 +11,6 @@ bootstrap = Bootstrap()
 db = MongoEngine()
 moment = Moment()
 mqtt = Mqtt()
-
-
-# login_manager = LoginManager()
-# login_manager.session_protection = 'strong'
-# login_manager.login_view = 'auth.login'
 
 
 def change_cdn_domestic(tar_app):
@@ -64,7 +59,6 @@ def create_app():
     moment.init_app(app)
     mqtt.init_app(app)
     init_login_manager(app)
-    # login_manager.init_app(app)
 
     # change_cdn_domestic(app)
 

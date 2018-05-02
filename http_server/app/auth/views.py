@@ -6,14 +6,13 @@ from flask_login import login_user, logout_user, login_required, \
 
 from .. import messages
 from . import auth
-from ..models import User, Vendor, db_setting
+from ..models import User, Vendor
 import json
 
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == "POST":
-        # db_setting(host='localhost', port=27017, database='usermanager')
         vendor = Vendor.objects(username=request.form["username"]).first()
 
         if vendor is not None:
