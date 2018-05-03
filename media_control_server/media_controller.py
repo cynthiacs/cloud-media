@@ -260,10 +260,17 @@ def handle_ali_notify(mqtt_msg):
     logger_mc.debug(repr(mqtt_msg))
 
     payload = eval(mqtt_msg.payload)
-    status = payload["action"]
+    action = payload["action"]
     app = payload["app"]
     stream = payload["stream"]
     node_tag = app  # TODO: change it
+
+    status = action
+    if action == 'publish_done':
+        status = _NODE_STATUS_PUSHING_CLOSE
+    if action == 'publish':
+        status = _NODE_STATUS_PUSHING
+
     online_nodes.update(node_tag, "stream_status", status)
 
     if status == 'publish_done':
