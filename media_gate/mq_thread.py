@@ -1,20 +1,24 @@
 import paho.mqtt.client as paho_mqtt
 import threading
-from media_gate import media_adaptor
 
 mqtt_client = paho_mqtt.Client()
 
+_mg = None
+
 class MqThread(threading.Thread):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, mg, *args, **kwargs):
         threading.Thread.__init__(self, *args, **kwargs)
-        self.daemon = True
-        self.loop = None
-        self.client = None
+        #self._mg = mg
+        global _mg
+        _mg = mg
+        #self.daemon = True
+        #self.loop = None
+        #self.client = None
 
     @staticmethod
     def on_connect(mqttc, obj, flags, rc):
         print('mqtt on_connect')
-        media_adaptor.set_mqtt(mqtt_client)
+        _mg.set_mqtt(mqtt_client)
 
     @staticmethod
     def on_message(mqttc, obj, msg):
@@ -22,7 +26,7 @@ class MqThread(threading.Thread):
         logger.debug("\t topic: " + msg.topic)
         logger.debug("\t qos: " + str(msg.qos))
         logger.debug("\t payload" + str(msg.payload))
-        # use media_adaptor to communicate with media controller
+        _mg.mq_put(msg)
 
     def run(self):
         mqtt_client.on_connect = self.on_connect

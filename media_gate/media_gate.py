@@ -1,79 +1,54 @@
 import logging.config
-from enum import Enum
-from user_admin_proxy import UserAdminProxy
-from media_controller_proxy import MediaControllerProxy
+from queue import Queue
+from ws_tasks import WsLoginTask, WsErrorTask
+from mq_tasks import MqForwordTask 
+from mg_adaptor import MgAdaptor
 
 logging.config.fileConfig('logging.conf')
 logger = logging.getLogger(__name__)
 
-class SessionStatus(Enum):
-    initial = 1
-    running = 2
-    waiting = 3
-
-class Session(object):
-    def __init__(self, ws=None, account=None, password=None, tag=None):
-        self._ws = ws 
-        self._account = account 
-        self._password = password 
-        self._node_tag = tag 
-        self._status = SessionStatus.initial
-
-    def set_node_tag(self, tag):
-        self._node_tag = tag
-
-    def set_status(self, status):
-        self._status = status
-
-    async def outer_commander(self, websocket, command):
-        print('ws send %s' % (command, ))
-        await websocket.send(command)
- 
-
-class MediaAdaptor:
+class MediaGate(object):
     def __init__(self):
-        logger.debug("MediaAdaptor init")
-        self._uap = UserAdminProxy(logger)
-        self._mcp = None 
-        self._sessions = []
+        logger.debug("MediaGate init")
+        self._input_queue = Queue()
+        self.adaptor = MgAdaptor()
 
     def set_mqtt(self, mqtt):
-        self._mcp = MediaControllerProxy(mqtt, logger=logger)
+        self.adaptor.set_mqtt(mqtt)
 
-    def _find_session_by_ws(self, ws):
-        """
-        find the session whoes websocket is ws
-        """
-        for s in self._sessions:
-            if ws == s._ws:
-                return s
-        return None 
+    def ws_put(self, ws, msg):
+        # try:
+        jrpc = eval(msg)
+        method = jrpc['method']
+        params = jrpc['params']
+        if method == 'login': 
+            task = WsLoginTask(self.adaptor, ws, params) 
+        elif method == 'connect':
+            #WsConnectTask(self.adaptor, params)
+            pass
+        elif method == 'start_push':
+            pass
+        elif method == 'stop_push':
+            pass
+        else:
+            print("unsupported command %s" % (method,))
+            task = WsErrorTask(self.adaptor, ws, '{"method":"echo", "params":"unsupported command"}') 
 
-    def _find_session_by_tag(self, tag):
-        """
-        find the session whoes node tag is tag 
-        """
-        for s in self._sessions:
-            if tag == s._node_tag:
-                return s
-        return None 
+        self._input_queue.put(task) 
 
-    def login(self, ws, account, password):
-        s = Session(ws, account, password)
-        self._sessions.append(s)
+    def mq_put(self, params):
+        print('fix me')
+        tag = 'V0001_G0001_N0001'
+        #params = 
+        task = MqForwordTask(self.adaptor, tag, params)
+        self._input_queue.put(task) 
 
-        self._uap.login(s) 
-
-    def mcp_connect(self, ws, params):
-        pass
-        #self._mcp.connect(s, "{url:xxxx, expire_time:eeeee}")
-
-    def mcp_start_push(self, ws, params):
-        s = _find_session_by_ws(ws)
-        self._mcp.start_push(s, "{url:xxxx, expire_time:eeeee}")
-
-    def mcp_stop_push(self, params):
-        pass
-
-media_adaptor = MediaAdaptor()
-
+    def get_task(self):
+        task = self._input_queue.get()
+        self._input_queue.task_done()
+        return task
+ 
+    def close(self):
+        self._input_queue.put(None)
+        self._input_queue.join()
+       

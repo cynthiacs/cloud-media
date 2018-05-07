@@ -1,22 +1,21 @@
 import threading
-from media_gate import media_adaptor
 import websockets
 import asyncio
 
 
 class WsThread(threading.Thread):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, mg, *args, **kwargs):
+        self._mg = mg
         threading.Thread.__init__(self, *args, **kwargs)
-        self.daemon = True
-        self.loop = None
+        #self.daemon = True
+        #self.loop = None
  
     async def message_handler(self, websocket, path):
         async for message in websocket:
             print("got:", message)
             print(repr(websocket))
             await websocket.send("echo: " + message)
-            if message == "login":
-                media_adaptor.login(websocket, "yangxudong", "123456")
+            self._mg.ws_put(websocket, message)
   
     def run(self):
         self.loop = asyncio.new_event_loop()

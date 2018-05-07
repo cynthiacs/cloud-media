@@ -1,11 +1,11 @@
 
 class UserAdminProxy:
-    def __init__(self, logger):
-        logger.debug("UserAdminProxy init")
-        self.logger = logger
+    def __init__(self):
+        #logger.debug("UserAdminProxy init")
+        print("UserAdminProxy init")
 
     def login(self, s):
-        self.logger.debug("UserAdminProxy login(%s, %s)" % (s._account, s._password))
+        print("UserAdminProxy login(%s, %s)" % (s._account, s._password))
         # send http request
         # waiting for reply
         # signal the result
