@@ -24,6 +24,9 @@ class Session(object):
     def set_status(self, status):
         self._status = status
 
+    def ws_send(self, data):
+        self._ws.send(data)
+
     async def outer_commander(self, websocket, command):
         print('ws send %s' % (command, ))
         await websocket.send(command)

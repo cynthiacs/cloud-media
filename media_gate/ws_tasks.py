@@ -10,7 +10,9 @@ class WsLoginTask(Task):
         self._adaptor.append_session(self._session)
 
     def run(self):
-       self._adaptor.uap.login(self._session) 
+        ret = self._adaptor.uap.login(self._session) 
+        # send ret to js client
+        # self._session.ws_send('OK')
 
 
 class WsErrorTask(Task):

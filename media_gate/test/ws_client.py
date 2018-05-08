@@ -2,7 +2,7 @@ import asyncio
 import websockets
 
 login_reqeust = '{"jsonrpc":2.0, "method":"login", "params":{"account":"yxd", "password":"123"}}'
-connect_reqeust = ''
+connect_reqeust = '{"jsonrpc":2.0, "method":"connect", "params":{"tag":"V0001_G0001_N0001", "token":"123456"}}'
 start_push_reqeust = ''
 stop_push_reqeust = ''
 

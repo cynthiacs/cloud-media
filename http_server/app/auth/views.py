@@ -84,3 +84,10 @@ def login_app():
         return json.dumps({'result': 'OK'})
     else:
         return json.dumps({'result': 'ERROR'})
+
+@auth.route('/login_mg', methods=['GET', 'POST'])
+def login_mg():
+    response = '{"tag":"V0001_G0001_N0001"}' 
+    print('in login_mg')
+    return response 
+
