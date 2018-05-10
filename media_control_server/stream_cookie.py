@@ -13,18 +13,29 @@ class StreamCookie(object):
     def keys(self):
         return self._streams.keys()
 
+    def show_cookie(self):
+        self.logger.debug('*** show_cookie')
+        for (k,v) in self._streams.items(): 
+            self.logger.debug("*** %s, %s" % (k, str(v["pullers"]) ))
+            self.logger.debug("*** stream %s count puller: %d" % (k, len(v["pullers"])))
+
     def join_stream(self, stream_tag, puller_tag):
         """ when a new puller start to pull the stream
         """
-        print("%s join stream %s" % (puller_tag, stream_tag))
+        self.show_cookie()
+        self.logger.debug("%s join stream %s" % (puller_tag, stream_tag))
+
         stream_info = self._streams.setdefault(stream_tag,
                                                {"pullers": [], "expire-time": 0})
-        stream_info["pullers"].append(puller_tag)
+        if puller_tag not in stream_info["pullers"]:
+            stream_info["pullers"].append(puller_tag)
 
     def quit_stream(self, stream_tag, puller_tag):
         """ when the puller stop to pull the stream
         """
-        print("%s quit stream %s" % (puller_tag, stream_tag))
+        self.show_cookie()
+        self.logger.debug("%s quit stream %s" % (puller_tag, stream_tag))
+
         stream_info = self._streams.setdefault(stream_tag,
                                                {"pullers": [], "expire-time": 0})
         if puller_tag in stream_info["pullers"]:
@@ -33,14 +44,18 @@ class StreamCookie(object):
     def del_stream(self, stream_tag):
         """when the stream is done
         """
-        print("delete stream %s" % stream_tag)
+        self.show_cookie()
+        self.logger.debug("delete stream %s" % stream_tag)
+
         if stream_tag in self._streams:
             del self._streams[stream_tag]
 
     def clean_puller(self, puller_tag):
         """ when the puller die, do this
         """
-        print("clean puller %s" % puller_tag)
+        self.show_cookie()
+        self.logger.debug("clean puller %s" % puller_tag)
+
         for k, v in self._streams.items():
             if puller_tag in v["pullers"]:
                 v["pullers"].remove(puller_tag)
@@ -48,7 +63,9 @@ class StreamCookie(object):
     def clean_pusher(self, pusher_tag):
         """ when the pusher die, do this
         """
-        print("clean pusher %s" % pusher_tag)
+        self.show_cookie()
+        self.logger.debug("clean pusher %s" % pusher_tag)
+
         stream_tag = None
         for k, v in self._streams.items():
             app, stream = k.split('/')
@@ -64,7 +81,8 @@ class StreamCookie(object):
         """
         stream_info = self._streams.setdefault(stream_tag,
                                                {"pullers": [], "expire-time": 0})
-        print("stream %s count puller: %d" % (stream_tag, len(stream_info["pullers"])))
+        self.show_cookie()
+
         return len(stream_info["pullers"])
 
     def get_pullers(self, pusher_tag):

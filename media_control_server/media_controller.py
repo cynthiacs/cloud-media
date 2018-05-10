@@ -29,6 +29,10 @@ _CHANGE_NEW_OFFLINE = "new_offline"
 _CHANGE_NEW_UPDATE = "new_update"
 
 # CM stream status
+_NODE_STATUS_PUSHING_START = 'pushing_start'
+_NODE_STATUS_PUBLISH = 'publish'
+_NODE_STATUS_PUBLISH_DONE = 'publish_done'
+
 _NODE_STATUS_PUSHING = 'pushing'
 _NODE_STATUS_PUSHING_CLOSE = 'pushing_close'
 _NODE_STATUS_PUSHING_ERROR = 'pushing_error'
@@ -169,25 +173,58 @@ def hook_4_start_push_media(fsession):
         return False
 
     stream_status = result['stream_status']
-    if stream_status == 'publish' or stream_status == 'pushing':
-        logger_mc.debug("%s is %s, so no need forward request anymore" %
+    #if stream_status == 'publish' or stream_status == 'pushing':
+    #    logger_mc.debug("%s is %s, so no need forward request anymore" %
+    #                    (target_node_tag, stream_status))
+
+    #    if stream_status == 'pushing':
+    #        #logger_mc.warning("temp workaround, async reply to be done!")
+    #        #time.sleep(1)
+    #        print('!!!!!!!!!!!!!!!!')
+    #        final_result = "{'url':'%s'}" % fsession.pull_url
+    #        fsession.async_reply('publish', final_result)
+    #    else:
+    #        reply_payload = "{'url':'%s'}" % fsession.pull_url
+    #        fsession.sync_reply(reply_payload)
+
+    #    stream_cookie.join_stream(fsession.stream_tag, fsession._source_tag)
+    #    return False
+
+
+    if stream_status == _NODE_STATUS_UNKNOWN  \
+        or stream_status == _NODE_STATUS_PUSHING_CLOSE \
+        or stream_status == _NODE_STATUS_PUBLISH_DONE \
+        or stream_status == _NODE_STATUS_PUSHING_ERROR:
+        logger_mc.debug("%s status is %s, forward it" %
                         (target_node_tag, stream_status))
 
-        if stream_status == 'pushing':
-            logger_mc.warning("temp workaround, async reply to be done!")
-            time.sleep(1)
-            # fsession.async_reply('publish', final_result)
-
-        reply_payload = "{'url':'%s'}" % fsession.pull_url
-        fsession.sync_reply(reply_payload)
+        stream_status = _NODE_STATUS_PUSHING_START
+        online_nodes.update(target_node_tag, "stream_status", stream_status)
 
         stream_cookie.join_stream(fsession.stream_tag, fsession._source_tag)
-        return False
+        # add url to the forward payload
+        # fsession.payload["params"]["url"] = fsession.push_url_rtmp
+        return True, None 
 
-    # add url to the forward payload
-    fsession.payload["params"]["url"] = fsession.push_url_rtmp
-    return True
+    if stream_status == _NODE_STATUS_PUBLISH:
+        logger_mc.debug("%s status is %s, reply url direct, no need to forward" %
+                        (target_node_tag, stream_status))
+        reply_payload = "{'url':'%s'}" % fsession.pull_url
+        fsession.sync_reply(reply_payload)
+        ret = None
+    elif stream_status == _NODE_STATUS_PUSHING \
+        or stream_status == _NODE_STATUS_PUSHING_START:
+        logger_mc.debug("%s status is %s, waiting aliyun's signal, no need to forward" %
+                        (target_node_tag, stream_status))
 
+        final_result = "{'url':'%s'}" % fsession.pull_url
+        stag = fsession.async_reply('publish', final_result)
+        ret = stag
+    else:
+        print('!!!!! @hook_4_start_push_media hould not be here !!!!!!')
+
+    stream_cookie.join_stream(fsession.stream_tag, fsession._source_tag)
+    return False, ret
 
 @media_controller.forward_reply_hook(REQUEST_START_PUSH_MEDIA)
 def hook_4_start_push_media_reply(fsession, reply_result):
@@ -224,16 +261,16 @@ def hook_4_stop_push_media(fsession):
     result = online_nodes.find_one(target_node_tag)
     if result is None:
         fsession.sync_reply("Error: nid:%s is not online" % nid)
-        return False
+        return False, None
 
     stream_cookie.quit_stream(fsession.stream_tag, fsession._source_tag)
 
     if stream_cookie.count_puller(fsession.stream_tag) == 0:
         logger_mc.info("forward stop_push_media command to %s" % target_node_tag)
-        return True
+        return True, None
     else:
         fsession.sync_reply("OK")
-        return False
+        return False, None
 
 
 @media_controller.topic_handler("cm/nodes_will")
@@ -266,10 +303,10 @@ def handle_ali_notify(mqtt_msg):
     node_tag = app  # TODO: change it
 
     status = action
-    if action == 'publish_done':
-        status = _NODE_STATUS_PUSHING_CLOSE
-    if action == 'publish':
-        status = _NODE_STATUS_PUSHING
+    #if action == 'publish_done':
+    #    status = _NODE_STATUS_PUSHING_CLOSE
+    #if action == 'publish':
+    #    status = _NODE_STATUS_PUSHING
 
     online_nodes.update(node_tag, "stream_status", status)
 
@@ -277,9 +314,10 @@ def handle_ali_notify(mqtt_msg):
         _publish_one_pusher_to_all(node_tag, _CHANGE_NEW_UPDATE, None)
         stream_tag = "%s/%s" % (node_tag, stream)
         stream_cookie.del_stream(stream_tag)
-        # FIX ME
+        # FIX ME, to check whether signal is needed
         return
 
+    # pusher_node_tag/publish
     stag = "%s/%s" % (node_tag, status)
     media_controller.signal(stag)
 

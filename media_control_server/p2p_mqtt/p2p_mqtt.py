@@ -208,6 +208,7 @@ class ForwardSession(Session):
 
     def async_reply(self, action, final_result):
         signal_tag = "%s/%s" % (self._dest_tag, action)
+        logger.debug("@async_reply sig_tag:" + signal_tag)
 
         def blocker(res):
             yield res
@@ -215,7 +216,13 @@ class ForwardSession(Session):
 
         co = blocker(final_result)
         next(co)
+
+        #self.pending_replies.setdefault(signal_tag,[])
+        # only one corutine pending for one signal currently
         self.pending_replies[signal_tag] = co
+        logger.debug("@async_reply install corutine for this fsession %s for signal %s " %
+                        (self.session_tag, signal_tag))
+
         return signal_tag
 
 
@@ -258,12 +265,22 @@ class SessionManager(object):
             logger.debug("_forward_handler")
             ss = ForwardSession(self.context, iport_request_msg)
 
-            ret = self._forward_request_hook[ss._method_name](ss)
+            # ret: Ture, need forward; False, no need
+            # stag: pending session with signal stag
+            ret, stag = self._forward_request_hook[ss._method_name](ss)
             if ret:
+                # add url to the forward payload
+                ss.payload["params"]["url"] = ss.push_url_rtmp
+ 
                 self._forward_sessions[ss.session_tag] = ss
                 ss.send_request()
             else:
-                print("no need to forward! do nothing at backgroud")
+                if stag is not None:
+                    logger.debug("@handle_request pending the session %s for signal: %s" %
+                                     (ss.session_tag, stag))
+                    self._pending_sessions.append(ss)
+                else: 
+                    logger.debug("no need to forward! do nothing at backgroud")
         else:
             logger.info("can not handle method: %s" % s._method_name)
             s.send_reply("ERROR: unknown method")
@@ -299,15 +316,30 @@ class SessionManager(object):
         :param stag:   dest_tag/action
         :return:
         """
+        logger.debug("@signal pending sessions tags:" + str([s.session_tag for s in self._pending_sessions]))
+
         for s in self._pending_sessions:
             if stag in s.pending_replies:
-                try:
-                    s.pending_replies[stag].send(None)
-                except StopIteration:
-                    print("StopIteration")
-                del s.pending_replies[stag]
-                #if s.pending_replies is None
-                self._pending_sessions.remove(s)
+                print('pending replies for stag %s found in session %s' % (stag, s.session_tag))
+                final_result = "{'url':'%s'}" % s.pull_url
+                s.send_reply(final_result)
+
+        self._pending_sessions = [s for s in self._pending_sessions if stag not in s.pending_replies]
+
+        #for s in self._pending_sessions:
+        #    logger.debug('@signal check _pending_sessions %s pending_replies:' % s.session_tag)
+        #    if stag in s.pending_replies:
+        #        try:
+        #            logger.debug('@signal found pending replies')
+        #            s.pending_replies[stag].send(None)
+        #        except StopIteration:
+        #            print("StopIteration")
+        #        del s.pending_replies[stag]
+        #        #if not bool(s.pending_replies):
+        #        # self._pending_sessions.remove(s)
+        #    else:
+        #        logger.debug('stag %s is not found' % stag)
+        #        print('pending reply stag is: ' + str([k for k in s.pending_replies]))
 
     def register_rpc_handler(self, method_name, handler):
         self._rpc_handler[method_name] = handler
