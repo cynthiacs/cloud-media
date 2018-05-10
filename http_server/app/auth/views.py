@@ -57,6 +57,9 @@ def login_app():
             return json.dumps({'result': 'ERROR'})
         if password != cur_user.password:
             return json.dumps({'result': 'ERROR'})
+        if cur_user.online is True:
+            return json.dumps({'result': 'ERROR'})
+        cur_user.update(online=True)
         user_info_seq = ('result', 'role', 'token', 'vendor_id', 'vendor_nick', 'group_id', 'group_nick')
         dict_return = dict.fromkeys(user_info_seq)
         dict_return['result'] = 'OK'

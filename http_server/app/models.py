@@ -1,3 +1,4 @@
+from flask import current_app
 from flask_login import login_manager, login_user
 from flask_login._compat import unicode
 from flask_security import Security, MongoEngineUserDatastore, \
@@ -5,21 +6,6 @@ from flask_security import Security, MongoEngineUserDatastore, \
 from werkzeug.security import generate_password_hash
 
 from . import db
-
-"""
-class Vendor(db.Document):
-    vid = db.StringField(max_length=80)
-    description = db.StringField(max_length=255)
-
-
-class Group(db.Document):
-    gid = db.StringField(max_length=80)
-    description = db.StringField(max_length=255)
-
-    @staticmethod
-    def add_group(id, desc):
-        pass
-"""
 
 
 class Permission:
@@ -80,6 +66,7 @@ class User(db.Document, UserMixin):
     token = db.StringField(max_length=64)
     # password_hash = db.StringField(max_length=128)
     active = db.BooleanField(default=True)
+    online = db.BooleanField(default=False)
     role = db.StringField(max_length=80)
     # group = db.StringField(max_length=80)
     group = db.ReferenceField(CmGroup)
@@ -108,6 +95,9 @@ class User(db.Document, UserMixin):
 
     def is_active(self):
         return self.active is True
+
+    def is_online(self):
+        return self.online is True
 
     def is_anonymous(self):
         return False

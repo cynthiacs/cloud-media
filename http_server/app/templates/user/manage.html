@@ -41,6 +41,7 @@
                                         <th>状态</th>
                                         <th>角色</th>
                                         <th>组</th>
+                                        <th>在线</th>
                                         <th>操作</th>
                                     </tr>
                                     </thead>
@@ -57,6 +58,11 @@
                                         {% endif %}
                                         <td>{{ user.role }}</td>
                                         <td>{{ user.group.name }}</td>
+                                        {% if user.is_online() %}
+                                        <td>是</td>
+                                        <td>禁止操作</td>
+                                        {% else %}
+                                        <td>否</td>
                                         <td>
                                             <div class="action-buttons">
                                                 <a href="{{ url_for('user.edit', account=user.account) }}">
@@ -69,6 +75,8 @@
                                                 </a>
                                             </div>
                                         </td>
+                                        {% endif %}
+
                                     </tr>
                                     {% endfor %}
 
@@ -147,5 +155,6 @@
             });
         });
     });
+
 </script>
 {% endblock %}
