@@ -1,13 +1,8 @@
-from task import Task
 
-class MqForwordTask(Task):
-    def __init__(self, adaptor, tag, params):
-        Task.__init__(self)
-        print('MqForwordTask')
-
-    def run(self):
-        print('this is running MqForwordTask')
-        # find the session with tag
-        # send the data through the session's websocket
-
+def mq_forward_reply(msg):
+    print('mq_forward_reply')
+    print(str(msg.payload))
+    # get the tag
+    # get the session
+    # send the reply to session.websocket
 

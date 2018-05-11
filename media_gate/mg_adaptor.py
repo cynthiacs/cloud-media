@@ -79,4 +79,4 @@ class MgAdaptor(object):
     def mcp_stop_push(self, params):
         pass
 
-
+mg_adaptor = MgAdaptor()

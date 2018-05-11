@@ -8,6 +8,7 @@ stop_push_reqeust = ''
 
 
 test_reqeust = login_reqeust
+#test_reqeust = connect_reqeust
 
 async def hello(uri):
     async with websockets.connect(uri) as ws:
