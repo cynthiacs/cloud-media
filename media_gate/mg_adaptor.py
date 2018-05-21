@@ -68,15 +68,18 @@ class MgAdaptor(object):
 
         self.uap.login(s) 
 
-    def mcp_connect(self, ws, params):
+    def uap_logout(self):
         pass
-        #self.mcp.connect(s, "{url:xxxx, expire_time:eeeee}")
 
-    def mcp_start_push(self, ws, params):
-        s = _find_session_by_ws(ws)
-        self.mcp.start_push(s, "{url:xxxx, expire_time:eeeee}")
+    def mcp_send_request(self, msg):
+        self.mcp.send_request(msg)
 
-    def mcp_stop_push(self, params):
+    def wsp_send_reply(msg):
+        print("debug: wsp send reply")
+        # get the tag
+        # get the session
+        # send the reply to session.websocket
         pass
+
 
 mg_adaptor = MgAdaptor()

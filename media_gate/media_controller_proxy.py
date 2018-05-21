@@ -4,17 +4,17 @@ class MediaControllerProxy:
         print("MediaControllerProxy init")
         self._mqtt = mqtt
 
-    def online(self, s):
-        print("MediaControllerProxy.online(%s)" % (s.tag,))
-        # lock: some interface is exposed to other thread,
-        # send request
-        # waiting for reply
-        # signal the result
+    def _get_request_topic(self, msg):
+        jrpc = eval(msg)
+        params = jrpc['params']
+        nid = params['id']
+        gid = params['group_id']
+        vid = params['vendor_id']
+        tag = "%s_%s_%s"%(vid, gid, nid)
+        topic = "%s/%s/%s"%('media_controller', tag, 'request')
+        return topic
 
-    def start_push(self, s, params):
-        print("MediaControllerProxy.start_push(%s)" % (params,))
-        # send request
-        # waiting for reply
-        # signal the result
-
+    def send_request(self, msg):
+        topic = self._get_request_topic(msg) 
+        self._mqtt.publish(topic, msg, qos=2)
 
