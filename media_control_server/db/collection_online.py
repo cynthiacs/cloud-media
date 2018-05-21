@@ -83,7 +83,8 @@ class OnlineNodes(object):
         role_info = self._db_manager.query(
             vid_gid_nid={Key.vendor.value: vid, Key.group.value: gid},
             condition={Key.role.value: role})
-        return str(role_info)
+        return role_info
+        #return str(role_info)
 
     def insert(self, source_tag, document):
         vid, gid, nid = source_tag.split('_')
