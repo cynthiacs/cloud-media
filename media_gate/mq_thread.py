@@ -41,10 +41,10 @@ class MqThread(threading.Thread):
 
     @staticmethod
     def on_message(mqttc, obj, msg):
-        logger.debug("==> _on_message")
-        logger.debug("\t topic: " + msg.topic)
-        logger.debug("\t qos: " + str(msg.qos))
-        logger.debug("\t payload" + str(msg.payload))
+        print("==> _on_message")
+        print("\t topic: " + msg.topic)
+        print("\t qos: " + str(msg.qos))
+        print("\t payload" + str(msg.payload))
         
         mqttc.send_callable(mq_forward_reply, msg)
 

@@ -92,6 +92,6 @@ def login_app():
 
 @auth.route('/login_mg', methods=['GET', 'POST'])
 def login_mg():
-    response = '{"tag":"V0001_G0001_N0001"}'
+    response = '{"tag":"V0001_G00000_N1077746422140"}'
     print('in login_mg')
     return response

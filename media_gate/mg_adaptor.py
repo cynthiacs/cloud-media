@@ -13,13 +13,11 @@ class Session(object):
         self._ws = ws 
         self._account = account 
         self._password = password 
-        self._node_tag = tag 
+        self.node_tag = tag
         self._status = SessionStatus.initial
         #self.input_queue = Queue()
         #self._nice = 0
 
-    def set_node_tag(self, tag):
-        self._node_tag = tag
 
     def set_status(self, status):
         self._status = status
@@ -66,7 +64,13 @@ class MgAdaptor(object):
         s = Session(ws, account, password)
         self._sessions.append(s)
 
-        self.uap.login(s) 
+        resp = self.uap.login(s)
+
+        #todo: check the response at first
+        d_resp = eval(resp)
+        s.node_tag = d_resp['tag']
+        topic = "%s/%s/reply"%(s.node_tag, "media_controller")
+        self.mcp.sub(topic)
 
     def uap_logout(self):
         pass
@@ -74,7 +78,7 @@ class MgAdaptor(object):
     def mcp_send_request(self, msg):
         self.mcp.send_request(msg)
 
-    def wsp_send_reply(msg):
+    def wsp_send_reply(self, msg):
         print("debug: wsp send reply")
         # get the tag
         # get the session

@@ -45,6 +45,7 @@ while True:
         print_usage()
         continue
     elif command == 'login':
+        method = 'login'
         params = '{"account":"yxd", "password":"123"}'
     elif command == 'online':
         method = 'Online'

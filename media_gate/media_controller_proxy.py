@@ -14,6 +14,12 @@ class MediaControllerProxy:
         topic = "%s/%s/%s"%('media_controller', tag, 'request')
         return topic
 
+    def sub(self, topic, qos=2):
+        print("subscribe \n\t %s \n\t %s" %
+            ("topic: " + topic, "qos: " + str(qos)))
+ 
+        self._mqtt.subscribe(topic, qos)
+
     def send_request(self, msg):
         topic = self._get_request_topic(msg) 
         self._mqtt.publish(topic, msg, qos=2)
