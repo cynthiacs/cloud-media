@@ -1,13 +1,8 @@
 from mg_adaptor import mg_adaptor 
 
-def ws_login(kwargs):
-    """
-    kwargs['ws']: websocket
-    kwargs['account']:account 
-    kwargs['password']:password
-    """
+async def ws_login(ws, account, password):
     print('ws_login ...')
-    mg_adaptor.login(kwargs['ws'], kwargs['account'], kwargs['password'])
+    await mg_adaptor.login(ws, account, password)
  
 def ws_logout(kwargs):
     pass

@@ -10,7 +10,7 @@ class SessionStatus(Enum):
 
 class Session(object):
     def __init__(self, ws=None, account=None, password=None, tag=None):
-        self._ws = ws 
+        self.ws = ws
         self._account = account 
         self._password = password 
         self.node_tag = tag
@@ -18,12 +18,11 @@ class Session(object):
         #self.input_queue = Queue()
         #self._nice = 0
 
-
     def set_status(self, status):
         self._status = status
 
     def ws_send(self, data):
-        self._ws.send(data)
+        self.ws.send(data)
 
     async def outer_commander(self, websocket, command):
         print('ws send %s' % (command, ))
@@ -44,7 +43,7 @@ class MgAdaptor(object):
         find the session whoes websocket is ws
         """
         for s in self._sessions:
-            if ws == s._ws:
+            if ws == s.ws:
                 return s
         return None 
 
@@ -53,14 +52,15 @@ class MgAdaptor(object):
         find the session whoes node tag is tag 
         """
         for s in self._sessions:
-            if tag == s._node_tag:
+            if tag == s.node_tag:
                 return s
         return None 
 
     def append_session(self, s):
         self._sessions.append(s)
 
-    def login(self, ws, account, password):
+    async def login(self, ws, account, password):
+        print("debug: mg_adaptor login ")
         s = Session(ws, account, password)
         self._sessions.append(s)
 
@@ -69,8 +69,11 @@ class MgAdaptor(object):
         #todo: check the response at first
         d_resp = eval(resp)
         s.node_tag = d_resp['tag']
+
         topic = "%s/%s/reply"%(s.node_tag, "media_controller")
         self.mcp.sub(topic)
+        
+        await ws.send(str(resp))
 
     def uap_logout(self):
         pass
@@ -78,12 +81,23 @@ class MgAdaptor(object):
     def mcp_send_request(self, msg):
         self.mcp.send_request(msg)
 
-    def wsp_send_reply(self, msg):
+    async def wsp_send_reply(self, msg):
         print("debug: wsp send reply")
-        # get the tag
-        # get the session
-        # send the reply to session.websocket
-        pass
+        print("\t topic: " + msg.topic)
+        print("\t qos: " + str(msg.qos))
+        print("\t payload" + str(msg.payload))
+        stopic = msg.topic.split('/')
+        if stopic[2] != 'reply':
+            return
+
+        ntag = stopic[0]
+        print('the tag is:' + ntag)
+        s = self._find_session_by_tag(ntag)
+        if s is None:
+            print('no sesion for this node: ' + ntag)
+            return
+
+        await s.ws.send(str(msg.payload))
 
 
 mg_adaptor = MgAdaptor()

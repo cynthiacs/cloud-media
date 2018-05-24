@@ -45,8 +45,9 @@ class MqThread(threading.Thread):
         print("\t topic: " + msg.topic)
         print("\t qos: " + str(msg.qos))
         print("\t payload" + str(msg.payload))
-        
-        mqttc.send_callable(mq_forward_reply, msg)
+
+        asyncio.run_coroutine_threadsafe(mq_forward_reply(msg), mqttc._main_loop)
+        #mqttc.send_callable(mq_forward_reply, msg)
 
     def run(self):
         _mqtt_client.on_connect = self.on_connect
