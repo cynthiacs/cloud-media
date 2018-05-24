@@ -2,7 +2,7 @@ import paho.mqtt.client as paho_mqtt
 import threading
 import asyncio
 from mg_adaptor import mg_adaptor
-from mq_tasks import mq_forward_reply 
+from mq_tasks import wsp_unicast, wsp_broadcast 
 
 class MqttWrapper(paho_mqtt.Client):
     def __init__(self):
@@ -39,6 +39,10 @@ class MqThread(threading.Thread):
         
         mg_adaptor.set_mqtt(mqttc)
 
+        # some common topic for each node
+        topic = '+/media_controller/nodes_change'
+        mqttc.subscribe(topic, qos=2)
+
     @staticmethod
     def on_message(mqttc, obj, msg):
         print("==> _on_message")
@@ -46,8 +50,19 @@ class MqThread(threading.Thread):
         print("\t qos: " + str(msg.qos))
         print("\t payload" + str(msg.payload))
 
-        asyncio.run_coroutine_threadsafe(mq_forward_reply(msg), mqttc._main_loop)
-        #mqttc.send_callable(mq_forward_reply, msg)
+        topic = msg.topic.split('/')
+        if len(topic) != 3:
+            print('topic format is wrong')
+            return
+
+        if topic[2] == 'reply':
+            asyncio.run_coroutine_threadsafe(wsp_unicast(msg), mqttc._main_loop)
+            return
+
+        if topic[2] == 'nodes_change':
+            asyncio.run_coroutine_threadsafe(wsp_broadcast(msg), mqttc._main_loop)
+            return
+
 
     def run(self):
         _mqtt_client.on_connect = self.on_connect

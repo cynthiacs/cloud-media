@@ -81,16 +81,11 @@ class MgAdaptor(object):
     def mcp_send_request(self, msg):
         self.mcp.send_request(msg)
 
-    async def wsp_send_reply(self, msg):
-        print("debug: wsp send reply")
-        print("\t topic: " + msg.topic)
-        print("\t qos: " + str(msg.qos))
-        print("\t payload" + str(msg.payload))
-        stopic = msg.topic.split('/')
-        if stopic[2] != 'reply':
-            return
+    async def wsp_unicast(self, msg):
+        print("debug: wsp send one msg")
+        topic = msg.topic.split('/')
 
-        ntag = stopic[0]
+        ntag = topic[0]
         print('the tag is:' + ntag)
         s = self._find_session_by_tag(ntag)
         if s is None:
@@ -98,6 +93,26 @@ class MgAdaptor(object):
             return
 
         await s.ws.send(str(msg.payload))
+
+    async def wsp_broadcast(self, msg):
+        print("debug: wsp send one msg")
+        topic = msg.topic.split('/')
+
+        ntag = topic[0]
+        print('the tag is:' + ntag)
+        sntag = ntag.split('_')
+        if len(sntag) != 3:
+            return
+
+        vid,gid,nid = sntag[0],sntag[1],sntag[2]
+
+        for s in self._sessions:
+            t = s.node_tag.split('_')
+            if vid == '*' or \
+                t[0] == vid and gid == '*' or \
+                t[0] == vid and t[1] == gid and nid == '*' or \
+                t[0] == vid and t[1] == gid and t[2] == nid:
+                await s.ws.send(str(msg.payload))
 
 
 mg_adaptor = MgAdaptor()
