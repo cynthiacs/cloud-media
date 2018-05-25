@@ -1,0 +1,30 @@
+##### install basic packages
+yum install openssl-devel bzip2-devel expat-devel gdbm-devel readline-devel
+sqlite-devel
+yum install git
+yum install nginx
+yum install mosquitto
+nginx
+mosquitto -d
+yum install  mongodb-org   # need config /etc/repo at first
+service mongod restart
+
+##### install python 3
+wget https://www.python.org/ftp/python/3.6.1/Python-3.6.1.tar.xz
+./configure --prefix=/usr/python3.6
+make
+make install
+
+
+##### get cloud-media
+git clone https://github.com/nantianyan/cloud-media.git
+
+##### sync cloud-media’s python dependencies
+cd cloud-media
+pip install --upgrade pip
+pip install virtualenv
+virtualenv -p /usr/python3.6/bin/python3.6 venv
+
+cd cloud-media/requirement/
+pip install -r requirements.txt
+
