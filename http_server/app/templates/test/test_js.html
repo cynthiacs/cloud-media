@@ -28,8 +28,19 @@
     {% endfor %}
 
     {% block page_content %} {% endblock %}
+   
+    <h1> Test about Media Gate && CM's JS SDK</h1>
+    <h1></h1>
+    <form method="post" action="#">  
+        <input type="button" value="login" id="btn_login"/>
+        <!--input type="button" value="connect" id="btn_connect"/-->
+        <input type="button" value="logout" id="btn_logout"/>  
+        <input type="button" value="online" id="btn_online"/>  
+        <input type="button" value="offline" id="btn_offline"/>  
+        <input type="button" value="start video" id="btn_start"/>  
+        <input type="button" value="stop video" id="btn_stop"/>  
+    </form>
     
-    <h1> This is a test about mqtt js.</h1>
     <div id="log"></div>
     <div id="log_mqtt"></div>
 </div>
@@ -87,7 +98,6 @@
             */ 
         });
 
-        /*
         if ('WebSocket' in window){
             //var addr = "ws://www.yangxudong.com:9001"
             var addr = "ws://139.224.128.15:9001"
@@ -95,7 +105,7 @@
             var ws = new WebSocket(addr)
             ws.onopen = function(){
                 console.log('Connection open!');
-                ws.send("client onopen");
+                //ws.send("client onopen");
             }
              
             ws.onmessage = function(evt) {
@@ -110,11 +120,38 @@
                console.log('Error detected: ' + error);
             }
 
+            $("#btn_login").click(function() {
+                var params = '{\"account\":\"yxd\", \"password\":\"123\"}'
+                var request = '{\"jsonrpc\":2.0, \"method\":\"login\",\"params\":' + params + ',\"id\":\"12345\"}'
+                ws.send(request)
+                console.log(request)
+            });
+
+
+            $("#btn_online").click(function() {
+                var params = '{\"id\":\"N1077746422140\",\"nick\":\"PULLER0\",\"role\":\"puller\",'
+                     + '\"device_name\":\"default\",\"location\":\"Location Unknown\",\"stream_status\":\"pulling_close\",'
+                     + '\"vendor_id\":\"V0001\",\"vendor_nick\":\"Leadcore\",\"group_id\":\"G00000\",\"group_nick\":\"Default Group\"}'
+
+                var request = '{\"jsonrpc\":2.0, \"method\":\"Online\",\"params\":' + params + ',\"id\":\"12346\"}'
+                ws.send(request)
+                console.log(request)
+            });
+
+            $("#btn_offline").click(function() {
+                var params = '{\"id\":\"N1077746422140\",\"nick\":\"PULLER0\",\"role\":\"puller\",'
+                     + '\"device_name\":\"default\",\"location\":\"Location Unknown\",\"stream_status\":\"pulling_close\",'
+                     + '\"vendor_id\":\"V0001\",\"vendor_nick\":\"Leadcore\",\"group_id\":\"G00000\",\"group_nick\":\"Default Group\"}'
+
+                var request = '{\"jsonrpc\":2.0, \"method\":\"Offline\",\"params\":' + params + ',\"id\":\"12347\"}'
+                ws.send(request)
+                console.log(request)
+            });
+
        } else {
            console.log('websocet is not supported')
        }
 
-        */
 
     </script>
 {% endblock %}

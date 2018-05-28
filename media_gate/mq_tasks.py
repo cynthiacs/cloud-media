@@ -1,13 +1,12 @@
-from task import Task
+from mg_adaptor import mg_adaptor 
 
-class MqForwordTask(Task):
-    def __init__(self, adaptor, tag, params):
-        Task.__init__(self)
-        print('MqForwordTask')
+async def wsp_unicast(msg):
+    print('mq_forward_reply')
+    print(str(msg.payload))
+    await mg_adaptor.wsp_unicast(msg)
 
-    def run(self):
-        print('this is running MqForwordTask')
-        # find the session with tag
-        # send the data through the session's websocket
-
+async def wsp_broadcast(msg):
+    print('mq_forward_reply')
+    print(str(msg.payload))
+    await mg_adaptor.wsp_broadcast(msg)
 

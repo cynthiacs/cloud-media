@@ -78,7 +78,12 @@ def _publish_one_pusher_to_all(source_tag, add_remove_update, node_info=None):
     if node_info['role'] != _ROLE_PUSHER:
         return
 
-    to_who = "%s_%s_*" % (vid, gid)
+    default_gid = 'G00000'
+    if gid == default_gid:
+        to_who = "%s_*_*" % (vid, )
+    else:
+        to_who = "%s_%s_*" % (vid, gid)
+
     payload = '{"%s":[%s]}' % (add_remove_update, node_info)
     media_controller.publish("%s/%s/%s" % (to_who, CONTROLLER_TAG, _TOPIC_NODES_CHANGE),
                              payload, qos=2, retain=False)
@@ -87,7 +92,18 @@ def _publish_one_pusher_to_all(source_tag, add_remove_update, node_info=None):
 def _publish_all_pusher_to_one(source_tag):
     role_info = online_nodes.find_role(source_tag, _ROLE_PUSHER)
 
-    payload = '{"%s": %s}' % (_CHANGE_ALL_ONLINE, role_info)
+    # handle the default group
+    # default group can be view by any group
+    # todo: move this to a config file
+    default_gid = 'G00000'
+    vid, gid, nid = source_tag.split('_')
+    if gid != default_gid:
+        tag = '_'.join((vid, default_gid, nid))  # nid is not used in find role
+        default_role_info = online_nodes.find_role(tag, _ROLE_PUSHER)
+        #role_info = {**role_info, **default_role_info} # for dict
+        role_info = role_info + default_role_info
+
+    payload = '{"%s": %s}' % (_CHANGE_ALL_ONLINE, str(role_info))
     media_controller.publish("%s/%s/%s" % (source_tag, CONTROLLER_TAG, _TOPIC_NODES_CHANGE),
                              payload, qos=2, retain=False)
 
@@ -307,6 +323,10 @@ def handle_ali_notify(mqtt_msg):
     #    status = _NODE_STATUS_PUSHING_CLOSE
     #if action == 'publish':
     #    status = _NODE_STATUS_PUSHING
+
+    if not node_tag.startswith('V'):
+        logger_mc.warning('this notify is not what we want')
+        return
 
     online_nodes.update(node_tag, "stream_status", status)
 

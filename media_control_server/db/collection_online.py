@@ -64,6 +64,14 @@ class OnlineNodes(object):
     def __init__(self, url='139.224.128.15', port=27017):
         self._db_manager = DBManager(host=url, port=port)
 
+    def reset(self):
+        # clear the data base each time mc bootup
+        dblist = self._db_manager.get_db_list()
+        for d in dblist:
+            #Waring: this host should not name a db start with 'V'
+            if d.startswith('V'):
+                self._db_manager.remove(vid_gid_nid={Key.vendor.value: vid})
+
     def find_one(self, source_tag):
         """
 
@@ -83,7 +91,8 @@ class OnlineNodes(object):
         role_info = self._db_manager.query(
             vid_gid_nid={Key.vendor.value: vid, Key.group.value: gid},
             condition={Key.role.value: role})
-        return str(role_info)
+        return role_info
+        #return str(role_info)
 
     def insert(self, source_tag, document):
         vid, gid, nid = source_tag.split('_')

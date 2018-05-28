@@ -1,26 +1,17 @@
-from task import Task
-from mg_adaptor import Session
+from mg_adaptor import mg_adaptor 
 
-class WsLoginTask(Task):
-    def __init__(self, adaptor, ws, params):
-        Task.__init__(self)
-        self._adaptor = adaptor
-        p = params
-        self._session = Session(ws, p['account'], p['password'])
-        self._adaptor.append_session(self._session)
+async def ws_login(ws, account, password):
+    print('ws_login ...')
+    await mg_adaptor.login(ws, account, password)
+ 
+def ws_logout(kwargs):
+    pass
 
-    def run(self):
-        ret = self._adaptor.uap.login(self._session) 
-        # send ret to js client
-        # self._session.ws_send('OK')
+def ws_error(kwargs):
+    print('this is an error task')
+    # send error notify reply through the ws
 
-
-class WsErrorTask(Task):
-    def __init__(self, adaptor, ws, params):
-        Task.__init__(self)
-        print('WsErrorTask')
-
-    def run(self):
-        print('this is an error task')
-
+def ws_send_mqtt_request(kwargs):
+    msg = kwargs['msg']
+    mg_adaptor.mcp_send_request(msg)
 

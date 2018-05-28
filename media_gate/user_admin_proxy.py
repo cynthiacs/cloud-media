@@ -12,6 +12,7 @@ class UserAdminProxy:
         conn = http.client.HTTPConnection(self._host)
         conn.request("GET","/login_mg")
         r = conn.getresponse()
-        print(r.read())
-        # return r.read()
+        ret = r.read()
+        print(ret)
+        return ret 
 
