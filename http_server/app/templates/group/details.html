@@ -22,6 +22,13 @@
             <div class="row">
                 <div class="col-xs-12">
                     <!-- PAGE CONTENT BEGINS -->
+                    <div>
+                        <p class="bigger-120 bolder blue">
+                            Puller&nbsp;:&nbsp;{{ pull_online_count }}/{{ pull_count }},&nbsp;Pusher&nbsp;:&nbsp;{{
+                            pusher_online_count }}/{{
+                            pusher_count }},&nbsp;Total&nbsp;:&nbsp;{{ total }}
+                        </p>
+                    </div>
                     <div class="row">
                         <div class="col-xs-12">
                             <div>
@@ -33,6 +40,7 @@
                                         <th>昵称</th>
                                         <th>状态</th>
                                         <th>角色</th>
+                                        <th>在线</th>
                                         <th>操作</th>
                                     </tr>
                                     </thead>
@@ -48,6 +56,11 @@
                                         <td>未激活</td>
                                         {% endif %}
                                         <td>{{ user.role }}</td>
+                                        {% if user.is_online() %}
+                                        <td>是</td>
+                                        <td></td>
+                                        {% else %}
+                                        <td>否</td>
                                         <td>
                                             <div class="hidden-sm hidden-xs action-buttons">
                                                 <a href="{{ url_for('user.edit', account=user.account) }}">
@@ -55,6 +68,7 @@
                                                 </a>
                                             </div>
                                         </td>
+                                        {% endif %}
                                     </tr>
                                     {% endfor %}
 

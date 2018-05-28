@@ -166,8 +166,13 @@ class MongoDB(object):
         :param db:
         :return:
         """
-        self._db = self.db_clint[db]
-        self._db.dropDatabase()
+        self.db_clint.drop_database(db)
+
+    def get_db_list(self):
+        """
+        :return: get mongodb client database list
+        """
+        return self.db_clint.list_database_names()
 
     def close(self):
         """

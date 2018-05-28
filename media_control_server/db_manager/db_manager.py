@@ -261,12 +261,9 @@ class DBManager(object):
             collection = vid_gid_nid[Key.group.value]
         else:
             self.logger.warning("[NOTE] remove db")
-            """
-            remove the whole database, issue: #000001
-            self.mongodb.remove_db(db=db)  # ????
+            # remove the whole database, issue: #000001 fixed 2018.5.28
+            self.mongodb.remove_db(db=db)
             return
-            """
-            collection = None
 
         if Key.node.value in vid_gid_nid:
             nid = vid_gid_nid[Key.node.value]
@@ -277,6 +274,12 @@ class DBManager(object):
             self.logger.debug(str(db) + ", " + str(collection) + ", " + str(condition))
             self.mongodb.remove_collection(db=db, collection=collection, condition=condition)
             return
+
+    def get_db_list(self):
+        """
+        :return: mongodb client database list
+        """
+        return self.mongodb.get_db_list()
 
     def close(self):
         """

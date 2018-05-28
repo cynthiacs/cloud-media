@@ -127,4 +127,10 @@ if __name__ == '__main__':
     print("query nodeID: ")
     for i in result:
         print(str(i))
+
+    db_list = dbManager.get_db_list()
+    print(db_list)
+    dbManager.remove(vid_gid_nid={Key.vendor.value: 'VendorA'})
+    db_list = dbManager.get_db_list()
+    print(db_list)
     dbManager.close()

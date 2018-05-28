@@ -28,6 +28,13 @@
 
             <div class="row">
                 <div class="col-xs-12">
+                    <div>
+                        <p class="bigger-120 bolder blue">
+                            Puller&nbsp;:&nbsp;{{ pull_online_count }}/{{ pull_count }},&nbsp;Pusher&nbsp;:&nbsp;{{
+                            pusher_online_count }}/{{
+                            pusher_count }},&nbsp;Total&nbsp;:&nbsp;{{ total }}
+                        </p>
+                    </div>
                     <!-- PAGE CONTENT BEGINS -->
                     <div class="row">
                         <div class="col-xs-12">
@@ -60,7 +67,7 @@
                                         <td>{{ user.group.name }}</td>
                                         {% if user.is_online() %}
                                         <td>是</td>
-                                        <td>禁止操作</td>
+                                        <td></td>
                                         {% else %}
                                         <td>否</td>
                                         <td>
@@ -155,6 +162,5 @@
             });
         });
     });
-
 </script>
 {% endblock %}

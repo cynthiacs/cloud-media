@@ -122,5 +122,19 @@ def manage():
     page = request.args.get('page', 1, type=int)
     pagination = User.objects.paginate(page=page, per_page=255)
     users = pagination.items
-
-    return render_template('user/manage.html', users=users)
+    pull_count = 0
+    pusher_count = 0
+    pull_online_count = 0
+    pusher_online_count = 0
+    for cur_user in users:
+        if cur_user.role == 'puller':
+            pull_count = pull_count + 1
+            if cur_user.online is True:
+                pull_online_count = pull_online_count + 1
+        else:
+            pusher_count = pusher_count + 1
+            if cur_user.online is True:
+                pusher_online_count = pusher_online_count + 1
+    return render_template('user/manage.html', users=users, pull_count=pull_count,
+                           pusher_count=pusher_count, total=pull_count + pusher_count,
+                           pull_online_count=pull_online_count, pusher_online_count=pusher_online_count)

@@ -2,11 +2,12 @@
 
 """
 import random
+
 from flask import url_for, redirect, render_template, request, flash
 from flask_login import login_required
 
-from .. import messages
 from . import group
+from .. import messages
 from ..models import CmGroup, User
 
 
@@ -93,4 +94,20 @@ def details(gid):
     cur_group = CmGroup.objects.get_or_404(gid=gid)
     pagination = User.objects(group=cur_group).paginate(page=page, per_page=255)
     users = pagination.items
-    return render_template('group/details.html', group=cur_group, users=users)
+    pull_count = 0
+    pusher_count = 0
+    pull_online_count = 0
+    pusher_online_count = 0
+    for user in users:
+        if user.role == 'puller':
+            pull_count = pull_count + 1
+            if user.online is True:
+                pull_online_count = pull_online_count + 1
+        else:
+            pusher_count = pusher_count + 1
+            if user.online is True:
+                pusher_online_count = pusher_online_count + 1
+
+    return render_template('group/details.html', group=cur_group, users=users, pull_count=pull_count,
+                           pusher_count=pusher_count, total=pull_count + pusher_count,
+                           pull_online_count=pull_online_count, pusher_online_count=pusher_online_count)
