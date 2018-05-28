@@ -58,6 +58,8 @@ logger_mc = logging.getLogger(__name__)
 
 media_controller = P2PMqtt(broker_url="139.224.128.15", whoami=CONTROLLER_TAG)
 online_nodes = OnlineNodes()
+online_nodes.reset() #a broadcast will be send while mqttc.onconnect
+
 stream_cookie = StreamCookie(logger_mc)   # scattergun, bad practice
 
 

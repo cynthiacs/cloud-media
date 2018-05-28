@@ -70,7 +70,7 @@ class OnlineNodes(object):
         for d in dblist:
             #Waring: this host should not name a db start with 'V'
             if d.startswith('V'):
-                self._db_manager.remove(vid_gid_nid={Key.vendor.value: vid})
+                self._db_manager.remove(vid_gid_nid={Key.vendor.value: d})
 
     def find_one(self, source_tag):
         """

@@ -380,7 +380,8 @@ class P2PMqtt(object):
     @staticmethod
     def _on_connect_wrapper(ext_mqttc, obj, flags, rc):
         logger.info("on_connect with rc: " + str(rc))
-        ext_mqttc.publish('*_*_*/media_controller/reset')
+        payload = "reset at " + time.asctime(time.localtime(time.time()))
+        ext_mqttc.pub('*_*_*/media_controller/reset', payload)
 
     @staticmethod
     def _on_message_wrapper(ext_mqttc, obj, msg):
