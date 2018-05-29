@@ -1,0 +1,15 @@
+.idea/
+http_server/app/__pycache__/
+http_server/app/apis/__pycache__/
+http_server/app/auth/__pycache__/
+http_server/app/group/__pycache__/
+http_server/app/lc_mqtt/__pycache__/
+http_server/app/main/__pycache__/
+http_server/app/user/__pycache__/
+http_server/__pycache__/
+http_server/app/test/__pycache__/
+media_control_server/__pycache__/
+media_control_server/db/__pycache__/
+media_control_server/db_manager/__pycache__/
+media_control_server/p2p_mqtt/__pycache__/
+media_control_server/logs/mcs.log
