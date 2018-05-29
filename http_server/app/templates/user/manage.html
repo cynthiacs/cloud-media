@@ -47,7 +47,7 @@
                                         <th>昵称</th>
                                         <th>状态</th>
                                         <th>角色</th>
-                                        <th>组</th>
+                                        <th>属于组</th>
                                         <th>在线</th>
                                         <th>操作</th>
                                     </tr>
@@ -59,17 +59,25 @@
                                         <td>{{ user.account }}</td>
                                         <td>{{ user.username }}</td>
                                         {% if user.is_active() %}
-                                        <td>激活</td>
+                                        <td>
+                                            <span class="label label-sm label-success">激活</span>
+                                        </td>
                                         {% else %}
-                                        <td>未激活</td>
+                                        <td>
+                                            <span class="label label-sm arrowed-in label-inverse">未激活</span>
+                                        </td>
                                         {% endif %}
                                         <td>{{ user.role }}</td>
                                         <td>{{ user.group.name }}</td>
                                         {% if user.is_online() %}
-                                        <td>是</td>
+                                        <td>
+                                            <span class="label label-sm label-warning arrowed arrowed-right">是</span>
+                                        </td>
                                         <td></td>
                                         {% else %}
-                                        <td>否</td>
+                                        <td>
+                                            <span class="label label-sm label-fail arrowed arrowed-right">否</span>
+                                        </td>
                                         <td>
                                             <div class="action-buttons">
                                                 <a href="{{ url_for('user.edit', account=user.account) }}">
