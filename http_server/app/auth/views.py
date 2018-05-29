@@ -38,7 +38,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return render_template('auth/login.html')
+    return redirect(url_for('auth.login'))
 
 
 @auth.route('/login_app', methods=['GET', 'POST'])
