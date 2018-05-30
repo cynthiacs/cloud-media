@@ -1,8 +1,8 @@
 from mg_adaptor import mg_adaptor 
 
-async def ws_login(ws, account, password):
+async def ws_login(ws, msg):
     print('ws_login ...')
-    await mg_adaptor.login(ws, account, password)
+    await mg_adaptor.login(ws, msg)
  
 def ws_logout(kwargs):
     pass

@@ -59,8 +59,15 @@ class MgAdaptor(object):
     def append_session(self, s):
         self._sessions.append(s)
 
-    async def login(self, ws, account, password):
+    async def login(self, ws, msg):
         print("debug: mg_adaptor login ")
+        jrpc = eval(msg)
+        params = jrpc['params']
+        rpc_id = jrpc['id']
+
+        account=params['account']
+        password=params['password']
+
         s = Session(ws, account, password)
         self._sessions.append(s)
 
@@ -72,8 +79,11 @@ class MgAdaptor(object):
 
         topic = "%s/%s/reply"%(s.node_tag, "media_controller")
         self.mcp.sub(topic)
-        
-        await ws.send(str(resp))
+       
+        result = '{"tag":"%s"}' % (s.node_tag, ) 
+        reply = '{"jsonrpc":2.0,"result":%s,"error":null,"id": "%s"}' % (result, rpc_id)
+        print(reply)
+        await ws.send(reply)
 
     def uap_logout(self):
         pass

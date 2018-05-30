@@ -25,17 +25,14 @@ class WsThread(threading.Thread):
 
             jrpc = eval(message)
             method = jrpc['method']
-            params = jrpc['params']
 
-            if method == 'login': 
+            if method == 'Login': 
                 # note that ws.send must run as coroutine in this structure
                 asyncio.run_coroutine_threadsafe(
-                    ws_login(ws=websocket,
-                            account=params['account'],
-                            password=params['password']),
+                    ws_login(ws=websocket, msg=message),
                     self._main_loop) 
 
-            elif method == 'logout': 
+            elif method == 'Logout': 
                 pass
             elif method == 'Online':
                 self._send_callable(ws_send_mqtt_request, msg=message)

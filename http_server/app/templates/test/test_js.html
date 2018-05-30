@@ -71,6 +71,9 @@
 
 
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+    
+    <script src="static/js/cmproxy.js"></script>
+
     <script type="text/javascript" charset="utf-8">
         $(document).ready(function() {
             console.log("in doucment.ready...");
@@ -98,6 +101,8 @@
             */ 
         });
 
+
+        /*
         if ('WebSocket' in window){
             //var addr = "ws://www.yangxudong.com:9001"
             var addr = "ws://139.224.128.15:9001"
@@ -151,7 +156,15 @@
        } else {
            console.log('websocet is not supported')
        }
+       */
 
+
+        $("#btn_login").click(function() {
+            cmproxy.login('yxd', '123', function(msg) {
+                console.log("this is in login's listener... when reply arrives!")
+                console.log(msg) 
+            });
+        });
 
     </script>
 {% endblock %}
