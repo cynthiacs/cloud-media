@@ -45,7 +45,7 @@ def create_app():
 
     # MongoDB Config
     app.config['MONGODB_DB'] = 'usermanager'
-    app.config['MONGODB_HOST'] = 'localhost'
+    app.config['MONGODB_HOST'] = '139.224.128.15'
     app.config['MONGODB_PORT'] = 27017
 
     app.config['MQTT_BROKER_URL'] = '139.224.128.15'
