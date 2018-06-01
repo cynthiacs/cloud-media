@@ -295,7 +295,7 @@ def hook_4_stop_push_media(fsession):
 def handle_nodes_will(mqtt_msg):
     logger_mc.debug('@handle_nodes_will')
     logger_mc.debug(repr(mqtt_msg))
-    payload = json.loads(mqtt_msg.payload)
+    payload = json.loads(str(mqtt_msg.payload, encoding="utf-8"))
     node_tag = payload['who']
     result = online_nodes.find_one(node_tag)
     if result is not None:
