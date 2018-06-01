@@ -291,11 +291,12 @@ def hook_4_stop_push_media(fsession):
         return False, None
 
 
-@media_controller.topic_handler("cm/nodes_will")
+@media_controller.topic_handler("media_controller/bq/nodes_will")
 def handle_nodes_will(mqtt_msg):
     logger_mc.debug('@handle_nodes_will')
     logger_mc.debug(repr(mqtt_msg))
-    node_tag = str(mqtt_msg.payload, encoding="utf-8")
+    payload = json.loads(mqtt_msg.payload)
+    node_tag = payload['who']
     result = online_nodes.find_one(node_tag)
     if result is not None:
         online_nodes.remove(node_tag)

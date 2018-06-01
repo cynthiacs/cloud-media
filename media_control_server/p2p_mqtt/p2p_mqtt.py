@@ -7,6 +7,7 @@ import logging
 import hashlib
 import re
 import time
+import json
 from .config import config
 
 __all__ = ('P2PMqtt', 'ForwardSession',)
@@ -380,8 +381,8 @@ class P2PMqtt(object):
     @staticmethod
     def _on_connect_wrapper(ext_mqttc, obj, flags, rc):
         logger.info("on_connect with rc: " + str(rc))
-        payload = "reset at " + time.asctime(time.localtime(time.time()))
-        ext_mqttc.pub('*_*_*/media_controller/reset', payload)
+        payload = "media_controller: reset at " + time.asctime(time.localtime(time.time()))
+        ext_mqttc.pub('*_*_*/media_controller/reset', json.dumps({'description': payload}))
 
     @staticmethod
     def _on_message_wrapper(ext_mqttc, obj, msg):
