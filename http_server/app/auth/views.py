@@ -9,6 +9,10 @@ from . import auth
 from ..models import User, Vendor
 import json
 
+def generate_node_id():
+    t = time.time()
+    nid = 'N' + str(int(t*1000*1000))
+    return nid
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
@@ -41,9 +45,8 @@ def logout():
     return redirect(url_for('auth.login'))
 
 
-@auth.route('/login_app', methods=['GET', 'POST'])
+@auth.route('/login_app', methods=['POST'])
 def login_app():
-    # assert request.method == 'POST'
     action = request.args.get('action', None)
     if action == 'in':
         data = request.get_data()
@@ -60,19 +63,17 @@ def login_app():
         if cur_user.online is True:
             return json.dumps({'result': 'ERROR'})
         cur_user.update(online=True)
-        user_info_seq = ('result', 'role', 'token', 'vendor_id', 'vendor_nick', 'group_id', 'group_nick')
+        user_info_seq = ('result', 'role', 'token', 'node_id', 'vendor_id', 'vendor_nick', 'group_id', 'group_nick')
         dict_return = dict.fromkeys(user_info_seq)
         dict_return['result'] = 'OK'
         dict_return['role'] = cur_user.role
         dict_return['token'] = cur_user.token
+        dict_return['node_id'] = generate_node_id()
         dict_return['vendor_id'] = cur_user.vid
         dict_return['vendor_nick'] = cur_user.vendor
         dict_return['group_id'] = cur_user.group.gid
         dict_return['group_nick'] = cur_user.group.name
 
-        # dict_return = {"result": "OK", "role": "pusher", "token": "12345678",
-        #               "vendor_id": "88888888", "vendor_nick": "CM Team",
-        #               "group_id": "00000000", "group_nick": "Default Group"}
         return json.dumps(dict_return)
     elif action == 'out':
         data = request.get_data()
