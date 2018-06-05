@@ -1,6 +1,7 @@
 from user_admin_proxy import UserAdminProxy
 from media_controller_proxy import MediaControllerProxy
 from enum import Enum
+import datetime
 
 class SessionStatus(Enum):
     initial = 1
@@ -73,20 +74,54 @@ class MgAdaptor(object):
 
         resp = self.uap.login(s)
 
+        print(repr(resp))
+        resp = eval(resp)
         #todo: check the response at first
-        d_resp = eval(resp)
-        s.node_tag = d_resp['tag']
+        if resp['result'] == 'OK':
+            nid = "N%s" % (datetime.datetime.now().microsecond, )
+            node_tag = "%s_%s_%s" % (resp['vendor_id'], resp['group_id'], nid)
+            s.node_tag = node_tag 
 
-        topic = "%s/%s/reply"%(s.node_tag, "media_controller")
-        self.mcp.sub(topic)
-       
-        result = '{"tag":"%s"}' % (s.node_tag, ) 
-        reply = '{"jsonrpc":2.0,"result":%s,"error":null,"id": "%s"}' % (result, rpc_id)
-        print(reply)
-        await ws.send(reply)
+            topic = "%s/%s/reply"%(s.node_tag, "media_controller")
+            self.mcp.sub(topic)
+ 
+        reply = {}
+        reply['jsonrpc'] = '2.0'
+        reply['result'] = resp
+        reply['id'] = rpc_id
+        #reply = '{"jsonrpc":2.0,"result":%s,"error":null,"id": "%s"}' % (str(resp), rpc_id)
+        print(repr(reply))
+        await ws.send(str(reply).replace('\'', '\"'))
 
-    def uap_logout(self):
-        pass
+    async def logout(self, ws, msg):
+        jrpc = eval(msg)
+        params = jrpc['params']
+        rpc_id = jrpc['id']
+
+        account=params['account']
+        password=params['password']
+
+        s = self._find_session_by_ws(ws)
+        if s is not None:
+            resp = self.uap.logout(s)
+
+            print(repr(resp))
+            resp = eval(resp)
+            #todo: check the response at first
+            if resp['result'] == 'OK':
+                topic = "%s/%s/reply"%(s.node_tag, "media_controller")
+                self.mcp.unsub(topic)
+                self._sessions.remove(s)
+                print("unsubscribe topic and removed session")
+        else:
+            resp = {'result':'ERROR'}
+ 
+        reply = {}
+        reply['jsonrpc'] = '2.0'
+        reply['result'] = resp
+        reply['id'] = rpc_id
+        print(repr(reply))
+        await ws.send(str(reply).replace('\'', '\"'))
 
     def mcp_send_request(self, msg):
         self.mcp.send_request(msg)

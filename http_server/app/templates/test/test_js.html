@@ -160,8 +160,15 @@
 
 
         $("#btn_login").click(function() {
-            cmproxy.login('yxd', '123', function(msg) {
+            cmproxy.login('A159308', '123456', function(msg) {
                 console.log("this is in login's listener... when reply arrives!")
+                console.log(msg) 
+            });
+        });
+
+        $("#btn_logout").click(function() {
+            cmproxy.logout('A159308', '123456', function(msg) {
+                console.log("this is in logout's listener... when reply arrives!")
                 console.log(msg) 
             });
         });

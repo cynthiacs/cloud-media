@@ -91,8 +91,46 @@ def login_app():
         return json.dumps({'result': 'ERROR'})
 
 
-@auth.route('/login_mg', methods=['GET', 'POST'])
+@auth.route('/login_mg', methods=['POST'])
 def login_mg():
-    response = '{"tag":"V0001_G00000_N1077746422140"}'
-    print('in login_mg')
-    return response
+    payload = json.loads(request.data)
+    method = payload['method']
+    if method == 'login':
+        account = payload['params']['account']
+        password = payload['params']['password']
+        print("LOGIN: account:%s, password:%s" % (account, password))
+
+        cur_user = User.objects(account=account).first()
+        if cur_user is None:
+            return json.dumps({'result': 'ERROR'})
+        if password != cur_user.password:
+            return json.dumps({'result': 'ERROR'})
+        if cur_user.online is True:
+            return json.dumps({'result': 'ERROR'})
+
+        cur_user.update(online=True)
+        user_info_seq = ('result', 'role', 'token', 'vendor_id', 'vendor_nick', 'group_id', 'group_nick')
+        dict_return = dict.fromkeys(user_info_seq)
+        dict_return['result'] = 'OK'
+        dict_return['role'] = cur_user.role
+        dict_return['token'] = cur_user.token
+        dict_return['vendor_id'] = cur_user.vid
+        dict_return['vendor_nick'] = cur_user.vendor
+        dict_return['group_id'] = cur_user.group.gid
+        dict_return['group_nick'] = cur_user.group.name
+
+        return json.dumps(dict_return)
+    elif method == 'logout':
+        account = payload['params']['account']
+        print("LOGOUT: account:%s" % (account))
+
+        cur_user = User.objects(account=account).first()
+        if cur_user is None:
+            return json.dumps({'result': 'ERROR'})
+
+        cur_user.update(online=False)
+        return json.dumps({'result': 'OK'})
+    else:
+        return json.dumps({'result': 'ERROR'})
+
+

@@ -1,18 +1,32 @@
-import http.client
+import requests
+#http://docs.python-requests.org/en/master/
 
 
 class UserAdminProxy:
     def __init__(self):
-        #logger.debug("UserAdminProxy init")
         print("UserAdminProxy init")
-        self._host = '127.0.0.1:8085'
+        self.login_url='http://139.224.128.15:8085/login_mg'
 
     def login(self, s):
         print("UserAdminProxy login(%s, %s)" % (s._account, s._password))
-        conn = http.client.HTTPConnection(self._host)
-        conn.request("GET","/login_mg")
-        r = conn.getresponse()
-        ret = r.read()
-        print(ret)
-        return ret 
+        data = {}
+        data['method'] = 'login'
+        data['params'] = {}
+        data['params']['account'] = s._account
+        data['params']['password'] = s._password
+
+        response = requests.post(url=self.login_url, json=data)
+        return response.text
+
+    def logout(self, s):
+        print("UserAdminProxy logout(%s, %s)" % (s._account, s._password))
+        data = {}
+        data['method'] = 'logout'
+        data['params'] = {}
+        data['params']['account'] = s._account
+        data['params']['password'] = s._password
+
+        response = requests.post(url=self.login_url, json=data)
+        return response.text
+
 

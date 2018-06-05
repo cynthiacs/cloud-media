@@ -1,7 +1,7 @@
 import threading
 import websockets
 import asyncio
-from ws_tasks import ws_login, ws_error, ws_send_mqtt_request
+from ws_tasks import ws_login, ws_logout, ws_error, ws_send_mqtt_request
 
 class WsThread(threading.Thread):
     def __init__(self, main_loop, *args, **kwargs):
@@ -27,13 +27,12 @@ class WsThread(threading.Thread):
             method = jrpc['method']
 
             if method == 'Login': 
-                # note that ws.send must run as coroutine in this structure
+                # note that ws.send must run as coroutine
                 asyncio.run_coroutine_threadsafe(
-                    ws_login(ws=websocket, msg=message),
-                    self._main_loop) 
-
+                    ws_login(ws=websocket, msg=message), self._main_loop) 
             elif method == 'Logout': 
-                pass
+                asyncio.run_coroutine_threadsafe(
+                    ws_logout(ws=websocket, msg=message), self._main_loop) 
             elif method == 'Online':
                 self._send_callable(ws_send_mqtt_request, msg=message)
             elif method == 'Offline':

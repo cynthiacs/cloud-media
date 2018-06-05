@@ -45,8 +45,11 @@ while True:
         print_usage()
         continue
     elif command == 'login':
-        method = 'login'
-        params = '{"account":"yxd", "password":"123"}'
+        method = 'Login'
+        params = '{"account":"A159308", "password":"123456"}'
+    elif command == 'logout':
+        method = 'Logout'
+        params = '{"account":"A159308", "password":"123456"}'
     elif command == 'online':
         method = 'Online'
         params = node_info
