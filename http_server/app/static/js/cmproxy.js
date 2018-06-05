@@ -65,6 +65,10 @@ CMProxy.prototype.login = function(account, psw, listener) {
     this._send_request(method, params, listener);
 }
 
+CMProxy.prototype.set_node_info = function(info) {
+    this.node_info = info
+}
+
 CMProxy.prototype.connect_mc = function() {
     console.log('connect_mc');
 }

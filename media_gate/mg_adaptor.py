@@ -15,6 +15,7 @@ class Session(object):
         self._account = account 
         self._password = password 
         self.node_tag = tag
+        self.node_info = {}
         self._status = SessionStatus.initial
         #self.input_queue = Queue()
         #self._nice = 0
@@ -81,6 +82,14 @@ class MgAdaptor(object):
             nid = "N%s" % (datetime.datetime.now().microsecond, )
             node_tag = "%s_%s_%s" % (resp['vendor_id'], resp['group_id'], nid)
             s.node_tag = node_tag 
+            del resp['result']
+            resp['id'] = nid
+            resp['nick'] = 'nick'
+            resp['device_name'] = 'default'
+            resp['location'] = 'Location Unknown'
+            resp['stream_status'] = 'unknown'
+            print(repr(resp))
+            #self._sessions.node_info = resp
 
             topic = "%s/%s/reply"%(s.node_tag, "media_controller")
             self.mcp.sub(topic)
@@ -89,7 +98,6 @@ class MgAdaptor(object):
         reply['jsonrpc'] = '2.0'
         reply['result'] = resp
         reply['id'] = rpc_id
-        #reply = '{"jsonrpc":2.0,"result":%s,"error":null,"id": "%s"}' % (str(resp), rpc_id)
         print(repr(reply))
         await ws.send(str(reply).replace('\'', '\"'))
 

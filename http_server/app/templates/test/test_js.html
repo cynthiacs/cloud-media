@@ -163,6 +163,9 @@
             cmproxy.login('A159308', '123456', function(msg) {
                 console.log("this is in login's listener... when reply arrives!")
                 console.log(msg) 
+                jrpc = JSON.parse(msg)
+                console.log(jrpc["result"])
+                cmproxy.set_node_info(JSON.stringify(jrpc["result"]))
             });
         });
 
@@ -172,6 +175,19 @@
                 console.log(msg) 
             });
         });
+
+        $("#btn_online").click(function() {
+            cmproxy.online(function(msg) {
+                console.log(msg) 
+            });
+        });
+
+        $("#btn_offline").click(function() {
+            cmproxy.offline(function(msg) {
+                console.log(msg) 
+            });
+        });
+
 
     </script>
 {% endblock %}
