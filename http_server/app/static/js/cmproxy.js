@@ -12,6 +12,7 @@ function CMProxy() {
     this.node_info = '{\"id\":\"N1077746422140\",\"nick\":\"PULLER0\",\"role\":\"puller\",'
       + '\"device_name\":\"default\",\"location\":\"Location Unknown\",\"stream_status\":\"pulling_close\",'
       + '\"vendor_id\":\"V0001\",\"vendor_nick\":\"Leadcore\",\"group_id\":\"G00000\",\"group_nick\":\"Default Group\"}'
+    this.on_nodes_update = null;
 
 }
 
@@ -45,6 +46,10 @@ CMProxy.prototype.set_onmessage = function(foo) {
 CMProxy.prototype.set_onerror = function(foo) {
     console.log('set onerror');
     this.ws.onerror = foo
+}
+
+CMProxy.prototype.set_nodes_update_listener = function(listener) {
+    this.on_nodes_update = listener;
 }
 
 CMProxy.prototype._send_request = function(method, params, listener) {
@@ -113,18 +118,38 @@ CMProxy.prototype._onclose = function() {
 
 CMProxy.prototype._onmessage = function(evt) {
     console.log('onmessage:' + evt.data);
-    var jrpc = JSON.parse(evt.data)
-    var id = jrpc["id"]
-    console.log(cmproxy.waiting_replies)
-
-    if(cmproxy.waiting_replies != null) {
-        if(id in cmproxy.waiting_replies) {
-            console.log('id is found in waiting replies')
-            cmproxy.waiting_replies[id](evt.data)
-            delete cmproxy.waiting_replies[id]
-        }
+    console.log('onmessage:' + typeof(evt.data));
+    if(evt.data[0] == '{' || evt.data[0] == "\'") {
+        payload = evt.data;
     } else {
-        console.log('no waiting replies for id:' + id)
+        // the string from mg looks like:
+        // b'{"jsonrpc": "2.0", "result": "OK", "id": "4"}'
+        // this is a workroud before fix
+        payload = evt.data.slice(2, -1);
+    }
+
+    var jrpc = JSON.parse(payload.toString())
+    if('all_online' in jrpc || 'new_online' in jrpc
+        || 'new_offline' in jrpc || 'new_update' in jrpc) {
+        console.log('online nodes info changed')
+        if(this.on_nodes_update != null) {
+            this.on_nodes_update(jrpc);
+        }
+    }
+
+    if('id' in jrpc) {
+        var id = jrpc["id"]
+        console.log(cmproxy.waiting_replies)
+
+        if(cmproxy.waiting_replies != null) {
+            if(id in cmproxy.waiting_replies) {
+                console.log('id is found in waiting replies')
+                cmproxy.waiting_replies[id](evt.data)
+                delete cmproxy.waiting_replies[id]
+            }
+        } else {
+            console.log('no waiting replies for id:' + id)
+        }
     }
 }
 
