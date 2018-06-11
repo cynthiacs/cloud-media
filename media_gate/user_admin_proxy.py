@@ -1,11 +1,12 @@
 import requests
 #http://docs.python-requests.org/en/master/
+from config import config
 
 
 class UserAdminProxy:
     def __init__(self):
         print("UserAdminProxy init")
-        self.login_url='http://139.224.128.15:8085/login_mg'
+        self.login_url=config['user_admin']['login_url']
 
     def login(self, s):
         print("UserAdminProxy login(%s, %s)" % (s._account, s._password))

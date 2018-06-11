@@ -1,10 +1,11 @@
 from pymongo import MongoClient
 from db_manager.db_manager import DBManager
 from db_manager.key import Key
+from config import config
 
 
 class CollectionOnLine(object):
-    def __init__(self, url='mongodb://139.224.128.15'):
+    def __init__(self, url='mongodb://' + config['mongo']['server_url']):
         self._db_client = MongoClient(url)
         self._db = self._db_client.extmqtt_nodes
         self._db_col_nodes_online = self._db.nodes_online
@@ -61,7 +62,7 @@ class CollectionOnLine(object):
 
 
 class OnlineNodes(object):
-    def __init__(self, url='139.224.128.15', port=27017):
+    def __init__(self, url=config['mongo']['server_url'], port=config['mongo']['server_port']):
         self._db_manager = DBManager(host=url, port=port)
 
     def reset(self):

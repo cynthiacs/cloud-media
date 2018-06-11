@@ -3,6 +3,8 @@ import logging.config
 from db.collection_online import OnlineNodes
 import time
 from stream_cookie import StreamCookie
+import json
+from config import config
 
 # topic format: dest_tag/source_tag/_TOPIC_XXX
 CONTROLLER_TAG = "media_controller"
@@ -56,7 +58,7 @@ _ROLE_TEST = "tester"
 logging.config.fileConfig('logging.conf')
 logger_mc = logging.getLogger(__name__)
 
-media_controller = P2PMqtt(broker_url="139.224.128.15", whoami=CONTROLLER_TAG)
+media_controller = P2PMqtt(broker_url=config['mqtt']['broker_url'], whoami=CONTROLLER_TAG)
 online_nodes = OnlineNodes()
 online_nodes.reset() #a broadcast will be send while mqttc.onconnect
 

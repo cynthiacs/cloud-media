@@ -3,6 +3,7 @@ import threading
 import asyncio
 from mg_adaptor import mg_adaptor
 from mq_tasks import wsp_unicast, wsp_broadcast 
+from config import config
 
 class MqttWrapper(paho_mqtt.Client):
     def __init__(self):
@@ -67,6 +68,6 @@ class MqThread(threading.Thread):
     def run(self):
         _mqtt_client.on_connect = self.on_connect
         _mqtt_client.on_message = self.on_message
-        _mqtt_client.connect("139.224.128.15", 1883, 60)
+        _mqtt_client.connect(config['mqtt']['broker_url'], config['mqtt']['broker_port'], config['mqtt']['connect_timeout_s'])
         _mqtt_client.loop_forever()
 
