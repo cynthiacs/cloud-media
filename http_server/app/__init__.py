@@ -6,7 +6,6 @@ from flask_mongoengine import MongoEngine
 from flask_bootstrap import WebCDN, ConditionalCDN, BOOTSTRAP_VERSION, JQUERY_VERSION, HTML5SHIV_VERSION, \
     RESPONDJS_VERSION
 from flask_mqtt import Mqtt
-from config import config
 
 bootstrap = Bootstrap()
 db = MongoEngine()
@@ -46,12 +45,11 @@ def create_app():
 
     # MongoDB Config
     app.config['MONGODB_DB'] = 'usermanager'
-    app.config['MONGODB_HOST'] = config['mongo']['server_url']
-    app.config['MONGODB_PORT'] = config['mongo']['server_port']
+    app.config['MONGODB_HOST'] = '139.224.128.15'
+    app.config['MONGODB_PORT'] = 27017
 
-
-    app.config['MQTT_BROKER_URL'] = config['mqtt']['broker_url']
-    app.config['MQTT_BROKER_PORT'] = config['mqtt']['broker_port']
+    app.config['MQTT_BROKER_URL'] = '139.224.128.15'
+    app.config['MQTT_BROKER_PORT'] = 1883
     # app.config['MQTT_USERNAME'] = 'user'
     # app.config['MQTT_PASSWORD'] = 'secret'
     # app.config['MQTT_REFRESH_TIME'] = 1.0  # refresh time in seconds
