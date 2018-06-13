@@ -1,30 +1,39 @@
-##### install basic packages
-yum install openssl-devel bzip2-devel expat-devel gdbm-devel readline-devel
-sqlite-devel
-yum install git
-yum install nginx
-yum install mosquitto
+# install basic packages
+sudo yum install openssl-devel bzip2-devel expat-devel gdbm-devel readline-devel sqlite-devel git nginx mosquitto
+
+# install mongo
+** touch /etc/yum.repos.d/mongodb-org-3.4.repo
+    [mongodb-org-3.4]
+    name=MongoDB Repository
+    baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/3.4/x86_64/
+    gpgcheck=1
+    enabled=1
+    gpgkey=https://www.mongodb.org/static/pgp/server-3.4.asc
+** sudo yum install -y mongodb-org
+
+# run deamons
 nginx
 mosquitto -d
-yum install  mongodb-org   # need config /etc/repo at first
 service mongod restart
 
-##### install python 3
+# install python 3
 wget https://www.python.org/ftp/python/3.6.1/Python-3.6.1.tar.xz
 ./configure --prefix=/usr/python3.6
 make
 make install
 
-
-##### get cloud-media
+# get cloud-media
 git clone https://github.com/nantianyan/cloud-media.git
 
-##### sync cloud-media’s python dependencies
+# setup python virtual enviroment
 cd cloud-media
 pip install --upgrade pip
 pip install virtualenv
 virtualenv -p /usr/python3.6/bin/python3.6 venv
-
 cd cloud-media/requirement/
 pip install -r requirements.txt
 
+# run cloud media
+** run http sever
+** run media gate
+** run media controller
