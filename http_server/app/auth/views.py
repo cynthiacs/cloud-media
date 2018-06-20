@@ -10,31 +10,56 @@ from . import auth
 from ..models import User, Vendor
 import json
 
+
 def generate_node_id():
     t = time.time()
-    nid = 'N' + str(int(t*1000*1000))
+    nid = 'N' + str(int(t * 1000 * 1000))
     return nid
+
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == "POST":
-        vendor = Vendor.objects(username=request.form["username"]).first()
+        if request.form["admin"] == "yes":
+            """
+            admin login
+            """
+            vendor = Vendor.objects(username=request.form["username"]).first()
+            if vendor is not None:
+                if vendor.verify_password(request.form["password"]):
+                    remember_me = False
+                    if "remember" in json.dumps(request.form):
+                        remember_me = True
 
-        if vendor is not None:
-            if vendor.verify_password(request.form["password"]):
-                remember_me = False
-                if "remember" in json.dumps(request.form):
-                    remember_me = True
-
-                # if current_user.is_authenticated:
-                #    flash(messages.user_login_already)
-                # else:
-                login_user(vendor, remember=remember_me, duration=datetime.timedelta(minutes=30))
-                return redirect(request.args.get('next') or url_for('group.manage'))
+                    # if current_user.is_authenticated:
+                    #    flash(messages.user_login_already)
+                    # else:
+                    login_user(vendor, remember=remember_me, duration=datetime.timedelta(minutes=30))
+                    return redirect(request.args.get('next') or url_for('group.manage'))
+                else:
+                    flash(messages.wrong_username_password)
             else:
-                flash(messages.wrong_username_password)
+                flash(messages.user_not_found)
         else:
-            flash(messages.user_not_found)
+            """
+            user login
+            """
+            user = User.objects(account=request.form["username"]).first()
+            if user is not None:
+                if user.verify_password(request.form["password"]):
+                    remember_me = False
+                    if "remember" in json.dumps(request.form):
+                        remember_me = True
+
+                    # if current_user.is_authenticated:
+                    #    flash(messages.user_login_already)
+                    # else:
+                    login_user(user, remember=remember_me, duration=datetime.timedelta(minutes=30))
+                    return render_template('puller/puller.html')
+                else:
+                    flash(messages.wrong_username_password)
+            else:
+                flash(messages.user_not_found)
 
     return render_template('auth/login.html')
 
@@ -133,5 +158,3 @@ def login_mg():
         return json.dumps({'result': 'OK'})
     else:
         return json.dumps({'result': 'ERROR'})
-
-

@@ -73,6 +73,17 @@
                                     <div class="space-6"></div>
 
                                     <form name="login" action="" method="POST">
+                                        <label>
+                                            <input name="admin" type="radio" checked="checked" class="ace"
+                                                   value="yes"/>
+                                            <span class="lbl"> &nbsp;管理员 </span>
+                                        </label>
+                                        &nbsp;&nbsp;
+                                        <label>
+                                            <input name="admin" type="radio" class="ace" value="no"/>
+                                            <span class="lbl"> &nbsp;普通用户 </span>
+                                        </label>
+                                        <div class="space-6"></div>
                                         <fieldset>
                                             <label class="block clearfix">
                                                 <span class="block input-icon input-icon-right">
@@ -272,6 +283,9 @@
 <![endif]-->
 <script type="text/javascript">
     if ('ontouchstart' in document.documentElement) document.write("<script src='../../static/assets/js/jquery.mobile.custom.min.js'>" + "<" + "/script>");
+
+
+
 </script>
 
 <!-- inline scripts related to this page -->
@@ -284,6 +298,9 @@
             $(target).addClass('visible');//show target
         });
     });
+
+
+
 </script>
 <script type="text/javascript">
     window.onload = function () {
@@ -301,6 +318,9 @@
             }
         }
     }
+
+
+
 
 </script>
 </body>
