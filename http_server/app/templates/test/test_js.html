@@ -39,10 +39,12 @@
         <input type="button" value="offline" id="btn_offline"/>  
         <input type="button" value="start video" id="btn_start"/>  
         <input type="button" value="stop video" id="btn_stop"/>  
+        <input type="button" value="test rsa" id="btn_rsa"/>
     </form>
     
     <div id="log"></div>
     <div id="log_mqtt"></div>
+
 </div>
 {% endblock %}
 
@@ -72,7 +74,8 @@
 
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
     
-    <script src="static/js/cmproxy.js"></script>
+    <!--script src="static/js/cmproxy.js"></script-->
+    <script src="static/js/jsencrypt.min.js"></script>
 
     <script type="text/javascript" charset="utf-8">
         $(document).ready(function() {
@@ -186,6 +189,20 @@
             cmproxy.offline(function(msg) {
                 console.log(msg) 
             });
+        });
+
+        $("#btn_rsa").click(function() {
+            var encrypt = new JSEncrypt();
+
+//https://github.com/travist/jsencrypt
+var pubkey = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC9ymEH5ac+mMQLitp6y+j4vrSC'
++ 'HC3ixbMm2aj6m8gzaL2sD5I8OwK/Dl58mHT1XENYWRueWW6Nb3/aejuRaMUO4sVW'
++ '6H0YJHIUnlGHqAU4Nf3iHh0aw5dDNil26rf/zUsZ2PHZJy7kQv6oPMF9EcnhzP7J'
++ '0R4tYwEl39BPeN46vQIDAQAB'
+
+            encrypt.setPublicKey(pubkey);
+            var encrypted = encrypt.encrypt("hello rsa");
+            console.log(encrypted);
         });
 
 
