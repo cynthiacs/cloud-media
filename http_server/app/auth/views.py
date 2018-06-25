@@ -55,7 +55,7 @@ def login():
                     #    flash(messages.user_login_already)
                     # else:
                     login_user(user, remember=remember_me, duration=datetime.timedelta(minutes=30))
-                    return render_template('puller/puller.html')
+                    return redirect(request.args.get('next') or url_for('user.view', account=request.form["username"]))
                 else:
                     flash(messages.wrong_username_password)
             else:

@@ -138,3 +138,9 @@ def manage():
     return render_template('user/manage.html', users=users, pull_count=pull_count,
                            pusher_count=pusher_count, total=pull_count + pusher_count,
                            pull_online_count=pull_online_count, pusher_online_count=pusher_online_count)
+
+
+@user.route('/user/view/<account>', methods=['GET', 'POST'])
+def view(account):
+    print(account)
+    return render_template('user/puller.html')
