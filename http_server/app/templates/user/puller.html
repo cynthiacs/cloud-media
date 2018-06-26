@@ -65,6 +65,7 @@
     <link rel="stylesheet" href="//g.alicdn.com/de/prismplayer/2.7.1/skins/default/aliplayer-min.css"/>
     <script type="text/javascript" src="//g.alicdn.com/de/prismplayer/2.7.1/aliplayer-min.js"></script>
     <!-- [end] -->
+
 </head>
 
 <body class="no-skin">
@@ -215,7 +216,7 @@
             <div class="page-content">
                 <div class="page-header">
                     <h1>
-                        启动直播
+                        直&nbsp;播
                         <small>
                             <i class="ace-icon fa fa-angle-double-right"></i>
                             A234567
@@ -227,10 +228,16 @@
                         <div class="prism-player" id="J_prismPlayer"></div>
                         <br>
                         <center>
-                            <div style="position:absolute;left:0;right:0;margin:auto">
+                            <div class="col-sm-6">
+                                <a class="btn btn-large btn-success"
+                                   id="startlive">启动直播</a>
+                            </div>
+
+                            <div>
                                 <a class="btn btn-large btn-danger"
                                    id="stoplive">停止直播</a>
                             </div>
+
                         </center>
                     </div>
                     <div style="width:600px;height:600px;;border:#ccc solid 1px;float:right" id="allmap"></div>
@@ -311,7 +318,27 @@
 </html>
 
 <script type="text/javascript">
-var player = new Aliplayer({
+var player = null;
+
+$(function(){
+    player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks");
+    createBaiduMap();
+    $("#startlive").click(function(){
+        player.play()
+        console.log("开始播放");
+
+    });
+
+    $("#stoplive").click(function(){
+        player.stop()
+        window.close();
+        console.log("停止播放，关闭页面");
+    });
+})
+
+function createPlayer(source)
+{
+    return new Aliplayer({
     id: "J_prismPlayer",
          autoplay: false,
          isLive:true,
@@ -321,9 +348,9 @@ var player = new Aliplayer({
          controlBarVisibility:"always",
          useH5Prism:false,
          useFlashPrism:false,
-         source:"//player.alicdn.com/video/aliyunmedia.mp4",
+         source:source,
          cover:"",
-         skinLayout:[{"name":"bigPlayButton","align":"blabs","x":30,"y":80},
+         skinLayout:[
                 {"name":"controlBar","align":"blabs","x":0,"y":0,"children":[{"name":"progress","align":"blabs","x":0,"y":44},
                 {"name":"fullScreenButton","align":"tr","x":10,"y":12},
                 {"name":"timeDisplay","align":"tl","x":10,"y":7},
@@ -331,16 +358,13 @@ var player = new Aliplayer({
                 {"name":"playButton","align":"tl","x":15,"y":12}]}]
          },function(player){
             console.log("播放器创建了。");
-          }
+         }
     );
+}
 
-    jQuery(function ($) {
-      $("#stoplive").click(function(){
-          player.stop()
-          window.location.reload()
-      });
-
-var baidumap = new BMap.Map("allmap");
+function createBaiduMap()
+{
+    var baidumap = new BMap.Map("allmap");
 	var point = new BMap.Point(121.6032242955, 31.2475034682);
 	var marker = new BMap.Marker(point);  // 创建标注
 	baidumap.addOverlay(marker);              // 将标注添加到地图中
@@ -356,5 +380,5 @@ var baidumap = new BMap.Map("allmap");
 	marker.addEventListener("click", function(){
 	    baidumap.openInfoWindow(infoWindow,point); //开启信息窗口
 	});
-  });
+}
 </script>
