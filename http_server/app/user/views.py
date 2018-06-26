@@ -129,11 +129,11 @@ def manage():
     for cur_user in users:
         if cur_user.role == 'puller':
             pull_count = pull_count + 1
-            if cur_user.online is True:
+            if cur_user.online > 0:
                 pull_online_count = pull_online_count + 1
         else:
             pusher_count = pusher_count + 1
-            if cur_user.online is True:
+            if cur_user.online > 0:
                 pusher_online_count = pusher_online_count + 1
     return render_template('user/manage.html', users=users, pull_count=pull_count,
                            pusher_count=pusher_count, total=pull_count + pusher_count,

@@ -86,9 +86,8 @@ def login_app():
             return json.dumps({'result': 'ERROR'})
         if password != cur_user.password:
             return json.dumps({'result': 'ERROR'})
-        if cur_user.online is True:
-            return json.dumps({'result': 'ERROR'})
-        cur_user.update(online=True)
+        cur_user.online = cur_user.online + 1
+        cur_user.update(online=cur_user.online)
         user_info_seq = ('result', 'role', 'token', 'node_id', 'vendor_id', 'vendor_nick', 'group_id', 'group_nick')
         dict_return = dict.fromkeys(user_info_seq)
         dict_return['result'] = 'OK'
@@ -111,7 +110,9 @@ def login_app():
         if cur_user is None:
             return json.dumps({'result': 'ERROR'})
 
-        cur_user.update(online=False)
+        if cur_user.online > 0:
+            cur_user.online = cur_user.online - 1
+        cur_user.update(online=cur_user.online)
         return json.dumps({'result': 'OK'})
     else:
         return json.dumps({'result': 'ERROR'})
@@ -131,10 +132,9 @@ def login_mg():
             return json.dumps({'result': 'ERROR'})
         if password != cur_user.password:
             return json.dumps({'result': 'ERROR'})
-        if cur_user.online is True:
-            return json.dumps({'result': 'ERROR'})
 
-        cur_user.update(online=True)
+        cur_user.online = cur_user.online + 1
+        cur_user.update(online=cur_user.online)
         user_info_seq = ('result', 'role', 'token', 'vendor_id', 'vendor_nick', 'group_id', 'group_nick')
         dict_return = dict.fromkeys(user_info_seq)
         dict_return['result'] = 'OK'
@@ -154,7 +154,9 @@ def login_mg():
         if cur_user is None:
             return json.dumps({'result': 'ERROR'})
 
-        cur_user.update(online=False)
+        if cur_user.online > 0:
+            cur_user.online = cur_user.online - 1
+        cur_user.update(online=cur_user.online)
         return json.dumps({'result': 'OK'})
     else:
         return json.dumps({'result': 'ERROR'})

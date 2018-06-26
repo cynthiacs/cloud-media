@@ -66,7 +66,7 @@ class User(db.Document, UserMixin):
     token = db.StringField(max_length=64)
     # password_hash = db.StringField(max_length=128)
     active = db.BooleanField(default=True)
-    online = db.BooleanField(default=False)
+    online = db.IntField(default=0)
     role = db.StringField(max_length=80)
     # group = db.StringField(max_length=80)
     group = db.ReferenceField(CmGroup)
@@ -97,7 +97,7 @@ class User(db.Document, UserMixin):
         return self.active is True
 
     def is_online(self):
-        return self.online is True
+        return self.online > 0
 
     def is_anonymous(self):
         return False
