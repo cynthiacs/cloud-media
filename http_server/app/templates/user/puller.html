@@ -56,6 +56,7 @@
 	body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";}
 	#allmap{width:100%;height:500px;}
 	p{margin-left:5px; font-size:14px;}
+
     </style>
     <script type="text/javascript"
             src="http://api.map.baidu.com/api?v=2.0&ak=SBMwGhsPVie6UHSO6GnjN4VKpdjThHyG"></script>
@@ -71,16 +72,6 @@
 <body class="no-skin">
 <div id="navbar" class="navbar navbar-default">
     <div class="navbar-container" id="navbar-container">
-        <button type="button" class="navbar-toggle menu-toggler pull-left" id="menu-toggler" data-target="#sidebar">
-            <span class="sr-only">Toggle sidebar</span>
-
-            <span class="icon-bar"></span>
-
-            <span class="icon-bar"></span>
-
-            <span class="icon-bar"></span>
-        </button>
-
         <div class="navbar-header pull-left">
             <a href="#" class="navbar-brand">
                 <small>
@@ -96,7 +87,7 @@
                     <a data-toggle="dropdown" href="#" class="dropdown-toggle">
                         <img class="nav-user-photo" src="{{ mirror_site }}/static/assets/images/avatars/avatar2.png"
                              alt="Jason's Photo"/>
-                        <span class="user-info"><small>Welcome,</small>{{ current_user.username }}</span>
+                        <span class="user-info"><small>Welcome,</small>{{ cur_user.username }}</span>
                         <i class="ace-icon fa fa-caret-down"></i>
                     </a>
 
@@ -131,21 +122,7 @@
 </div>
 
 <div class="main-container ace-save-state" id="main-container">
-    <script type="text/javascript">
-        try {
-            ace.settings.loadState('main-container')
-        } catch (e) {
-        }
-    </script>
-
     <div id="sidebar" class="sidebar responsive ace-save-state">
-        <script type="text/javascript">
-            try {
-                ace.settings.loadState('sidebar')
-            } catch (e) {
-            }
-        </script>
-
         <ul class="nav nav-list">
             <li class="">
                 <a href="#" class="dropdown-toggle">
@@ -158,7 +135,7 @@
                 <b class="arrow"></b>
 
                 <ul class="submenu">
-                    <li class="active">
+                    <li class="">
                         <a href="{{ url_for('user.view', account='A123456') }}" target="_blank">
                             <i class="menu-icon fa fa-caret-right"></i>
                             A123456
@@ -178,7 +155,7 @@
                 </ul>
             </li>
 
-            <li class="active">
+            <li class="">
                 <a href="#" class="dropdown-toggle">
                     <i class="menu-icon fa fa-group green"></i>
                     <span class="menu-text"> Leadcore </span>
@@ -208,7 +185,7 @@
                     </li>
                 </ul>
             </li>
-        </ul><!-- /.nav-list -->
+        </ul>
     </div>
 
     <div class="main-content">
@@ -217,12 +194,8 @@
                 <div class="page-header">
                     <h1>
                         直&nbsp;播
-                        <small>
-                            <i class="ace-icon fa fa-angle-double-right"></i>
-                            A234567
-                        </small>
                     </h1>
-                </div><!-- /.page-header -->
+                </div>
                 <div class="row">
                     <div style="position:relative;" class="col-sm-6">
                         <div class="prism-player" id="J_prismPlayer"></div>
@@ -260,69 +233,78 @@
     <a href="#" id="btn-scroll-up" class="btn-scroll-up btn btn-sm btn-inverse">
         <i class="ace-icon fa fa-angle-double-up icon-only bigger-110"></i>
     </a>
-    </div><!-- /.main-container -->
+</div>
 
-    <!-- basic scripts -->
+<!--[if !IE]> -->
+<script src="{{ mirror_site }}/static/assets/js/jquery-2.1.4.min.js"></script>
 
-    <!--[if !IE]> -->
-    <script src="{{ mirror_site }}/static/assets/js/jquery-2.1.4.min.js"></script>
+<!-- <![endif]-->
 
-    <!-- <![endif]-->
+<!--[if IE]>
+<script src="{{ mirror_site }}/static/assets/js/jquery-1.11.3.min.js"></script>
+<![endif]-->
 
-    <!--[if IE]>
-    <script src="{{ mirror_site }}/static/assets/js/jquery-1.11.3.min.js"></script>
-    <![endif]-->
-    <script type="text/javascript">
-    if ('ontouchstart' in document.documentElement) document.write("<script src='{{ mirror_site }}/static/assets/js/jquery.mobile.custom.min.js'>" + "<" + "/script>");
-    </script>
+<script src="{{ mirror_site }}/static/assets/js/bootstrap.min.js"></script>
 
-    <script src="{{ mirror_site }}/static/assets/js/bootstrap.min.js"></script>
+<!--[if lte IE 8]>
+<script src="{{ mirror_site }}/static/assets/js/excanvas.min.js"></script>
+<![endif]-->
 
-    <!-- page specific plugin scripts -->
-
-    <!--[if lte IE 8]>
-    <script src="{{ mirror_site }}/static/assets/js/excanvas.min.js"></script>
-    <![endif]-->
-
-    <script src="{{ mirror_site }}/static/assets/js/jquery-ui.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/jquery-ui.custom.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/jquery.ui.touch-punch.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/chosen.jquery.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/spinbox.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/bootstrap-datepicker.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/bootstrap-timepicker.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/moment.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/daterangepicker.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/bootstrap-datetimepicker.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/bootstrap-colorpicker.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/jquery.knob.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/autosize.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/jquery.inputlimiter.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/jquery.maskedinput.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/bootstrap-tag.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/jquery-ui.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/jquery-ui.custom.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/jquery.ui.touch-punch.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/chosen.jquery.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/spinbox.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/bootstrap-datepicker.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/bootstrap-timepicker.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/moment.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/daterangepicker.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/bootstrap-datetimepicker.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/bootstrap-colorpicker.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/jquery.knob.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/autosize.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/jquery.inputlimiter.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/jquery.maskedinput.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/bootstrap-tag.min.js"></script>
 
 
-    <script src="{{ mirror_site }}/static/assets/js/jquery.dataTables.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/jquery.dataTables.bootstrap.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/dataTables.buttons.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/buttons.flash.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/buttons.html5.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/buttons.print.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/buttons.colVis.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/dataTables.select.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/jquery.dataTables.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/jquery.dataTables.bootstrap.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/dataTables.buttons.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/buttons.flash.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/buttons.html5.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/buttons.print.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/buttons.colVis.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/dataTables.select.min.js"></script>
 
-    <!-- ace scripts -->
-    <script src="{{ mirror_site }}/static/assets/js/ace-elements.min.js"></script>
-    <script src="{{ mirror_site }}/static/assets/js/ace.min.js"></script>
-    </body>
+<!-- ace scripts -->
+<script src="{{ mirror_site }}/static/assets/js/ace-elements.min.js"></script>
+<script src="{{ mirror_site }}/static/assets/js/ace.min.js"></script>
+</body>
 </html>
 
 <script type="text/javascript">
+    try {
+        ace.settings.loadState('main-container')
+    } catch (e) {
+        console.log('main-container')
+    }
+
+    try {
+        ace.settings.loadState('sidebar')
+    } catch (e) {
+        console.log('sidebar')
+    }
+
+    if ('ontouchstart' in document.documentElement) {
+        document.write("<script src='{{ mirror_site }}/static/assets/js/jquery.mobile.custom.min.js'>" + "<" + "/script>");
+    }
+
 var player = null;
 
 $(function(){
-    player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks");
     createBaiduMap();
+    player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks");
     $("#startlive").click(function(){
         player.play()
         console.log("开始播放");

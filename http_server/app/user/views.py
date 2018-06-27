@@ -142,5 +142,8 @@ def manage():
 
 @user.route('/user/view/<account>', methods=['GET', 'POST'])
 def view(account):
-    print(account)
-    return render_template('user/puller.html')
+    cur_user = User.objects(account=account).first()
+    if cur_user is None:
+        flash(messages.user_not_found)
+        return "error"
+    return render_template('user/puller.html', cur_user=cur_user)
