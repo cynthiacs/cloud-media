@@ -248,5 +248,6 @@ CMProxy.prototype._onerror = function(error) {
 }
 
 cmproxy = new CMProxy();
-cmproxy._connect('127.0.0.1', '9001')
-
+//cmproxy._connect('127.0.0.1', '9001')
+//cmproxy.connect('139.224.128.15', '9001')
+cmproxy.connect('47.100.125.222', '9001')
