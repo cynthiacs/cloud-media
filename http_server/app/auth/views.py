@@ -135,11 +135,12 @@ def login_mg():
 
         cur_user.online = cur_user.online + 1
         cur_user.update(online=cur_user.online)
-        user_info_seq = ('result', 'role', 'token', 'vendor_id', 'vendor_nick', 'group_id', 'group_nick')
+        user_info_seq = ('result', 'role', 'token', 'node_id', 'vendor_id', 'vendor_nick', 'group_id', 'group_nick')
         dict_return = dict.fromkeys(user_info_seq)
         dict_return['result'] = 'OK'
         dict_return['role'] = cur_user.role
         dict_return['token'] = cur_user.token
+        dict_return['node_id'] = generate_node_id()
         dict_return['vendor_id'] = cur_user.vid
         dict_return['vendor_nick'] = cur_user.vendor
         dict_return['group_id'] = cur_user.group.gid

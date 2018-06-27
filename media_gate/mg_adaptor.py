@@ -77,56 +77,56 @@ class MgAdaptor(object):
 
         print(repr(resp))
         resp = eval(resp)
+        reply = {}
+        reply['jsonrpc'] = '2.0'
         #todo: check the response at first
         if resp['result'] == 'OK':
-            nid = "N%s" % (datetime.datetime.now().microsecond, )
-            node_tag = "%s_%s_%s" % (resp['vendor_id'], resp['group_id'], nid)
+            """nid = "N%s" % (datetime.datetime.now().microsecond, )"""
+            node_tag = "%s_%s_%s" % (resp['vendor_id'], resp['group_id'], resp['node_id'])
             s.node_tag = node_tag 
             del resp['result']
-            resp['id'] = nid
-            resp['nick'] = 'nick'
-            resp['device_name'] = 'default'
-            resp['location'] = 'Location Unknown'
-            resp['stream_status'] = 'unknown'
             print(repr(resp))
+            print("node_tag: " + node_tag)
             #self._sessions.node_info = resp
 
             topic = "%s/%s/reply"%(s.node_tag, "media_controller")
             self.mcp.sub(topic)
- 
-        reply = {}
-        reply['jsonrpc'] = '2.0'
-        reply['result'] = resp
+            reply['result'] = resp
+        else:
+            reply['error'] = resp['result']
+
         reply['id'] = rpc_id
         print(repr(reply))
         await ws.send(str(reply).replace('\'', '\"'))
 
     async def logout(self, ws, msg):
+        print("debug: mg_adaptor logout ")
         jrpc = eval(msg)
         params = jrpc['params']
         rpc_id = jrpc['id']
 
         account=params['account']
-        password=params['password']
 
+        reply = {}
+        reply['jsonrpc'] = '2.0'
         s = self._find_session_by_ws(ws)
         if s is not None:
             resp = self.uap.logout(s)
-
             print(repr(resp))
             resp = eval(resp)
+
             #todo: check the response at first
             if resp['result'] == 'OK':
                 topic = "%s/%s/reply"%(s.node_tag, "media_controller")
                 self.mcp.unsub(topic)
                 self._sessions.remove(s)
+                reply['result'] = resp['result']
                 print("unsubscribe topic and removed session")
+            else:
+                reply['error'] = resp['result']
         else:
-            resp = {'result':'ERROR'}
- 
-        reply = {}
-        reply['jsonrpc'] = '2.0'
-        reply['result'] = resp
+            reply['error'] = "ERROR:INVALID"
+
         reply['id'] = rpc_id
         print(repr(reply))
         await ws.send(str(reply).replace('\'', '\"'))

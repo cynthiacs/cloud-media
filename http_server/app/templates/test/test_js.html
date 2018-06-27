@@ -35,8 +35,8 @@
         <input type="button" value="login" id="btn_login"/>
         <!--input type="button" value="connect" id="btn_connect"/-->
         <input type="button" value="logout" id="btn_logout"/>  
-        <input type="button" value="online" id="btn_online"/>  
-        <input type="button" value="offline" id="btn_offline"/>  
+        <input type="button" value="connect" id="btn_connect"/>  
+        <input type="button" value="disconnect" id="btn_disconnect"/>  
         <input type="button" value="start video" id="btn_start"/>  
         <input type="button" value="stop video" id="btn_stop"/>  
         <input type="button" value="test rsa" id="btn_rsa"/>
@@ -74,8 +74,8 @@
 
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
     
-    <!--script src="static/js/cmproxy.js"></script-->
-    <script src="static/js/jsencrypt.min.js"></script>
+    <script src="static/js/cmproxy.js"></script>
+    <!--script src="static/js/jsencrypt.min.js"></script-->
 
     <script type="text/javascript" charset="utf-8">
         $(document).ready(function() {
@@ -136,7 +136,7 @@
             });
 
 
-            $("#btn_online").click(function() {
+            $("#btn_connect").click(function() {
                 var params = '{\"id\":\"N1077746422140\",\"nick\":\"PULLER0\",\"role\":\"puller\",'
                      + '\"device_name\":\"default\",\"location\":\"Location Unknown\",\"stream_status\":\"pulling_close\",'
                      + '\"vendor_id\":\"V0001\",\"vendor_nick\":\"Leadcore\",\"group_id\":\"G00000\",\"group_nick\":\"Default Group\"}'
@@ -146,7 +146,7 @@
                 console.log(request)
             });
 
-            $("#btn_offline").click(function() {
+            $("#btn_disconnect").click(function() {
                 var params = '{\"id\":\"N1077746422140\",\"nick\":\"PULLER0\",\"role\":\"puller\",'
                      + '\"device_name\":\"default\",\"location\":\"Location Unknown\",\"stream_status\":\"pulling_close\",'
                      + '\"vendor_id\":\"V0001\",\"vendor_nick\":\"Leadcore\",\"group_id\":\"G00000\",\"group_nick\":\"Default Group\"}'
@@ -173,20 +173,20 @@
         });
 
         $("#btn_logout").click(function() {
-            cmproxy.logout('A159308', '123456', function(msg) {
+            cmproxy.logout('A159308', function(msg) {
                 console.log("this is in logout's listener... when reply arrives!")
                 console.log(msg) 
             });
         });
 
-        $("#btn_online").click(function() {
-            cmproxy.online(function(msg) {
+        $("#btn_connect").click(function() {
+            cmproxy.connect(function(msg) {
                 console.log(msg) 
             });
         });
 
-        $("#btn_offline").click(function() {
-            cmproxy.offline(function(msg) {
+        $("#btn_disconnect").click(function() {
+            cmproxy.disconnect(function(msg) {
                 console.log(msg) 
             });
         });
