@@ -11,6 +11,8 @@ sudo yum install openssl-devel bzip2-devel expat-devel gdbm-devel readline-devel
 #    enabled=1
 #    gpgkey=https://www.mongodb.org/static/pgp/server-3.4.asc
 sudo yum install -y mongodb-org
+# edit /etc/mongo.conf, change bind_IP as 0.0.0.0
+# service mongod restart
 
 # run deamons
 nginx
