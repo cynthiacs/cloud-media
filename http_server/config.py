@@ -1,14 +1,13 @@
 import os
 
-
 config = {
     "mqtt": {
-        "broker_url":os.environ.get('CM_MQTT_HOST'),
+        "broker_url": '47.100.125.222',
         "broker_port": 1883,
         "connect_timeout_s": 60
     },
     "mongo": {
-        "server_url":os.environ.get('CM_MONGO_HOST'),
+        "server_url": '47.100.125.222',
         "server_port": 27017,
         "db_name": "usermanager"
     },

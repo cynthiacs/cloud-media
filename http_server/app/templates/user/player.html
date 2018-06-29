@@ -101,15 +101,14 @@
                         <br>
                         <center>
                             <div class="col-sm-6">
-                                <a class="btn btn-large btn-success"
-                                   id="startlive">启动直播</a>
+                                <button id="startlive" class="btn btn-large btn-success"
+                                        onclick="startlive()">启动直播</button>
                             </div>
 
                             <div>
-                                <a class="btn btn-large btn-danger"
-                                   id="stoplive">停止直播</a>
+                                <button id="stoplive" class="btn btn-large btn-danger"
+                                        onclick="stoplive()" disabled="true">停止直播</button>
                             </div>
-
                         </center>
                     </div>
                     <div style="width:50%;height:600px;;border:#ccc solid 1px;float:right" id="allmap"></div>
@@ -200,26 +199,27 @@ var player = null;
 $(function() {
     createBaiduMap()
     player = createPlayer(null);
-    $("#startlive").click(function() {
-        player.dispose();
-        //player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks");
-        player = createPlayer("http://cloud.video.taobao.com/play/u/2554695624/p/1/e/6/t/1/fv/102/28552077.mp4");
-        var handleReady = function(e)
-        {
-            console.log(e);
-            player.play();
-        }
-        player.on('ready',handleReady);
-        disabled = true;
-        console.log("开始播放");
-    });
-
-    $("#stoplive").click(function() {
-        player.stop();
-        player.dispose();
-        window.location.reload();
-    });
 })
+
+function startlive() {
+    player.dispose();
+    //player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks");
+    player = createPlayer("http://cloud.video.taobao.com/play/u/2554695624/p/1/e/6/t/1/fv/102/28552077.mp4");
+    var handleReady = function(e) {
+        console.log(e);
+        player.play();
+    }
+    player.on('ready',handleReady);
+    console.log("开始播放");
+    document.getElementById("startlive").disabled=true
+    document.getElementById("stoplive").disabled=false
+}
+
+function stoplive() {
+    player.stop();
+    player.dispose();
+    window.location.reload();
+}
 
 function createPlayer(source) {
     return new Aliplayer({
