@@ -1,4 +1,9 @@
 .idea/
+.DS_Store
+doc/.DS_Store
+http_server/.DS_Store
+http_server/app/.DS_Store
+http_server/app/templates/.DS_Store
 http_server/app/__pycache__/
 http_server/app/apis/__pycache__/
 http_server/app/auth/__pycache__/
