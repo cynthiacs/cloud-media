@@ -13,6 +13,7 @@ def ws_error(kwargs):
     # send error notify reply through the ws
 
 def ws_send_mqtt_request(kwargs):
+    ws = kwargs['ws']
     msg = kwargs['msg']
-    mg_adaptor.mcp_send_request(msg)
+    mg_adaptor.mcp_send_request(ws, msg)
 

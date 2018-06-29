@@ -34,17 +34,17 @@ class WsThread(threading.Thread):
                 asyncio.run_coroutine_threadsafe(
                     ws_logout(ws=websocket, msg=message), self._main_loop) 
             elif method == 'Online':
-                self._send_callable(ws_send_mqtt_request, msg=message)
+                self._send_callable(ws_send_mqtt_request, ws=websocket, msg=message)
             elif method == 'Offline':
-                self._send_callable(ws_send_mqtt_request, msg=message)
-            elif method == 'Start_push':
-                self._send_callable(ws_send_mqtt_request, msg=message)
-            elif method == 'Stop_push':
-                self._send_callable(ws_send_mqtt_request, msg=message)
+                self._send_callable(ws_send_mqtt_request, ws=websocket, msg=message)
+            elif method == 'StartPushMedia':
+                self._send_callable(ws_send_mqtt_request, ws=websocket, msg=message)
+            elif method == 'StopPushMedia':
+                self._send_callable(ws_send_mqtt_request, ws=websocket, msg=message)
             else:
                 print("unsupported command %s" % (method,))
                 params = '{"method":"echo", "params":"unsupported command"}'
-                self.send_callable(ws_error, websocket, params)
+                self._send_callable(ws_error, websocket, params)
   
     def run(self):
         self.loop = asyncio.new_event_loop()

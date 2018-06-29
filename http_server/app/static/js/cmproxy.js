@@ -65,12 +65,11 @@ function CMProxy() {
     this.ws_addr = '';
     this.ws = null;
     this.serial = 0;
-    this.waiting_replies = {}
-    this.sent_requests = {}
+    this.waiting_replies = {};
+    this.sent_requests = {};
     //this.node_info = '';
-    this.node_info = '{\"id\":\"N1077746422140\",\"nick\":\"PULLER0\",\"role\":\"puller\",'
-      + '\"device_name\":\"default\",\"location\":\"Location Unknown\",\"stream_status\":\"pulling_close\",'
-      + '\"vendor_id\":\"V0001\",\"vendor_nick\":\"Leadcore\",\"group_id\":\"G00000\",\"group_nick\":\"Default Group\"}'
+    //this.node_info = {id:"unknown", nick:"unknown", role:"unknown", device_name:"unknown", location:"unknown",
+    //                stream_status:"unknown", vendor_id:"unknown", vendor_nick:"unknown", group_id:"unknown", group_nick:"unknown"};
     this.on_nodes_update = null;
     this.cm_user = null;
 
@@ -79,14 +78,15 @@ function CMProxy() {
 CMProxy.prototype.login = function(account, password, listener) {
     this.cm_user = new CMUser(account, password);
     var method = 'Login';
-    var params = '{\"account\":\"' + account + '\", \"password\":\"' + password + '\"}'
+    var params = {account:account, password:password};
     this._send_request(method, params, listener);
 }
 
 CMProxy.prototype.logout = function(account, listener) {
     var method = 'Logout';
-    var params = '{\"account\":\"' + account + '\"}'
+    var params = {account:account}
     this._send_request(method, params, listener);
+    this.cm_user = null;
 }
 
 CMProxy.prototype._connect = function(host, port) {
@@ -124,10 +124,17 @@ CMProxy.prototype.set_nodes_update_listener = function(listener) {
 }
 
 CMProxy.prototype._send_request = function(method, params, listener) {
-    var request = '{\"jsonrpc\":2.0, \"method\":\"' + method + '\",\"params\":' + params + ',\"id\":\"' + this.serial + '\"}';
-    console.log(request)
+    var request = {};
+    request.jsonrpc = "2.0";
+    request.method = method;
+    if (params != null)
+        request.params = params;
+    // request.id must be a string for server required
+    request.id = this.serial+"";
+    var req_str = JSON.stringify(request);
+    console.log(req_str)
 
-    this.ws.send(request);
+    this.ws.send(req_str);
     this.waiting_replies[this.serial] = listener
     console.log('add listener to waiting replies')
     console.log(this.waiting_replies)
@@ -138,33 +145,48 @@ CMProxy.prototype._send_request = function(method, params, listener) {
     ++this.serial;
 }
 
-CMProxy.prototype.set_node_info = function(info) {
-    this.node_info = info
-}
-
 CMProxy.prototype.connect_mc = function() {
     console.log('connect_mc');
 }
 
-CMProxy.prototype.connect = function(listener) {
-    var method = 'Connect'
-    var params = this.node_info; //get when login 
+CMProxy.prototype.connect = function(nick, device_name, listener) {
+    if (this.cm_user == null) {
+        listener('{\"error\":\"ERROR: please login first\"}');
+        return;
+    }
+    if (this.cm_user.get_role() != "puller") {
+        listener('{\"error\":\"ERROR: role is not matched\"}');
+        return;
+    }
+    var method = 'Online';
+    var node_info = {};
+    node_info.id = this.cm_user.get_node_id();
+    node_info.nick = nick;
+    node_info.role = this.cm_user.get_role();
+    node_info.token = this.cm_user.get_token();
+    node_info.device_name = this.cm_user.device_name;
+    node_info.location = "Location Unknown";
+    node_info.stream_status = "pulling_close";
+    node_info.vendor_id = this.cm_user.get_vendor_id();
+    node_info.vendor_nick = this.cm_user.get_vendor_nick();
+    node_info.group_id = this.cm_user.get_group_id();
+    node_info.group_nick = this.cm_user.get_group_nick();
+    var params = node_info;
     this._send_request(method, params, listener);
 }
 
 CMProxy.prototype.disconnect = function(listener) {
-    var method = 'Disconnect'
-    var params = this.node_info; //get when login 
-    this._send_request(method, params, listener);
+    var method = 'Offline'
+    this._send_request(method, null, listener);
 }
 
-CMProxy.prototype.start_video = function(target_tag, expire_time, listener) {
+CMProxy.prototype.start_push_media = function(target_tag, expire_time, listener) {
     var method = 'StartPushMedia'
     var params = '{"target-id":"' + target_tag + '","expire-time":"' + expire_time + 's"}'
     this._send_request(method, params, listener);
 }
 
-CMProxy.prototype.stop_video = function(target_tag, expire_time, listener) {
+CMProxy.prototype.stop_push_media = function(target_tag, expire_time, listener) {
     method = 'StopPushMedia'
     var params = '{"target-id":"' + target_tag + '","expire-time":"' + expire_time + 's"}'
     this._send_request(method, params, listener);
@@ -248,6 +270,6 @@ CMProxy.prototype._onerror = function(error) {
 }
 
 cmproxy = new CMProxy();
-//cmproxy._connect('127.0.0.1', '9001')
+cmproxy._connect('127.0.0.1', '9001')
 //cmproxy.connect('139.224.128.15', '9001')
-cmproxy.connect('47.100.125.222', '9001')
+//cmproxy.connect('47.100.125.222', '9001')

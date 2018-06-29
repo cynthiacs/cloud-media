@@ -4,13 +4,7 @@ class MediaControllerProxy:
         print("MediaControllerProxy init")
         self._mqtt = mqtt
 
-    def _get_request_topic(self, msg):
-        jrpc = eval(msg)
-        params = jrpc['params']
-        nid = params['id']
-        gid = params['group_id']
-        vid = params['vendor_id']
-        tag = "%s_%s_%s"%(vid, gid, nid)
+    def _get_request_topic(self, tag):
         topic = "%s/%s/%s"%('media_controller', tag, 'request')
         return topic
 
@@ -25,7 +19,7 @@ class MediaControllerProxy:
  
         self._mqtt.unsubscribe(topic)
 
-    def send_request(self, msg):
-        topic = self._get_request_topic(msg) 
+    def send_request(self, tag, msg):
+        topic = self._get_request_topic(tag) 
         self._mqtt.publish(topic, msg, qos=2)
 

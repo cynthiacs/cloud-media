@@ -131,8 +131,13 @@ class MgAdaptor(object):
         print(repr(reply))
         await ws.send(str(reply).replace('\'', '\"'))
 
-    def mcp_send_request(self, msg):
-        self.mcp.send_request(msg)
+    def mcp_send_request(self, ws, msg):
+        s = self._find_session_by_ws(ws)
+        if s is not None:
+            self.mcp.send_request(s.node_tag, msg)
+        #todo: response error
+        else:
+            print("error: unknown request, session removed?")
 
     async def wsp_unicast(self, msg):
         print("debug: wsp send one msg")
