@@ -324,12 +324,12 @@ function createPlayer(source) {
     );
 }
 
-var baidumap = null;
+var map = null;
 
 function createBaiduMap() {
-    baidumap = new BMap.Map("allmap");
+    map = new BMap.Map("allmap");
 	var point = new BMap.Point(121.6032242955, 31.2475034682);
-	baidumap.centerAndZoom(point, 15);
+	map.centerAndZoom(point, 15);
 	var json_data = [[121.4763072256, 31.2297339198, "地址：人民广场"],
 	                 [121.4000991472, 31.1314073528, "地址：南方商城商城"],
 	                 [121.3789452139, 31.1054771411, "地址：莘庄"]];
@@ -337,12 +337,12 @@ function createBaiduMap() {
 	for(var i=0;i<json_data.length;i++){
 		var marker = new BMap.Marker(new BMap.Point(json_data[i][0], json_data[i][1])); // 创建点
 		var content = json_data[i][2];
-		baidumap.addOverlay(marker);    //增加点
+		map.addOverlay(marker);    //增加点
 		pointArray[i] = new BMap.Point(json_data[i][0], json_data[i][1]);
 		addClickHandler(content,marker);
 	}
 
-    baidumap.setViewport(pointArray);
+    map.setViewport(pointArray);
 }
 
 function addClickHandler(content,marker) {
@@ -362,6 +362,6 @@ function openInfo(content,e) {
         enableMessage:true//设置允许信息窗发送短息
     };
     var infoWindow = new BMap.InfoWindow(content,opts);  // 创建信息窗口对象
-    baidumap.openInfoWindow(infoWindow,point); //开启信息窗口
+    map.openInfoWindow(infoWindow,point); //开启信息窗口
 }
 </script>

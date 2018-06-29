@@ -247,11 +247,11 @@ function createPlayer(source) {
 }
 
 function createBaiduMap() {
-    var baidumap = new BMap.Map("allmap");
+    var map = new BMap.Map("allmap");
 	var point = new BMap.Point(121.6032242955, 31.2475034682);
 	var marker = new BMap.Marker(point);  // 创建标注
-	baidumap.addOverlay(marker);              // 将标注添加到地图中
-	baidumap.centerAndZoom(point, 15);
+	map.addOverlay(marker);              // 将标注添加到地图中
+	map.centerAndZoom(point, 15);
 	var opts = {
 	  width : 200,     // 信息窗口宽度
 	  height: 100,     // 信息窗口高度
@@ -261,7 +261,7 @@ function createBaiduMap() {
 	}
 	var infoWindow = new BMap.InfoWindow("地址：上海浦东新区明月路1258号 大唐电信产业园", opts);  // 创建信息窗口对象
 	marker.addEventListener("click", function(){
-	    baidumap.openInfoWindow(infoWindow,point); //开启信息窗口
+	    map.openInfoWindow(infoWindow,point); //开启信息窗口
 	});
 }
 </script>
