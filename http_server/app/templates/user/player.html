@@ -56,7 +56,6 @@
 	body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";}
 	#allmap{width:100%;height:500px;}
 	p{margin-left:5px; font-size:14px;}
-
     </style>
     <script type="text/javascript"
             src="http://api.map.baidu.com/api?v=2.0&ak=SBMwGhsPVie6UHSO6GnjN4VKpdjThHyG"></script>
@@ -72,7 +71,7 @@
 <body class="no-skin">
 <div id="navbar" class="navbar navbar-default">
     <div class="navbar-container" id="navbar-container">
-        <div class="navbar-header">
+        <div class="navbar-header pull-left">
             <a href="#" class="navbar-brand">
                 <small>
                     <i class="fa fa-leaf green bigger-125"></i>
@@ -80,7 +79,6 @@
                 </small>
             </a>
         </div>
-
     </div>
 </div>
 
@@ -90,13 +88,13 @@
             <div class="page-content">
                 <div class="page-header">
                     <h1>
-                        直&nbsp;播
+                        视&nbsp;频&nbsp;直&nbsp;播
                         <small>
                             <i class="ace-icon fa fa-angle-double-right"></i>
-                            { }
+                            A234567
                         </small>
                     </h1>
-                </div><!-- /.page-header -->
+                </div>
                 <div class="row">
                     <div style="position:relative;" class="col-sm-6">
                         <div class="prism-player" id="J_prismPlayer"></div>
@@ -114,9 +112,7 @@
 
                         </center>
                     </div>
-                    <div style="width:600px;height:600px;;border:#ccc solid 1px;float:right"
-                         id="allmap">
-                    </div>
+                    <div style="width:50%;height:600px;;border:#ccc solid 1px;float:right" id="allmap"></div>
                 </div>
             </div>
         </div>
@@ -132,13 +128,7 @@
             </div>
         </div>
     </div>
-
-    <a href="#" id="btn-scroll-up" class="btn-scroll-up btn btn-sm btn-inverse">
-        <i class="ace-icon fa fa-angle-double-up icon-only bigger-110"></i>
-    </a>
-</div><!-- /.main-container -->
-
-<!-- basic scripts -->
+</div>
 
 <!--[if !IE]> -->
 <script src="{{ mirror_site }}/static/assets/js/jquery-2.1.4.min.js"></script>
@@ -150,8 +140,6 @@
 <![endif]-->
 
 <script src="{{ mirror_site }}/static/assets/js/bootstrap.min.js"></script>
-
-<!-- page specific plugin scripts -->
 
 <!--[if lte IE 8]>
 <script src="{{ mirror_site }}/static/assets/js/excanvas.min.js"></script>
@@ -191,32 +179,45 @@
 </html>
 
 <script type="text/javascript">
-try {
+    try {
         ace.settings.loadState('main-container')
     } catch (e) {
+        console.log('main-container')
     }
-try {
+
+    try {
         ace.settings.loadState('sidebar')
     } catch (e) {
+        console.log('sidebar')
     }
-if ('ontouchstart' in document.documentElement) {
+
+    if ('ontouchstart' in document.documentElement) {
         document.write("<script src='{{ mirror_site }}/static/assets/js/jquery.mobile.custom.min.js'>" + "<" + "/script>");
     }
+
 var player = null;
 
 $(function() {
-    player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks");
-    createBaiduMap();
+    createBaiduMap()
+    player = createPlayer(null);
     $("#startlive").click(function() {
-        player.play()
+        player.dispose();
+        //player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks");
+        player = createPlayer("http://cloud.video.taobao.com/play/u/2554695624/p/1/e/6/t/1/fv/102/28552077.mp4");
+        var handleReady = function(e)
+        {
+            console.log(e);
+            player.play();
+        }
+        player.on('ready',handleReady);
+        disabled = true;
         console.log("开始播放");
-
     });
 
     $("#stoplive").click(function() {
-        player.stop()
+        player.stop();
+        player.dispose();
         window.location.reload();
-        console.log("停止播放，关闭页面");
     });
 })
 
@@ -227,7 +228,7 @@ function createPlayer(source) {
          isLive:true,
          playsinline:false,
          width:"100%",
-         height:"380px",
+         height:"500px",
          controlBarVisibility:"always",
          useH5Prism:false,
          useFlashPrism:false,

@@ -56,7 +56,6 @@
 	body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";}
 	#allmap{width:100%;height:500px;}
 	p{margin-left:5px; font-size:14px;}
-
     </style>
     <script type="text/javascript"
             src="http://api.map.baidu.com/api?v=2.0&ak=SBMwGhsPVie6UHSO6GnjN4VKpdjThHyG"></script>
@@ -136,7 +135,7 @@
 
                 <ul class="submenu">
                     <li class="">
-                        <a href="{{ url_for('user.view', account='A123456') }}" target="_blank">
+                        <a href="{{ url_for('user.player', url='A123456') }}" target="_blank">
                             <i class="menu-icon fa fa-caret-right"></i>
                             A123456
                         </a>
@@ -145,7 +144,7 @@
                     </li>
 
                     <li class="">
-                        <a href="{{ url_for('user.view', account='A234567') }}" target="_blank">
+                        <a href="{{ url_for('user.player', url='A234567') }}" target="_blank">
                             <i class="menu-icon fa fa-caret-right"></i>
                             A234567
                         </a>
@@ -167,7 +166,7 @@
 
                 <ul class="submenu">
                     <li class="">
-                        <a href="{{ url_for('user.view', account='A123456') }}" target="_blank">
+                        <a href="{{ url_for('user.player', url='A123456') }}" target="_blank">
                             <i class="menu-icon fa fa-user fa-caret-right"></i>
                             A123456
                         </a>
@@ -176,7 +175,7 @@
                     </li>
 
                     <li class="">
-                        <a href="{{ url_for('user.view', account='A234567') }}" target="_blank">
+                        <a href="{{ url_for('user.player', url='A234567') }}" target="_blank">
                             <i class="menu-icon fa fa-user fa-caret-right"></i>
                             A234567
                         </a>
@@ -197,23 +196,9 @@
                     </h1>
                 </div>
                 <div class="row">
-                    <div style="position:relative;" class="col-sm-6">
-                        <div class="prism-player" id="J_prismPlayer"></div>
-                        <br>
-                        <center>
-                            <div class="col-sm-6">
-                                <a class="btn btn-large btn-success"
-                                   id="startlive">启动直播</a>
-                            </div>
-
-                            <div>
-                                <a class="btn btn-large btn-danger"
-                                   id="stoplive">停止直播</a>
-                            </div>
-
-                        </center>
+                    <div class="col-sm-12">
+                        <div style="width:100%;height:600px;;border:#ccc solid 1px;float:right" id="allmap"></div>
                     </div>
-                    <div style="width:600px;height:600px;;border:#ccc solid 1px;float:right" id="allmap"></div>
                 </div>
             </div>
         </div>
@@ -229,10 +214,6 @@
             </div>
         </div>
     </div>
-
-    <a href="#" id="btn-scroll-up" class="btn-scroll-up btn btn-sm btn-inverse">
-        <i class="ace-icon fa fa-angle-double-up icon-only bigger-110"></i>
-    </a>
 </div>
 
 <!--[if !IE]> -->
@@ -302,24 +283,23 @@
 
 var player = null;
 
-$(function(){
+$(function() {
     createBaiduMap();
     player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks");
-    $("#startlive").click(function(){
+    $("#startlive").click(function() {
         player.play()
         console.log("开始播放");
 
     });
 
-    $("#stoplive").click(function(){
+    $("#stoplive").click(function() {
         player.stop()
-        window.close();
+        window.location.reload();
         console.log("停止播放，关闭页面");
     });
 })
 
-function createPlayer(source)
-{
+function createPlayer(source) {
     return new Aliplayer({
     id: "J_prismPlayer",
          autoplay: false,
@@ -344,23 +324,44 @@ function createPlayer(source)
     );
 }
 
-function createBaiduMap()
-{
-    var baidumap = new BMap.Map("allmap");
+var baidumap = null;
+
+function createBaiduMap() {
+    baidumap = new BMap.Map("allmap");
 	var point = new BMap.Point(121.6032242955, 31.2475034682);
-	var marker = new BMap.Marker(point);  // 创建标注
-	baidumap.addOverlay(marker);              // 将标注添加到地图中
 	baidumap.centerAndZoom(point, 15);
-	var opts = {
-	  width : 200,     // 信息窗口宽度
-	  height: 100,     // 信息窗口高度
-	  title : "联芯科技有限公司" , // 信息窗口标题
-	  enableMessage:true,//设置允许信息窗发送短息
-	  message:"HELLO"
+	var json_data = [[121.4763072256, 31.2297339198, "地址：人民广场"],
+	                 [121.4000991472, 31.1314073528, "地址：南方商城商城"],
+	                 [121.3789452139, 31.1054771411, "地址：莘庄"]];
+	var pointArray = new Array();
+	for(var i=0;i<json_data.length;i++){
+		var marker = new BMap.Marker(new BMap.Point(json_data[i][0], json_data[i][1])); // 创建点
+		var content = json_data[i][2];
+		baidumap.addOverlay(marker);    //增加点
+		pointArray[i] = new BMap.Point(json_data[i][0], json_data[i][1]);
+		addClickHandler(content,marker);
 	}
-	var infoWindow = new BMap.InfoWindow("地址：上海浦东新区明月路1258号 大唐电信产业园", opts);  // 创建信息窗口对象
-	marker.addEventListener("click", function(){
-	    baidumap.openInfoWindow(infoWindow,point); //开启信息窗口
-	});
+
+    baidumap.setViewport(pointArray);
+}
+
+function addClickHandler(content,marker) {
+    marker.addEventListener("click",function(e) {
+        console.log(content)
+        openInfo(content,e)
+    });
+}
+
+function openInfo(content,e) {
+    var p = e.target;
+    var point = new BMap.Point(p.getPosition().lng, p.getPosition().lat);
+    var opts = {
+        width : 250,     // 信息窗口宽度
+        height: 80,     // 信息窗口高度
+        title : "信息窗口" , // 信息窗口标题
+        enableMessage:true//设置允许信息窗发送短息
+    };
+    var infoWindow = new BMap.InfoWindow(content,opts);  // 创建信息窗口对象
+    baidumap.openInfoWindow(infoWindow,point); //开启信息窗口
 }
 </script>

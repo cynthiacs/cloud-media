@@ -147,3 +147,8 @@ def view(account):
         flash(messages.user_not_found)
         return "error"
     return render_template('user/puller.html', cur_user=cur_user)
+
+
+@user.route('/user/player/<url>', methods=['GET', 'POST'])
+def player(url):
+    return render_template('user/player.html', source=url)
