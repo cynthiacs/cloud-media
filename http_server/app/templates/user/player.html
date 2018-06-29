@@ -260,7 +260,8 @@ function createBaiduMap() {
 	  message:"HELLO"
 	}
 	var infoWindow = new BMap.InfoWindow("地址：上海浦东新区明月路1258号 大唐电信产业园", opts);  // 创建信息窗口对象
-	marker.addEventListener("click", function(){
+	map.openInfoWindow(infoWindow,point); //开启信息窗口
+	marker.addEventListener("click", function() {
 	    map.openInfoWindow(infoWindow,point); //开启信息窗口
 	});
 }
