@@ -102,16 +102,19 @@
                         <center>
                             <div class="col-sm-6">
                                 <button id="startlive" class="btn btn-large btn-success"
-                                        onclick="startlive()">启动直播</button>
+                                        onclick="startlive('{{ source }}')">启动直播
+                                </button>
                             </div>
 
                             <div>
                                 <button id="stoplive" class="btn btn-large btn-danger"
-                                        onclick="stoplive()" disabled="true">停止直播</button>
+                                        onclick="stoplive('{{ source }}')" disabled="true">停止直播
+                                </button>
                             </div>
                         </center>
                     </div>
-                    <div style="width:50%;height:600px;;border:#ccc solid 1px;float:right" id="allmap"></div>
+                    <div style="width:50%;height:600px;;border:#ccc solid 1px;float:right"
+                         id="allmap" data-node={{ source }}></div>
                 </div>
             </div>
         </div>
@@ -201,7 +204,8 @@ $(function() {
     player = createPlayer(null);
 })
 
-function startlive() {
+function startlive(source) {
+    console.log(source)
     player.dispose();
     //player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks");
     player = createPlayer("http://cloud.video.taobao.com/play/u/2554695624/p/1/e/6/t/1/fv/102/28552077.mp4");
@@ -215,7 +219,8 @@ function startlive() {
     document.getElementById("stoplive").disabled=false
 }
 
-function stoplive() {
+function stoplive(source) {
+    console.log(source)
     player.stop();
     player.dispose();
     window.location.reload();
@@ -247,6 +252,9 @@ function createPlayer(source) {
 }
 
 function createBaiduMap() {
+    var allmap = document.getElementById("allmap");
+    var node = allmap.dataset.node;
+    console.log(node)
     var map = new BMap.Map("allmap");
 	var point = new BMap.Point(121.6032242955, 31.2475034682);
 	var marker = new BMap.Marker(point);  // 创建标注
@@ -265,4 +273,5 @@ function createBaiduMap() {
 	    map.openInfoWindow(infoWindow,point); //开启信息窗口
 	});
 }
+
 </script>

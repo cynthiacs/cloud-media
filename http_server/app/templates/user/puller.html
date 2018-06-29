@@ -60,12 +60,6 @@
     <script type="text/javascript"
             src="http://api.map.baidu.com/api?v=2.0&ak=SBMwGhsPVie6UHSO6GnjN4VKpdjThHyG"></script>
     <!-- [end] -->
-
-    <!-- [Ali player] -->
-    <link rel="stylesheet" href="//g.alicdn.com/de/prismplayer/2.7.1/skins/default/aliplayer-min.css"/>
-    <script type="text/javascript" src="//g.alicdn.com/de/prismplayer/2.7.1/aliplayer-min.js"></script>
-    <!-- [end] -->
-
 </head>
 
 <body class="no-skin">
@@ -281,48 +275,9 @@
         document.write("<script src='{{ mirror_site }}/static/assets/js/jquery.mobile.custom.min.js'>" + "<" + "/script>");
     }
 
-var player = null;
-
 $(function() {
     createBaiduMap();
-    player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks");
-    $("#startlive").click(function() {
-        player.play()
-        console.log("开始播放");
-
-    });
-
-    $("#stoplive").click(function() {
-        player.stop()
-        window.location.reload();
-        console.log("停止播放，关闭页面");
-    });
 })
-
-function createPlayer(source) {
-    return new Aliplayer({
-    id: "J_prismPlayer",
-         autoplay: false,
-         isLive:true,
-         playsinline:false,
-         width:"100%",
-         height:"380px",
-         controlBarVisibility:"always",
-         useH5Prism:false,
-         useFlashPrism:false,
-         source:source,
-         cover:"",
-         skinLayout:[
-                {"name":"controlBar","align":"blabs","x":0,"y":0,"children":[{"name":"progress","align":"blabs","x":0,"y":44},
-                {"name":"fullScreenButton","align":"tr","x":10,"y":12},
-                {"name":"timeDisplay","align":"tl","x":10,"y":7},
-                {"name":"volume","align":"tr","x":5,"y":10},
-                {"name":"playButton","align":"tl","x":15,"y":12}]}]
-         },function(player){
-            console.log("播放器创建了。");
-         }
-    );
-}
 
 var map = null;
 
@@ -356,8 +311,8 @@ function openInfo(content,e) {
     var p = e.target;
     var point = new BMap.Point(p.getPosition().lng, p.getPosition().lat);
     var opts = {
-        width : 250,     // 信息窗口宽度
-        height: 80,     // 信息窗口高度
+        width : 200,     // 信息窗口宽度
+        height: 100,     // 信息窗口高度
         title : "信息窗口" , // 信息窗口标题
         enableMessage:true//设置允许信息窗发送短息
     };
