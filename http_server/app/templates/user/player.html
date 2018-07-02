@@ -79,7 +79,9 @@
                 </small>
             </a>
         </div>
-        <div id="curtime" class="navbar-header pull-right navbar-brand bigger-130">
+        <div id="curtime" class="col-sm-1 navbar-header pull-right navbar-brand bigger-130">
+        </div>
+        <div id="curdate" class="navbar-header pull-right navbar-brand bigger-130">
         </div>
     </div>
 </div>
@@ -116,7 +118,7 @@
                         </center>
                     </div>
                     <div style="width:50%;height:600px;;border:#ccc solid 1px;float:right"
-                         id="allmap" data-node={{ source }}></div>
+                         id="allmap" data-node="{{ source.username }}"></div>
                 </div>
             </div>
         </div>
@@ -183,25 +185,12 @@
 </html>
 
 <script type="text/javascript">
-    try {
-        ace.settings.loadState('main-container')
-    } catch (e) {
-        console.log('main-container')
-    }
-
-    try {
-        ace.settings.loadState('sidebar')
-    } catch (e) {
-        console.log('sidebar')
-    }
-
-    if ('ontouchstart' in document.documentElement) {
-        document.write("<script src='{{ mirror_site }}/static/assets/js/jquery.mobile.custom.min.js'>" + "<" + "/script>");
-    }
-
 var player = null;
 
-$(function() {
+$(document).ready(function() {
+    var node_str={{ node|safe }};
+    var node_obj=eval('(' + node_str.node + ')');
+    console.log(node_obj.username)
     getTime()
     createBaiduMap()
     player = createPlayer(null);
@@ -236,24 +225,26 @@ function getTime() {
         seconds = "0"+seconds;
     }
 
-    var newDate = year+"年"+month+"月"+date+"日"+"&nbsp"+week+"&nbsp &nbsp"+hours+":"+minutes+":"+seconds;
-    document.getElementById("curtime").innerHTML = newDate;//在div中写入时间
+    //var newDate = year+"年"+month+"月"+date+"日"+"&nbsp"+week+"&nbsp &nbsp"+hours+":"+minutes+":"+seconds;
+    var newDate = year+"年"+month+"月"+date+"日"+"&nbsp &nbsp"+week;
+    var newTime = hours+":"+minutes+":"+seconds;
+    document.getElementById("curdate").innerHTML = newDate;//在div中写入时间
+    document.getElementById("curtime").innerHTML = newTime;//在div中写入时间
     setTimeout('getTime()', 500);//每隔500ms执行一次getTime()
 }
 
 function startlive(source) {
     console.log(source)
     player.dispose();
-    //player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks");
-    player = createPlayer("http://cloud.video.taobao.com/play/u/2554695624/p/1/e/6/t/1/fv/102/28552077.mp4");
-    var handleReady = function(e) {
+    player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks");
+    //player = createPlayer("http://cloud.video.taobao.com/play/u/2554695624/p/1/e/6/t/1/fv/102/28552077.mp4");
+    player.on('ready',function(e) {
         console.log(e);
         player.play();
-    }
-    player.on('ready',handleReady);
+    });
     console.log("开始播放");
-    document.getElementById("startlive").disabled=true
-    document.getElementById("stoplive").disabled=false
+    document.getElementById("startlive").disabled=true;
+    document.getElementById("stoplive").disabled=false;
 }
 
 function stoplive(source) {
@@ -268,7 +259,7 @@ function createPlayer(source) {
     id: "J_prismPlayer",
          autoplay: false,
          isLive:true,
-         playsinline:false,
+         playsinline:true,
          width:"100%",
          height:"500px",
          controlBarVisibility:"always",
@@ -310,6 +301,4 @@ function createBaiduMap() {
 	    map.openInfoWindow(infoWindow,point); //开启信息窗口
 	});
 }
-
-
 </script>

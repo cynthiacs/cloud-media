@@ -119,9 +119,7 @@
         <ul class="nav nav-list">
             <li class="">
                 <a href="#" class="dropdown-toggle">
-                    <i class="menu-icon fa fa-group green"></i>
                     <span class="menu-text"> Default Group </span>
-
                     <b class="arrow fa fa-angle-down"></b>
                 </a>
 
@@ -150,9 +148,7 @@
 
             <li class="">
                 <a href="#" class="dropdown-toggle">
-                    <i class="menu-icon fa fa-group green"></i>
                     <span class="menu-text"> Leadcore </span>
-
                     <b class="arrow fa fa-angle-down"></b>
                 </a>
 
@@ -259,23 +255,7 @@
 </html>
 
 <script type="text/javascript">
-    try {
-        ace.settings.loadState('main-container')
-    } catch (e) {
-        console.log('main-container')
-    }
-
-    try {
-        ace.settings.loadState('sidebar')
-    } catch (e) {
-        console.log('sidebar')
-    }
-
-    if ('ontouchstart' in document.documentElement) {
-        document.write("<script src='{{ mirror_site }}/static/assets/js/jquery.mobile.custom.min.js'>" + "<" + "/script>");
-    }
-
-$(function() {
+$(document).ready(function() {
     createBaiduMap();
 })
 
@@ -289,14 +269,13 @@ function createBaiduMap() {
 	                 [121.4000991472, 31.1314073528, "地址：南方商城商城"],
 	                 [121.3789452139, 31.1054771411, "地址：莘庄"]];
 	var pointArray = new Array();
-	for(var i=0;i<json_data.length;i++){
+	for(var i=0; i<json_data.length; i++){
 		var marker = new BMap.Marker(new BMap.Point(json_data[i][0], json_data[i][1])); // 创建点
 		var content = json_data[i][2];
 		map.addOverlay(marker);    //增加点
 		pointArray[i] = new BMap.Point(json_data[i][0], json_data[i][1]);
 		addClickHandler(content,marker);
 	}
-
     map.setViewport(pointArray);
 }
 

@@ -151,4 +151,10 @@ def view(account):
 
 @user.route('/user/player/<url>', methods=['GET', 'POST'])
 def player(url):
-    return render_template('user/player.html', source=url)
+    print(url)
+
+    cur_user = User.objects(account="A491625").first()
+    if cur_user is None:
+        flash(messages.user_not_found)
+        return "error"
+    return render_template('user/player.html', source=cur_user, node={'node': json.dumps(cur_user)})
