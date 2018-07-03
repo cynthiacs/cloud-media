@@ -139,9 +139,9 @@ class MgAdaptor(object):
         else:
             print("error: unknown request, session removed?")
 
-    async def wsp_unicast(self, msg):
-        print("debug: wsp send one msg")
-        topic = msg.topic.split('/')
+    async def wsp_unicast(self, topic, payload):
+        print("debug: wsp_unicast send one msg")
+        topic = topic.split('/')
 
         ntag = topic[0]
         print('the tag is:' + ntag)
@@ -150,11 +150,11 @@ class MgAdaptor(object):
             print('no sesion for this node: ' + ntag)
             return
 
-        await s.ws.send(str(msg.payload))
+        await s.ws.send(payload)
 
-    async def wsp_broadcast(self, msg):
-        print("debug: wsp send one msg")
-        topic = msg.topic.split('/')
+    async def wsp_broadcast(self, topic, payload):
+        print("debug: wsp_broadcast send one msg")
+        topic = topic.split('/')
 
         ntag = topic[0]
         print('the tag is:' + ntag)
@@ -163,14 +163,21 @@ class MgAdaptor(object):
             return
 
         vid,gid,nid = sntag[0],sntag[1],sntag[2]
-
+        print('wsp_broadcast payload: ' + payload)
+        data_keys = ("action", "payload")
+        data = dict.fromkeys(data_keys)
+        data["action"] = topic[2]
+        data["payload"] = eval(payload)
+        data_str = str(data)
+        data_str = data_str.replace("\'", "\"")
+        print(data_str)
         for s in self._sessions:
             t = s.node_tag.split('_')
             if vid == '*' or \
                 t[0] == vid and gid == '*' or \
                 t[0] == vid and t[1] == gid and nid == '*' or \
                 t[0] == vid and t[1] == gid and t[2] == nid:
-                await s.ws.send(str(msg.payload))
+                await s.ws.send(data_str)
 
 
 mg_adaptor = MgAdaptor()

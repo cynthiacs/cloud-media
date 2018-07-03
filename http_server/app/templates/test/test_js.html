@@ -172,13 +172,17 @@
         });
 
         $("#btn_logout").click(function() {
-            cmproxy.logout('A204931', function(msg) {
+            cmproxy.logout('A491625', function(msg) {
                 console.log("this is in logout's listener... when reply arrives!")
                 console.log(msg) 
             });
         });
 
         $("#btn_connect").click(function() {
+            cmproxy.set_nodeslist_change_listener(function(msg) {
+                console.log("this is in nodeslist change listener...")
+                console.log(msg) 
+            });
             cmproxy.connect("nick_test", "device_test", function(msg) {
                 console.log(msg) 
             });
@@ -186,6 +190,18 @@
 
         $("#btn_disconnect").click(function() {
             cmproxy.disconnect(function(msg) {
+                console.log(msg) 
+            });
+        });
+
+        $("#btn_start").click(function() {
+            cmproxy.start_push_media("xxxxxxxx", "30s", function(msg) {
+                console.log(msg) 
+            });
+        });
+
+        $("#btn_stop").click(function() {
+            cmproxy.stop_push_media("xxxxxxxx", function(msg) {
                 console.log(msg) 
             });
         });

@@ -49,7 +49,14 @@ class MqThread(threading.Thread):
         print("==> _on_message")
         print("\t topic: " + msg.topic)
         print("\t qos: " + str(msg.qos))
-        print("\t payload" + str(msg.payload))
+        print("\t payload:" + str(msg.payload))
+        pd_str = str(msg.payload)
+        # workround, the reason is unknown!
+        if (pd_str.startswith("b'")):
+            print('strip payload')
+            pd_str = pd_str.lstrip('b')
+            pd_str = pd_str.lstrip('\'')
+            pd_str = pd_str.rstrip('\'')
 
         topic = msg.topic.split('/')
         if len(topic) != 3:
@@ -57,11 +64,11 @@ class MqThread(threading.Thread):
             return
 
         if topic[2] == 'reply':
-            asyncio.run_coroutine_threadsafe(wsp_unicast(msg), mqttc._main_loop)
+            asyncio.run_coroutine_threadsafe(wsp_unicast(msg.topic, pd_str), mqttc._main_loop)
             return
 
         if topic[2] == 'nodes_change':
-            asyncio.run_coroutine_threadsafe(wsp_broadcast(msg), mqttc._main_loop)
+            asyncio.run_coroutine_threadsafe(wsp_broadcast(msg.topic, pd_str), mqttc._main_loop)
             return
 
 

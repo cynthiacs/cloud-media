@@ -67,10 +67,8 @@ function CMProxy() {
     this.serial = 0;
     this.waiting_replies = {};
     this.sent_requests = {};
-    //this.node_info = '';
-    //this.node_info = {id:"unknown", nick:"unknown", role:"unknown", device_name:"unknown", location:"unknown",
-    //                stream_status:"unknown", vendor_id:"unknown", vendor_nick:"unknown", group_id:"unknown", group_nick:"unknown"};
-    this.on_nodes_update = null;
+    this.my_info = {};
+    this.on_nodeslist_change = null;
     this.cm_user = null;
 
 }
@@ -78,26 +76,16 @@ function CMProxy() {
 CMProxy.prototype.login = function(account, password, listener) {
     this.cm_user = new CMUser(account, password);
     var method = 'Login';
-    var params = {account:account, password:password};
+    var params = {"account":account, "password":password};
     this._send_request(method, params, listener);
 }
 
 CMProxy.prototype.logout = function(account, listener) {
     var method = 'Logout';
-    var params = {account:account}
+    var params = {"account":account}
     this._send_request(method, params, listener);
     this.cm_user = null;
 }
-
-CMProxy.prototype._connect = function(host, port) {
-    var ws_addr = "ws://" + host + ":" + port
-    this.ws = new WebSocket(ws_addr)
-
-    this.ws.onopen = this._onopen
-    this.ws.onclose = this._onclose
-    this.ws.onmessage = this._onmessage
-    this.ws.onerror = this._onerror
-}   
 
 CMProxy.prototype.set_onopen = function(foo) {
     console.log('set onopen');
@@ -119,34 +107,8 @@ CMProxy.prototype.set_onerror = function(foo) {
     this.ws.onerror = foo
 }
 
-CMProxy.prototype.set_nodes_update_listener = function(listener) {
-    this.on_nodes_update = listener;
-}
-
-CMProxy.prototype._send_request = function(method, params, listener) {
-    var request = {};
-    request.jsonrpc = "2.0";
-    request.method = method;
-    if (params != null)
-        request.params = params;
-    // request.id must be a string for server required
-    request.id = this.serial+"";
-    var req_str = JSON.stringify(request);
-    console.log(req_str)
-
-    this.ws.send(req_str);
-    this.waiting_replies[this.serial] = listener
-    console.log('add listener to waiting replies')
-    console.log(this.waiting_replies)
-    this.sent_requests[this.serial] = method
-    console.log('add method to sent requests')
-    console.log(this.sent_requests)
-
-    ++this.serial;
-}
-
-CMProxy.prototype.connect_mc = function() {
-    console.log('connect_mc');
+CMProxy.prototype.set_nodeslist_change_listener = function(listener) {
+    this.on_nodeslist_change = listener;
 }
 
 CMProxy.prototype.connect = function(nick, device_name, listener) {
@@ -181,23 +143,38 @@ CMProxy.prototype.disconnect = function(listener) {
 }
 
 CMProxy.prototype.start_push_media = function(target_tag, expire_time, listener) {
-    var method = 'StartPushMedia'
-    var params = '{"target-id":"' + target_tag + '","expire-time":"' + expire_time + 's"}'
+    var method = 'StartPushMedia';
+    var params = {"target-id":target_tag, "expire-time":expire_time};
     this._send_request(method, params, listener);
 }
 
-CMProxy.prototype.stop_push_media = function(target_tag, expire_time, listener) {
-    method = 'StopPushMedia'
-    var params = '{"target-id":"' + target_tag + '","expire-time":"' + expire_time + 's"}'
+CMProxy.prototype.stop_push_media = function(target_tag, listener) {
+    method = 'StopPushMedia';
+    var params = {};
+    params["target-id"] = target_tag;
     this._send_request(method, params, listener);
 }
 
-CMProxy.prototype._onopen = function() {
-    console.log('onopen');
-}
+CMProxy.prototype._send_request = function(method, params, listener) {
+    var request = {};
+    request.jsonrpc = "2.0";
+    request.method = method;
+    if (params != null)
+        request.params = params;
+    // request.id must be a string for server required
+    request.id = this.serial+"";
+    var req_str = JSON.stringify(request);
+    console.log(req_str)
 
-CMProxy.prototype._onclose = function() {
-    console.log('onclose');
+    this.ws.send(req_str);
+    this.waiting_replies[this.serial] = listener
+    console.log('add listener to waiting replies')
+    console.log(this.waiting_replies)
+    this.sent_requests[this.serial] = method
+    console.log('add method to sent requests')
+    console.log(this.sent_requests)
+
+    ++this.serial;
 }
 
 CMProxy.prototype._handle_reply = function(jrpc) {
@@ -236,40 +213,55 @@ CMProxy.prototype._handle_reply = function(jrpc) {
 }
 
 CMProxy.prototype._handle_notify = function(jstr) {
-
+    var action = jstr["action"];
+    var payload = jstr["payload"];
+    switch(action) {
+    case 'nodes_change':
+        if (this.on_nodeslist_change != null)
+            this.on_nodeslist_change(JSON.stringify(payload));
+        break;
+    default:
+        break;
+    }
 }
 
 CMProxy.prototype._onmessage = function(evt) {
     console.log('onmessage:' + evt.data + ', type:' + typeof(evt.data));
-    if(evt.data[0] == '{' || evt.data[0] == "\'") {
-        payload = evt.data;
+
+    var jstring = JSON.parse(evt.data.toString())
+
+    if('id' in jstring) {
+        //this._handle_reply(jstring);
+        cmproxy._handle_reply(jstring);
+    } else if ('action' in jstring) {
+        cmproxy._handle_notify(jstring);
     } else {
-        // the string from mg looks like:
-        // b'{"jsonrpc": "2.0", "result": "OK", "id": "4"}'
-        // this is a workroud before fix
-        payload = evt.data.slice(2, -1);
+        console.log('unknown message');
     }
+}
 
-    var jrpc = JSON.parse(payload.toString())
-    if('all_online' in jrpc || 'new_online' in jrpc
-        || 'new_offline' in jrpc || 'new_update' in jrpc) {
-        console.log('online nodes info changed')
-        if(this.on_nodes_update != null) {
-            this.on_nodes_update(jrpc);
-        }
-    }
+CMProxy.prototype._onopen = function() {
+    console.log('onopen');
+}
 
-    if('id' in jrpc) {
-        //this._handle_reply(jrpc);
-        cmproxy._handle_reply(jrpc);
-    }
+CMProxy.prototype._onclose = function() {
+    console.log('onclose');
 }
 
 CMProxy.prototype._onerror = function(error) {
     console.log('onerror');
 }
 
+CMProxy.prototype._connect = function(host, port) {
+    var ws_addr = "ws://" + host + ":" + port
+    this.ws = new WebSocket(ws_addr)
+
+    this.ws.onopen = this._onopen
+    this.ws.onclose = this._onclose
+    this.ws.onmessage = this._onmessage
+    this.ws.onerror = this._onerror
+}
+
 cmproxy = new CMProxy();
-cmproxy._connect('127.0.0.1', '9001')
-//cmproxy.connect('139.224.128.15', '9001')
-//cmproxy.connect('47.100.125.222', '9001')
+//cmproxy._connect('127.0.0.1', '9001')
+cmproxy.connect('47.100.125.222', '9001')

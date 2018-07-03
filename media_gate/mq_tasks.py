@@ -1,12 +1,10 @@
 from mg_adaptor import mg_adaptor 
 
-async def wsp_unicast(msg):
-    print('mq_forward_reply')
-    print(str(msg.payload))
-    await mg_adaptor.wsp_unicast(msg)
+async def wsp_unicast(topic, payload):
+    print('wsp_unicast: topic:%s, payload:%s' % (topic,payload))
+    await mg_adaptor.wsp_unicast(topic, payload)
 
-async def wsp_broadcast(msg):
-    print('mq_forward_reply')
-    print(str(msg.payload))
-    await mg_adaptor.wsp_broadcast(msg)
+async def wsp_broadcast(topic, payload):
+    print('wsp_broadcast: topic:%s, payload:%s' % (topic,payload))
+    await mg_adaptor.wsp_broadcast(topic, payload)
 
