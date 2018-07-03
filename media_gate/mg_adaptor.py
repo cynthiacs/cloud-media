@@ -150,7 +150,8 @@ class MgAdaptor(object):
             print('no sesion for this node: ' + ntag)
             return
 
-        await s.ws.send(str(msg.payload))
+        #type(msg.payload) is bytes
+        await s.ws.send(msg.payload.decode())
 
     async def wsp_broadcast(self, msg):
         print("debug: wsp send one msg")
@@ -170,7 +171,8 @@ class MgAdaptor(object):
                 t[0] == vid and gid == '*' or \
                 t[0] == vid and t[1] == gid and nid == '*' or \
                 t[0] == vid and t[1] == gid and t[2] == nid:
-                await s.ws.send(str(msg.payload))
+                    #type(msg.payload) is bytes
+                    await s.ws.send(msg.payload.decode())
 
 
 mg_adaptor = MgAdaptor()

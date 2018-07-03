@@ -7,3 +7,7 @@ from .. import db
 def test_js():
     return render_template('test/test_js.html')
 
+@bp_test.route('/jstest1', methods=['GET', 'POST'])
+def jstest1():
+    return render_template('test/jstest1.html')
+

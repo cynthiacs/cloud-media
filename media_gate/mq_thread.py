@@ -49,7 +49,7 @@ class MqThread(threading.Thread):
         print("==> _on_message")
         print("\t topic: " + msg.topic)
         print("\t qos: " + str(msg.qos))
-        print("\t payload" + str(msg.payload))
+        print("\t payload:" + str(msg.payload))
 
         topic = msg.topic.split('/')
         if len(topic) != 3:
