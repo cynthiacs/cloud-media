@@ -50,13 +50,14 @@ class MqThread(threading.Thread):
         print("\t topic: " + msg.topic)
         print("\t qos: " + str(msg.qos))
         print("\t payload:" + str(msg.payload))
-        pd_str = str(msg.payload)
-        # workround, the reason is unknown!
+        # paho payloads use bytes format
+        pd_str = str(msg.payload.decode())
+        """# workround, the reason is unknown!
         if (pd_str.startswith("b'")):
             print('strip payload')
             pd_str = pd_str.lstrip('b')
             pd_str = pd_str.lstrip('\'')
-            pd_str = pd_str.rstrip('\'')
+            pd_str = pd_str.rstrip('\'')"""
 
         topic = msg.topic.split('/')
         if len(topic) != 3:
