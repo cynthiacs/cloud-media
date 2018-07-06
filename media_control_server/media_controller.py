@@ -190,7 +190,7 @@ def hook_4_start_push_media(fsession):
     result = online_nodes.find_one(target_node_tag)
     if result is None:
         fsession.sync_reply("Error: nid:%s is not online" % nid)
-        return False
+        return False, None
 
     stream_status = result['stream_status']
     #if stream_status == 'publish' or stream_status == 'pushing':

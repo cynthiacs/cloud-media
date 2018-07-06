@@ -43,6 +43,8 @@ class MqThread(threading.Thread):
         # some common topic for each node
         topic = '+/media_controller/nodes_change'
         mqttc.subscribe(topic, qos=2)
+        topic = '*_*_*/media_controller/reset'
+        mqttc.subscribe(topic, qos=2)
 
     @staticmethod
     def on_message(mqttc, obj, msg):

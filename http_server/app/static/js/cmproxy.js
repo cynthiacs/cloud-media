@@ -62,13 +62,14 @@ function CMUser(account, password) {
 
 function CMProxy() {
     console.log('CMProxy');
-    this.ws_addr = '';
     this.ws = null;
     this.serial = 0;
     this.waiting_replies = {};
     this.sent_requests = {};
-    this.my_info = {};
+    this.my_info = null;
     this.on_nodeslist_change = null;
+    this.on_stream_exception = null;
+    this.on_server_reset = null;
     this.cm_user = null;
 
 }
@@ -97,11 +98,6 @@ CMProxy.prototype.set_onclose = function(foo) {
     this.ws.onclose = foo
 }
 
-CMProxy.prototype.set_onmessage = function(foo) {
-    console.log('set onmessage');
-    this.ws.onmessage = foo
-}
-
 CMProxy.prototype.set_onerror = function(foo) {
     console.log('set onerror');
     this.ws.onerror = foo
@@ -111,7 +107,15 @@ CMProxy.prototype.set_nodeslist_change_listener = function(listener) {
     this.on_nodeslist_change = listener;
 }
 
-CMProxy.prototype.connect = function(nick, device_name, listener) {
+CMProxy.prototype.set_stream_exception_listener = function(listener) {
+    this.on_stream_exception = listener;
+}
+
+CMProxy.prototype.set_server_reset_listener = function(listener) {
+    this.on_server_reset = listener;
+}
+
+CMProxy.prototype.connect = function(nick, device_name, location, listener) {
     if (this.cm_user == null) {
         listener('{\"error\":\"ERROR: please login first\"}');
         return;
@@ -127,7 +131,7 @@ CMProxy.prototype.connect = function(nick, device_name, listener) {
     node_info.role = this.cm_user.get_role();
     node_info.token = this.cm_user.get_token();
     node_info.device_name = this.cm_user.device_name;
-    node_info.location = "Location Unknown";
+    node_info.location = location;
     node_info.stream_status = "pulling_close";
     node_info.vendor_id = this.cm_user.get_vendor_id();
     node_info.vendor_nick = this.cm_user.get_vendor_nick();
@@ -135,21 +139,45 @@ CMProxy.prototype.connect = function(nick, device_name, listener) {
     node_info.group_nick = this.cm_user.get_group_nick();
     var params = node_info;
     this._send_request(method, params, listener);
+    this.my_info = node_info;
 }
 
 CMProxy.prototype.disconnect = function(listener) {
     var method = 'Offline'
     this._send_request(method, null, listener);
+    this.my_info = null;
 }
 
-CMProxy.prototype.start_push_media = function(target_tag, expire_time, listener) {
+CMProxy.prototype.getMyInfo = function() {
+    if (this.my_info == null)
+        return '';
+
+    return JSON.stringify(this.my_info);
+}
+
+CMProxy.prototype.update_nick = function(new_nick, listener) {
+    _update_cm_field("nick", new_nick, listener);
+}
+
+CMProxy.prototype.update_location = function(new_location, listener) {
+    _update_cm_field("location", new_location, listener);
+}
+
+// stream_status: "pushing", "pushing_close", "pushing_error", "pulling", "pulling_close", "pulling_error"
+CMProxy.prototype.update_stream_status = function(new_status, listener) {
+    _update_cm_field("stream_status", new_status, listener);
+}
+
+CMProxy.prototype.start_push_media = function(target_id, target_gid, expire_time, listener) {
     var method = 'StartPushMedia';
+    var target_tag = this.my_info.vendor_id + '_' + target_gid + '_' + target_id;
     var params = {"target-id":target_tag, "expire-time":expire_time};
     this._send_request(method, params, listener);
 }
 
-CMProxy.prototype.stop_push_media = function(target_tag, listener) {
-    method = 'StopPushMedia';
+CMProxy.prototype.stop_push_media = function(target_id, target_gid, listener) {
+    var method = 'StopPushMedia';
+    var target_tag = this.my_info.vendor_id + '_' + target_gid + '_' + target_id;
     var params = {};
     params["target-id"] = target_tag;
     this._send_request(method, params, listener);
@@ -185,19 +213,24 @@ CMProxy.prototype._handle_reply = function(jrpc) {
         return;
     }
 
+    var request = cmproxy.sent_requests[id];
     if ('error' in jrpc) {
         var text = '{\"error\":' + JSON.stringify(jrpc["error"]) + '}';
         listener(text);
+        if (request == 'Online') {
+            console.log('online failed, clear this.my_info');
+            this.my_info = null;
+        }
     } else if ('result' in jrpc) {
-
         if(id in cmproxy.waiting_replies) {
             console.log('id is found in waiting replies');
-            var request = cmproxy.sent_requests[id];
             var result = jrpc["result"];
             switch(request) {
             case 'Login':
                 cmproxy.cm_user.set_user_info(result);
                 cmproxy.cm_user.print_user_info();
+            case 'StartPushMedia':
+
             default:
                 var text = '{\"result\":' + JSON.stringify(jrpc["result"]) + '}';
                 listener(text);
@@ -220,6 +253,14 @@ CMProxy.prototype._handle_notify = function(jstr) {
         if (this.on_nodeslist_change != null)
             this.on_nodeslist_change(JSON.stringify(payload));
         break;
+    case 'stream_exception':
+        if (this.on_stream_exception != null)
+            this.on_stream_exception(JSON.stringify(payload));
+        break;
+    case 'reset':
+        if (this.on_server_reset != null)
+            this.on_server_reset(JSON.stringify(payload));
+        break;
     default:
         break;
     }
@@ -238,6 +279,12 @@ CMProxy.prototype._onmessage = function(evt) {
     } else {
         console.log('unknown message');
     }
+}
+
+CMProxy.prototype._update_cm_field = function(field, new_value, listener) {
+    var method = 'UpdateField';
+    var params = {"field":field, "value":new_value};
+    this._send_request(method, params, listener);
 }
 
 CMProxy.prototype._onopen = function() {

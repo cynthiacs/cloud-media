@@ -183,7 +183,7 @@
                 console.log("this is in nodeslist change listener...")
                 console.log(msg) 
             });
-            cmproxy.connect("nick_test", "device_test", function(msg) {
+            cmproxy.connect("nick_test", "device_test", "Unknow Location", function(msg) {
                 console.log(msg) 
             });
         });
@@ -195,13 +195,13 @@
         });
 
         $("#btn_start").click(function() {
-            cmproxy.start_push_media("xxxxxxxx", "30s", function(msg) {
+            cmproxy.start_push_media("N00001", "G00001", "30s", function(msg) {
                 console.log(msg) 
             });
         });
 
         $("#btn_stop").click(function() {
-            cmproxy.stop_push_media("xxxxxxxx", function(msg) {
+            cmproxy.stop_push_media("N00001", "G00001", function(msg) {
                 console.log(msg) 
             });
         });
