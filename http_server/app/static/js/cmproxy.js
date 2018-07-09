@@ -60,7 +60,7 @@ function CMUser(account, password) {
 
 }
 
-function CMProxy() {
+function CMProxy(pubkey=null) {
     console.log('CMProxy');
     this.ws = null;
     this.serial = 0;
@@ -72,6 +72,11 @@ function CMProxy() {
     this.on_server_reset = null;
     this.cm_user = null;
 
+    this._encrypt = null;
+    if(pubkey != null) {
+        this._encrypt = new JSEncrypt();
+        this._encrypt.setPublicKey(pubkey);
+    }
 }
 
 CMProxy.prototype.login = function(account, password, listener) {
@@ -194,6 +199,9 @@ CMProxy.prototype._send_request = function(method, params, listener) {
     var req_str = JSON.stringify(request);
     console.log(req_str)
 
+    if(this._encrypt != null) {
+        req_str = this._encrypt.encrypt(req_str);
+    }
     this.ws.send(req_str);
     this.waiting_replies[this.serial] = listener
     console.log('add listener to waiting replies')
@@ -309,6 +317,15 @@ CMProxy.prototype._connect = function(host, port) {
     this.ws.onerror = this._onerror
 }
 
-cmproxy = new CMProxy();
+
+// NOTE: you should import jsencrypt becore cmproxy.js
+//<script src="static/js/jsencrypt.min.js"></script>
+
+var cm_pubkey = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC9ymEH5ac+mMQLitp6y+j4vrSC'
++ 'HC3ixbMm2aj6m8gzaL2sD5I8OwK/Dl58mHT1XENYWRueWW6Nb3/aejuRaMUO4sVW'
++ '6H0YJHIUnlGHqAU4Nf3iHh0aw5dDNil26rf/zUsZ2PHZJy7kQv6oPMF9EcnhzP7J'
++ '0R4tYwEl39BPeN46vQIDAQAB'
+
+cmproxy = new CMProxy(cm_pubkey);
 //cmproxy._connect('127.0.0.1', '9001')
-cmproxy.connect('47.100.125.222', '9001')
+cmproxy._connect('www.yangxudong.com', '9001')

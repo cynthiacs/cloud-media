@@ -1,6 +1,10 @@
 import threading
 import websockets
 import asyncio
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_v1_5 as Cipher_pkcs1_v1_5
+import base64
+
 from ws_tasks import ws_login, ws_logout, ws_error, ws_send_mqtt_request
 
 class WsThread(threading.Thread):
@@ -9,6 +13,10 @@ class WsThread(threading.Thread):
         threading.Thread.__init__(self, *args, **kwargs)
         #self.daemon = True
         #self.loop = None
+        with open('rsa_1024_priv.pem') as f:
+            key = f.read()
+            rsakey = RSA.importKey(key)
+            self.cipher = Cipher_pkcs1_v1_5.new(rsakey)
 
     def _send_corutine(self, co):
         asyncio.run_coroutine_threadsafe(co, self._main_loop) 
@@ -22,6 +30,12 @@ class WsThread(threading.Thread):
             print("got:", message)
             print(repr(websocket))
             #await websocket.send("echo: " + message)
+
+            if self.cipher != None:
+                text = self.cipher.decrypt(base64.b64decode(message), "ERROR")
+                print("decrypt message:")
+                print(text)
+                message = text
 
             jrpc = eval(message)
             method = jrpc['method']
