@@ -1,5 +1,7 @@
 .idea/
 .DS_Store
+media_gate/__pycache__/
+venv/
 doc/.DS_Store
 http_server/.DS_Store
 http_server/app/.DS_Store

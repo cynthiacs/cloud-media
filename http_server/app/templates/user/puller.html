@@ -60,6 +60,11 @@
     <script type="text/javascript"
             src="http://api.map.baidu.com/api?v=2.0&ak=SBMwGhsPVie6UHSO6GnjN4VKpdjThHyG"></script>
     <!-- [end] -->
+
+    <!-- cm proxy scripts -->
+    <script src="{{ mirror_site }}/static/js/jsencrypt.min.js"></script>
+    <script src="{{ mirror_site }}/static/js/cmproxy.js"></script>
+    <!-- cm proxy end -->
 </head>
 
 <body class="no-skin">
@@ -116,64 +121,7 @@
 
 <div class="main-container ace-save-state" id="main-container">
     <div id="sidebar" class="sidebar responsive ace-save-state">
-        <ul class="nav nav-list">
-            <li class="">
-                <a href="#" class="dropdown-toggle">
-                    <span class="menu-text"> Default Group </span>
-                    <b class="arrow fa fa-angle-down"></b>
-                </a>
-
-                <b class="arrow"></b>
-
-                <ul class="submenu">
-                    <li class="">
-                        <a href="{{ url_for('user.player', url='A123456') }}" target="_blank">
-                            <i class="menu-icon fa fa-caret-right"></i>
-                            A123456
-                        </a>
-
-                        <b class="arrow"></b>
-                    </li>
-
-                    <li class="">
-                        <a href="{{ url_for('user.player', url='A234567') }}" target="_blank">
-                            <i class="menu-icon fa fa-caret-right"></i>
-                            A234567
-                        </a>
-
-                        <b class="arrow"></b>
-                    </li>
-                </ul>
-            </li>
-
-            <li class="">
-                <a href="#" class="dropdown-toggle">
-                    <span class="menu-text"> Leadcore </span>
-                    <b class="arrow fa fa-angle-down"></b>
-                </a>
-
-                <b class="arrow"></b>
-
-                <ul class="submenu">
-                    <li class="">
-                        <a href="{{ url_for('user.player', url='A123456') }}" target="_blank">
-                            <i class="menu-icon fa fa-user fa-caret-right"></i>
-                            A123456
-                        </a>
-
-                        <b class="arrow"></b>
-                    </li>
-
-                    <li class="">
-                        <a href="{{ url_for('user.player', url='A234567') }}" target="_blank">
-                            <i class="menu-icon fa fa-user fa-caret-right"></i>
-                            A234567
-                        </a>
-
-                        <b class="arrow"></b>
-                    </li>
-                </ul>
-            </li>
+        <ul class="nav nav-list" id='userlist'>
         </ul>
     </div>
 
@@ -255,28 +203,133 @@
 </html>
 
 <script type="text/javascript">
-$(document).ready(function() {
-    createBaiduMap();
+if(typeof UpdateType == "undefined") {
+    var UpdateType = {
+        ADD: 1,
+        DELETE: 2,
+        UPDATE: 3
+    }
+}
+
+window.addEventListener("storage", function(e) {
+    var action = localStorage.getItem('action')
+    var node_act = action.split('_')
+    console.log(node_act)
+    if(node_act[1] == "startlive") {
+        var target_url = node_act[0] + "_" + "URL" + "_" + "rtmp://live.hkstv.hk.lxdns.com/live/hks"
+        localStorage.setItem('target_url', target_url)
+        /*cmproxy.start_push_media(node_act[0], "30s", function(msg) {
+            console.log(msg)
+            var target_url = node_act[0] + "_" + "URL" + "_" + "rtmp://live.hkstv.hk.lxdns.com/live/hks"
+            localStorage.setItem('target_url', target_url)
+        })*/
+    }
+    else if(node_act[1] == "stoplive") {
+        cmproxy.stop_push_media(node_act[0], function(msg) {
+            console.log(msg)
+            //var target_url = node_act[0] + "_" + "STOP" + "_" + msg["url"]
+            //localStorage.setItem('target_url', target_url)
+        })
+    }
 })
+
+$(document).ready(function() {
+    var node_obj = {{ node|safe }}
+    //var list = [{"Default": ["A123456", "A111111", "A222222"]}, {"Leadcore": ["A333333", "A444444"]}]
+    var list = [{"Default": [{"A123456": [121.4763172256, 31.2197339198, "地址：人民广场--Q"]},
+                             {"A111111": [121.4763172256, 31.2297339198, "地址：人民广场--W"]},
+                             {"A222222": [121.4763172256, 31.2397339198, "地址：人民广场--E"]}]},
+                {"Leadcore": [{"A333333": [121.4763172256, 31.2497339198, "地址：人民广场--R"]},
+                              {"A444444": [121.4763172256, 31.2597339198, "地址：人民广场--T"]}]}]
+
+    init_Pull_nodes(node_obj)
+    showList(list)
+    createBaiduMap(list)
+    var UID = "FFFF"
+    localStorage.setItem('UID', UID);
+})
+
+function init_Pull_nodes(node_obj) {
+    cmproxy.login(node_obj.account, node_obj.password, function(msg) {
+        console.log("this is in login's listener... when reply arrives!")
+        console.log(msg)
+        jrpc = JSON.parse(msg)
+
+        cmproxy.set_nodeslist_change_listener(function(msg) {
+            console.log("this is in nodeslist change listener...")
+            console.log(msg)
+        })
+        cmproxy.connect(node_obj.account, node_obj.account, function(msg) {
+            console.log("this is in connect listener...")
+            console.log(msg)
+            jrpc = JSON.parse(msg)
+            //localStorage.setItem('cmproxy', JSON.stringify(cmproxy))
+            //console.log(cmproxy)
+            //showList(null)
+        })
+    })
+}
+
+function showList(userlist) {
+    str = ''
+    for(var i = 0; i < userlist.length; i++) {
+        for(var group in userlist[i]) {
+            str += '<li>'
+            str += '<a class="dropdown-toggle">'
+            str += '<span class="menu-text">'
+            str += group
+            str += '</span>'
+            str += '<b class="arrow fa fa-angle-down"></b>'
+            str += '</a>'
+            str += '<b class="arrow"></b>'
+            str += '<ul class="submenu">'
+            for(var j = 0; j < userlist[i][group].length; j++) {
+                for(var user in userlist[i][group][j]) {
+                    str += '<li>'
+                    str += '<a href="/user/player?account='+user+'" target="_blank">'
+                    str += '<i class="menu-icon fa fa-caret-right"></i>'
+                    str += user
+                    str += '</a>'
+                    str += '<b class="arrow"></b>'
+                    str += '</li>'
+                }
+            }
+            str += '</ul>'
+            str += '</li>'
+        }
+    }
+    document.getElementById("userlist").innerHTML = str;
+}
 
 var map = null;
 
-function createBaiduMap() {
-    map = new BMap.Map("allmap");
-	var point = new BMap.Point(121.6032242955, 31.2475034682);
-	map.centerAndZoom(point, 15);
-	var json_data = [[121.4763072256, 31.2297339198, "地址：人民广场"],
-	                 [121.4000991472, 31.1314073528, "地址：南方商城商城"],
-	                 [121.3789452139, 31.1054771411, "地址：莘庄"]];
-	var pointArray = new Array();
-	for(var i=0; i<json_data.length; i++){
-		var marker = new BMap.Marker(new BMap.Point(json_data[i][0], json_data[i][1])); // 创建点
-		var content = json_data[i][2];
-		map.addOverlay(marker);    //增加点
-		pointArray[i] = new BMap.Point(json_data[i][0], json_data[i][1]);
-		addClickHandler(content,marker);
+function createBaiduMap(userlist) {
+    map = new BMap.Map("allmap")
+	var point = new BMap.Point(121.6032242955, 31.2475034682)
+	map.centerAndZoom(point, 15)
+	var json_data=[]
+	for(var i = 0; i < userlist.length; i++) {
+        for(var group in userlist[i]) {
+            for(var j = 0; j < userlist[i][group].length; j++) {
+                for(var user in userlist[i][group][j]) {
+                    json_data.push(userlist[i][group][j][user])
+                }
+            }
+        }
+    }
+
+	//var json_data = [[121.4763072256, 31.2297339198, "地址：人民广场"],
+	//                 [121.4000991472, 31.1314073528, "地址：南方商城商城"],
+	//                 [121.3789452139, 31.1054771411, "地址：莘庄"]]
+	var pointArray = new Array()
+	for(var i=0; i<json_data.length; i++) {
+		var marker = new BMap.Marker(new BMap.Point(json_data[i][0], json_data[i][1]))
+		var content = json_data[i][2]
+		map.addOverlay(marker)
+		pointArray[i] = new BMap.Point(json_data[i][0], json_data[i][1])
+		addClickHandler(content,marker)
 	}
-    map.setViewport(pointArray);
+    map.setViewport(pointArray)
 }
 
 function addClickHandler(content,marker) {
@@ -288,14 +341,14 @@ function addClickHandler(content,marker) {
 
 function openInfo(content,e) {
     var p = e.target;
-    var point = new BMap.Point(p.getPosition().lng, p.getPosition().lat);
+    var point = new BMap.Point(p.getPosition().lng, p.getPosition().lat)
     var opts = {
-        width : 200,     // 信息窗口宽度
-        height: 100,     // 信息窗口高度
-        title : "信息窗口" , // 信息窗口标题
-        enableMessage:true//设置允许信息窗发送短息
+        width : 200,
+        height: 100,
+        title : "信息窗口",
+        enableMessage:true
     };
-    var infoWindow = new BMap.InfoWindow(content,opts);  // 创建信息窗口对象
-    map.openInfoWindow(infoWindow,point); //开启信息窗口
+    var infoWindow = new BMap.InfoWindow(content,opts)
+    map.openInfoWindow(infoWindow,point)
 }
 </script>

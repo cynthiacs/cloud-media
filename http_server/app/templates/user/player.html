@@ -56,6 +56,7 @@
 	body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";}
 	#allmap{width:100%;height:500px;}
 	p{margin-left:5px; font-size:14px;}
+
     </style>
     <script type="text/javascript"
             src="http://api.map.baidu.com/api?v=2.0&ak=SBMwGhsPVie6UHSO6GnjN4VKpdjThHyG"></script>
@@ -65,7 +66,6 @@
     <link rel="stylesheet" href="//g.alicdn.com/de/prismplayer/2.7.1/skins/default/aliplayer-min.css"/>
     <script type="text/javascript" src="//g.alicdn.com/de/prismplayer/2.7.1/aliplayer-min.js"></script>
     <!-- [end] -->
-
 </head>
 
 <body class="no-skin">
@@ -95,7 +95,7 @@
                         视&nbsp;频&nbsp;直&nbsp;播
                         <small>
                             <i class="ace-icon fa fa-angle-double-right"></i>
-                            A234567
+                            {{ target }}
                         </small>
                     </h1>
                 </div>
@@ -106,19 +106,19 @@
                         <center>
                             <div class="col-sm-6">
                                 <button id="startlive" class="btn btn-large btn-success"
-                                        onclick="startlive('{{ source }}')">启动直播
+                                        onclick="startlive_action('{{ target }}')">启动直播
                                 </button>
                             </div>
 
                             <div>
                                 <button id="stoplive" class="btn btn-large btn-danger"
-                                        onclick="stoplive('{{ source }}')" disabled="true">停止直播
+                                        onclick="stoplive_action('{{ target }}')" disabled="true">停止直播
                                 </button>
                             </div>
                         </center>
                     </div>
                     <div style="width:50%;height:600px;;border:#ccc solid 1px;float:right"
-                         id="allmap" data-node="{{ source.username }}"></div>
+                         id="allmap" data-node="{{ target }}"></div>
                 </div>
             </div>
         </div>
@@ -168,7 +168,6 @@
 <script src="{{ mirror_site }}/static/assets/js/jquery.maskedinput.min.js"></script>
 <script src="{{ mirror_site }}/static/assets/js/bootstrap-tag.min.js"></script>
 
-
 <script src="{{ mirror_site }}/static/assets/js/jquery.dataTables.min.js"></script>
 <script src="{{ mirror_site }}/static/assets/js/jquery.dataTables.bootstrap.min.js"></script>
 <script src="{{ mirror_site }}/static/assets/js/dataTables.buttons.min.js"></script>
@@ -185,58 +184,65 @@
 </html>
 
 <script type="text/javascript">
-var player = null;
+var player = null
+var target_node = null
 
 $(document).ready(function() {
-    var node_str={{ node|safe }};
-    var node_obj=eval('(' + node_str.node + ')');
-    console.log(node_obj.username)
-    getTime()
-    createBaiduMap()
+    getTime();
+    createBaiduMap();
     player = createPlayer(null);
 })
+
+window.addEventListener("storage", function(e) {
+    var target_url = localStorage.getItem('target_url')
+    var node_url = target_url.split('_')
+    console.log(node_url)
+    if(node_url[0] == target_node && node_url[1] == "URL") {
+        startlive(node_url[2])
+    }
+});
 
 function getTime() {
     var dateObj = new Date();
 
-    var year = dateObj.getFullYear();//年
-    var month = dateObj.getMonth()+1;//月  (注意：月份+1)
-    var date = dateObj.getDate();//日
+    var year = dateObj.getFullYear();
+    var month = dateObj.getMonth() + 1;
+    var date = dateObj.getDate();
     var day = dateObj.getDay();
     var weeks = ["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
-    var week = weeks[day];//根据day值，获取星期数组中的星期数。
-    var hours = dateObj.getHours();//小时
-    var minutes = dateObj.getMinutes();//分钟
-    var seconds = dateObj.getSeconds();//秒
+    var week = weeks[day];
+    var hours = dateObj.getHours();
+    var minutes = dateObj.getMinutes();
+    var seconds = dateObj.getSeconds();
 
     if(month < 10) {
-        month = "0"+month;
+        month = "0" + month;
     }
     if(date < 10) {
-        date = "0"+date;
+        date = "0" + date;
     }
     if(hours < 10) {
-        hours = "0"+hours;
+        hours = "0" + hours;
     }
     if(minutes < 10) {
-        minutes = "0"+minutes;
+        minutes = "0" + minutes;
     }
     if(seconds < 10) {
-        seconds = "0"+seconds;
+        seconds = "0" + seconds;
     }
 
-    //var newDate = year+"年"+month+"月"+date+"日"+"&nbsp"+week+"&nbsp &nbsp"+hours+":"+minutes+":"+seconds;
-    var newDate = year+"年"+month+"月"+date+"日"+"&nbsp &nbsp"+week;
-    var newTime = hours+":"+minutes+":"+seconds;
-    document.getElementById("curdate").innerHTML = newDate;//在div中写入时间
-    document.getElementById("curtime").innerHTML = newTime;//在div中写入时间
-    setTimeout('getTime()', 500);//每隔500ms执行一次getTime()
+    var newDate = year + "年" + month + "月" + date + "日" + "&nbsp &nbsp" + week;
+    var newTime = hours + ":" + minutes + ":" + seconds;
+    document.getElementById("curdate").innerHTML = newDate;
+    document.getElementById("curtime").innerHTML = newTime;
+    setTimeout('getTime()', 500);
 }
 
-function startlive(source) {
-    console.log(source)
+function startlive(url) {
+    console.log(url)
     player.dispose();
-    player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks");
+    player = createPlayer(url)
+    //player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks")
     //player = createPlayer("http://cloud.video.taobao.com/play/u/2554695624/p/1/e/6/t/1/fv/102/28552077.mp4");
     player.on('ready',function(e) {
         console.log(e);
@@ -247,8 +253,21 @@ function startlive(source) {
     document.getElementById("stoplive").disabled=false;
 }
 
-function stoplive(source) {
-    console.log(source)
+function startlive_action(target) {
+    console.log(target)
+    target_node = target
+    var target_action = target + "_" + "startlive"
+    console.log(target_action)
+    localStorage.removeItem('action');
+    localStorage.setItem('action', target_action)
+}
+
+function stoplive_action(target) {
+    console.log(target)
+    var target_action = target + "_" + "startlive"
+    console.log(target_action)
+    localStorage.removeItem('action');
+    localStorage.setItem('action', target_action)
     player.stop();
     player.dispose();
     window.location.reload();
@@ -273,7 +292,7 @@ function createPlayer(source) {
                 {"name":"timeDisplay","align":"tl","x":10,"y":7},
                 {"name":"volume","align":"tr","x":5,"y":10},
                 {"name":"playButton","align":"tl","x":15,"y":12}]}]
-         },function(player){
+         },function(player) {
             console.log("播放器创建了。");
          }
     );
@@ -285,20 +304,20 @@ function createBaiduMap() {
     console.log(node)
     var map = new BMap.Map("allmap");
 	var point = new BMap.Point(121.6032242955, 31.2475034682);
-	var marker = new BMap.Marker(point);  // 创建标注
-	map.addOverlay(marker);              // 将标注添加到地图中
+	var marker = new BMap.Marker(point);
+	map.addOverlay(marker);
 	map.centerAndZoom(point, 15);
 	var opts = {
-	  width : 200,     // 信息窗口宽度
-	  height: 100,     // 信息窗口高度
-	  title : "联芯科技有限公司" , // 信息窗口标题
-	  enableMessage:true,//设置允许信息窗发送短息
+	  width : 200,
+	  height: 100,
+	  title : "联芯科技有限公司",
+	  enableMessage:true,
 	  message:"HELLO"
 	}
-	var infoWindow = new BMap.InfoWindow("地址：上海浦东新区明月路1258号 大唐电信产业园", opts);  // 创建信息窗口对象
-	map.openInfoWindow(infoWindow,point); //开启信息窗口
+	var infoWindow = new BMap.InfoWindow("地址：上海浦东新区明月路1258号 大唐电信产业园", opts);
+	map.openInfoWindow(infoWindow,point);
 	marker.addEventListener("click", function() {
-	    map.openInfoWindow(infoWindow,point); //开启信息窗口
+	    map.openInfoWindow(infoWindow,point);
 	});
 }
 </script>

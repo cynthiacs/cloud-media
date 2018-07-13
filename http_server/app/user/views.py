@@ -146,15 +146,17 @@ def view(account):
     if cur_user is None:
         flash(messages.user_not_found)
         return "error"
-    return render_template('user/puller.html', cur_user=cur_user)
+    return render_template('user/puller.html', cur_user=cur_user, node=json.dumps(cur_user))
 
 
-@user.route('/user/player/<url>', methods=['GET', 'POST'])
-def player(url):
-    print(url)
-
-    cur_user = User.objects(account="A491625").first()
-    if cur_user is None:
-        flash(messages.user_not_found)
-        return "error"
-    return render_template('user/player.html', source=cur_user, node={'node': json.dumps(cur_user)})
+# @user.route('/user/player/<url>', methods=['GET', 'POST'])
+@user.route('/user/player', methods=['GET', 'POST'])
+def player():
+    account = request.args.get('account')
+    print(account)
+    # print(url)
+    # cur_user = User.objects(account="A491625").first()
+    # if cur_user is None:
+    #    flash(messages.user_not_found)
+    #    return "error"
+    return render_template('user/player.html', target=account)
