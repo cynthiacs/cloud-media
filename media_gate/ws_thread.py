@@ -4,6 +4,7 @@ import asyncio
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5 as Cipher_pkcs1_v1_5
 import base64
+from config import config
 
 from ws_tasks import ws_login, ws_logout, ws_error, ws_send_mqtt_request
 
@@ -31,11 +32,15 @@ class WsThread(threading.Thread):
             print(repr(websocket))
             #await websocket.send("echo: " + message)
 
-            if self.cipher != None:
-                text = self.cipher.decrypt(base64.b64decode(message), "ERROR")
-                print("decrypt message:")
-                print(text)
-                message = text
+            if config['media_gate']['encrypt']:
+                if self.cipher != None:
+                    text = self.cipher.decrypt(base64.b64decode(message), "ERROR")
+                    print("decrypt message:")
+                    print(text)
+                    message = text
+                else:
+                    print("MG ERROR: cipher is None!")
+                    return
 
             jrpc = eval(message)
             method = jrpc['method']

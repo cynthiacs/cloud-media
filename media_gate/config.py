@@ -26,5 +26,8 @@ config = {
     },
     "user_admin":{
         "login_url":_user_admin_login_url
+    },
+    "media_gate":{
+        "encrypt":False
     }
 }

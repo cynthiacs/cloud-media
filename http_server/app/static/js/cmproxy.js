@@ -326,6 +326,7 @@ var cm_pubkey = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC9ymEH5ac+mMQLitp6y+j4vrS
 + '6H0YJHIUnlGHqAU4Nf3iHh0aw5dDNil26rf/zUsZ2PHZJy7kQv6oPMF9EcnhzP7J'
 + '0R4tYwEl39BPeN46vQIDAQAB'
 
-cmproxy = new CMProxy(cm_pubkey);
+//cmproxy = new CMProxy(cm_pubkey);
+cmproxy = new CMProxy();
 //cmproxy._connect('127.0.0.1', '9001')
 cmproxy._connect('www.yangxudong.com', '9001')
