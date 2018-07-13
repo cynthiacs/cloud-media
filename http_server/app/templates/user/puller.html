@@ -216,6 +216,7 @@ window.addEventListener("storage", function(e) {
     var node_act = action.split('_')
     console.log(node_act)
     if(node_act[1] == "startlive") {
+        localStorage.removeItem('action');
         var target_url = node_act[0] + "_" + "URL" + "_" + "rtmp://live.hkstv.hk.lxdns.com/live/hks"
         localStorage.setItem('target_url', target_url)
         /*cmproxy.start_push_media(node_act[0], "30s", function(msg) {
