@@ -203,14 +203,8 @@
 </html>
 
 <script type="text/javascript">
-if(typeof UpdateType == "undefined") {
-    var UpdateType = {
-        ADD: 1,
-        DELETE: 2,
-        UPDATE: 3
-    }
-}
-
+var map = null
+var list = []
 window.addEventListener("storage", function(e) {
     var action = localStorage.getItem('action')
     var node_act = action.split('_')
@@ -236,18 +230,53 @@ window.addEventListener("storage", function(e) {
 
 $(document).ready(function() {
     var node_obj = {{ node|safe }}
-    //var list = [{"Default": ["A123456", "A111111", "A222222"]}, {"Leadcore": ["A333333", "A444444"]}]
-    var list = [{"Default": [{"A123456": [121.4763172256, 31.2197339198, "地址：人民广场--Q"]},
-                             {"A111111": [121.4763172256, 31.2297339198, "地址：人民广场--W"]},
-                             {"A222222": [121.4763172256, 31.2397339198, "地址：人民广场--E"]}]},
-                {"Leadcore": [{"A333333": [121.4763172256, 31.2497339198, "地址：人民广场--R"]},
-                              {"A444444": [121.4763172256, 31.2597339198, "地址：人民广场--T"]}]}]
+
+    /*
+    var list_all_online = {"all_online":
+    [{"id":"N1531709933236186","nick":"A105896","role":"pusher",
+            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
+            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00001","group_nick":"Leadcore"},
+            {"id":"N1531709933236187","nick":"A105897","role":"pusher",
+            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
+            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00000","group_nick":"Default Group"},
+            {"id":"N1531709933236188","nick":"A105898","role":"pusher",
+            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
+            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00001","group_nick":"Leadcore"},
+            {"id":"N1531709933236189","nick":"A105899","role":"pusher",
+            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
+            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00000","group_nick":"Default Group"},
+            {"id":"N1531709933236190","nick":"A105810","role":"pusher",
+            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
+            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00000","group_nick":"Default Group"}]}
+
+    for(var item in list_all_online) {
+        if(item == "all_online") {
+            for(var i = 0; i < list_all_online[item].length; i++) {
+               list.push(list_all_online[item][i])
+            }
+        }
+    }
+
+    list = [{"id":"N1531709933236186","nick":"A105896","role":"pusher",
+            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
+            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00001","group_nick":"Leadcore"},
+            {"id":"N1531709933236187","nick":"A105897","role":"pusher",
+            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
+            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00000","group_nick":"Default Group"},
+            {"id":"N1531709933236188","nick":"A105898","role":"pusher",
+            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
+            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00001","group_nick":"Leadcore"},
+            {"id":"N1531709933236189","nick":"A105899","role":"pusher",
+            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
+            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00000","group_nick":"Default Group"},
+            {"id":"N1531709933236190","nick":"A105810","role":"pusher",
+            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
+            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00000","group_nick":"Default Group"}]
+    */
 
     init_Pull_nodes(node_obj)
-    showList(list)
+    //showList(list)
     createBaiduMap(list)
-    var UID = "FFFF"
-    localStorage.setItem('UID', UID);
 })
 
 function init_Pull_nodes(node_obj) {
@@ -259,69 +288,93 @@ function init_Pull_nodes(node_obj) {
         cmproxy.set_nodeslist_change_listener(function(msg) {
             console.log("this is in nodeslist change listener...")
             console.log(msg)
+            json_rpc = JSON.parse(msg)
+            if(json_rpc["action"] == "modes_change") {
+                for(var item in json_rpc["payload"]) {
+                    if(item == "all_online") {
+                        for(var i = 0; i < json_rpc["payload"][item].length; i++) {
+                           list.push(json_rpc["payload"][item][i])
+                        }
+                    } else if(item == "new_online") {
+                        for(var i = 0; i < json_rpc["payload"][item].length; i++) {
+                           list.push(json_rpc["payload"][item][i])
+                        }
+                    } else if(item == "new_offline") {
+                        for(var i = 0; i < json_rpc["payload"][item].length; i++) {
+                            for(var j = 0; j < list.length; j++) {
+                                if(json_rpc["payload"][item][i]["id"] == list[j]["id"]) {
+                                    list.remove(j)
+                                }
+                            }
+                        }
+                    }
+                }
+                showList(list)
+            }
         })
         cmproxy.connect(node_obj.account, node_obj.account, function(msg) {
             console.log("this is in connect listener...")
             console.log(msg)
             jrpc = JSON.parse(msg)
-            //localStorage.setItem('cmproxy', JSON.stringify(cmproxy))
-            //console.log(cmproxy)
-            //showList(null)
         })
     })
 }
 
 function showList(userlist) {
     str = ''
-    for(var i = 0; i < userlist.length; i++) {
-        for(var group in userlist[i]) {
-            str += '<li>'
-            str += '<a class="dropdown-toggle">'
-            str += '<span class="menu-text">'
-            str += group
-            str += '</span>'
-            str += '<b class="arrow fa fa-angle-down"></b>'
-            str += '</a>'
-            str += '<b class="arrow"></b>'
-            str += '<ul class="submenu">'
-            for(var j = 0; j < userlist[i][group].length; j++) {
-                for(var user in userlist[i][group][j]) {
-                    str += '<li>'
-                    str += '<a href="/user/player?account='+user+'" target="_blank">'
-                    str += '<i class="menu-icon fa fa-caret-right"></i>'
-                    str += user
-                    str += '</a>'
-                    str += '<b class="arrow"></b>'
-                    str += '</li>'
-                }
-            }
-            str += '</ul>'
-            str += '</li>'
+    var userlist_cp = userlist.concat()
+    var group_list = []
+    for(var i = 0; i < userlist_cp.length; i++) {
+        if(group_list.length == 0) {
+            group_list.push([userlist_cp[i]["group_id"], userlist_cp[i]["group_nick"]])
+        } else {
+             var new_group = true
+             for(var j = 0; j < group_list.length; j++) {
+                 if(userlist_cp[i]["group_id"] == group_list[j][0]) {
+                     new_group = false
+                     break
+                 }
+             }
+             if(new_group) {
+                 group_list.push([userlist_cp[i]["group_id"], userlist_cp[i]["group_nick"]])
+             }
         }
+    }
+    for(var m = 0; m < group_list.length; m++) {
+        str += '<li>'
+        str += '<a class="dropdown-toggle">'
+        str += '<span class="menu-text">'
+        str += group_list[m][1]
+        str += '</span>'
+        str += '<b class="arrow fa fa-angle-down"></b>'
+        str += '</a>'
+        str += '<b class="arrow"></b>'
+        str += '<ul class="submenu">'
+        for(var n = 0; n < userlist_cp.length; n++) {
+            if(userlist_cp[n]["group_id"] == group_list[m][0]) {
+                target = userlist_cp[n]["id"]
+                str += '<li>'
+                str += '<a href="/user/player?target='+target+'" target="_blank">'
+                str += '<i class="menu-icon fa fa-caret-right"></i>'
+                str += userlist_cp[n]["nick"]
+                str += '</a>'
+                str += '<b class="arrow"></b>'
+                str += '</li>'
+            }
+        }
+        str += '</ul>'
+        str += '</li>'
     }
     document.getElementById("userlist").innerHTML = str;
 }
-
-var map = null;
 
 function createBaiduMap(userlist) {
     map = new BMap.Map("allmap")
 	var point = new BMap.Point(121.6032242955, 31.2475034682)
 	map.centerAndZoom(point, 15)
-	var json_data=[]
-	for(var i = 0; i < userlist.length; i++) {
-        for(var group in userlist[i]) {
-            for(var j = 0; j < userlist[i][group].length; j++) {
-                for(var user in userlist[i][group][j]) {
-                    json_data.push(userlist[i][group][j][user])
-                }
-            }
-        }
-    }
-
-	//var json_data = [[121.4763072256, 31.2297339198, "地址：人民广场"],
-	//                 [121.4000991472, 31.1314073528, "地址：南方商城商城"],
-	//                 [121.3789452139, 31.1054771411, "地址：莘庄"]]
+	var json_data = [[121.4763072256, 31.2297339198, "地址：人民广场"],
+	                 [121.4000991472, 31.1314073528, "地址：南方商城商城"],
+	                 [121.3789452139, 31.1054771411, "地址：莘庄"]]
 	var pointArray = new Array()
 	for(var i=0; i<json_data.length; i++) {
 		var marker = new BMap.Marker(new BMap.Point(json_data[i][0], json_data[i][1]))

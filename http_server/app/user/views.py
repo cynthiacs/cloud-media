@@ -149,7 +149,6 @@ def view(account):
     return render_template('user/puller.html', cur_user=cur_user, node=json.dumps(cur_user))
 
 
-# @user.route('/user/player/<url>', methods=['GET', 'POST'])
 @user.route('/user/player', methods=['GET', 'POST'])
 def player():
     account = request.args.get('account')
