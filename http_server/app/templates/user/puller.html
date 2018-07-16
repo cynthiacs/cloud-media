@@ -289,28 +289,27 @@ function init_Pull_nodes(node_obj) {
             console.log("this is in nodeslist change listener...")
             console.log(msg)
             json_rpc = JSON.parse(msg)
-            if(json_rpc["action"] == "modes_change") {
-                for(var item in json_rpc["payload"]) {
-                    if(item == "all_online") {
-                        for(var i = 0; i < json_rpc["payload"][item].length; i++) {
-                           list.push(json_rpc["payload"][item][i])
-                        }
-                    } else if(item == "new_online") {
-                        for(var i = 0; i < json_rpc["payload"][item].length; i++) {
-                           list.push(json_rpc["payload"][item][i])
-                        }
-                    } else if(item == "new_offline") {
-                        for(var i = 0; i < json_rpc["payload"][item].length; i++) {
-                            for(var j = 0; j < list.length; j++) {
-                                if(json_rpc["payload"][item][i]["id"] == list[j]["id"]) {
-                                    list.remove(j)
-                                }
+            for(var item in json_rpc) {
+                if(item == "all_online") {
+                    for(var i = 0; i < json_rpc[item].length; i++) {
+                       list.push(json_rpc["payload"][item][i])
+                    }
+                } else if(item == "new_online") {
+                    for(var i = 0; i < json_rpc[item].length; i++) {
+                       list.push(json_rpc["payload"][item][i])
+                    }
+                } else if(item == "new_offline") {
+                    for(var i = 0; i < json_rpc[item].length; i++) {
+                        for(var j = 0; j < list.length; j++) {
+                            if(json_rpc[i]["id"] == list[j]["id"]) {
+                                list.remove(j)
                             }
                         }
                     }
                 }
-                showList(list)
             }
+            showList(list)
+
         })
         cmproxy.connect(node_obj.account, node_obj.account, function(msg) {
             console.log("this is in connect listener...")
