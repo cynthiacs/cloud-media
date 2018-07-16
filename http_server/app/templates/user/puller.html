@@ -230,52 +230,7 @@ window.addEventListener("storage", function(e) {
 
 $(document).ready(function() {
     var node_obj = {{ node|safe }}
-
-    /*
-    var list_all_online = {"all_online":
-    [{"id":"N1531709933236186","nick":"A105896","role":"pusher",
-            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
-            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00001","group_nick":"Leadcore"},
-            {"id":"N1531709933236187","nick":"A105897","role":"pusher",
-            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
-            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00000","group_nick":"Default Group"},
-            {"id":"N1531709933236188","nick":"A105898","role":"pusher",
-            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
-            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00001","group_nick":"Leadcore"},
-            {"id":"N1531709933236189","nick":"A105899","role":"pusher",
-            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
-            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00000","group_nick":"Default Group"},
-            {"id":"N1531709933236190","nick":"A105810","role":"pusher",
-            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
-            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00000","group_nick":"Default Group"}]}
-
-    for(var item in list_all_online) {
-        if(item == "all_online") {
-            for(var i = 0; i < list_all_online[item].length; i++) {
-               list.push(list_all_online[item][i])
-            }
-        }
-    }
-
-    list = [{"id":"N1531709933236186","nick":"A105896","role":"pusher",
-            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
-            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00001","group_nick":"Leadcore"},
-            {"id":"N1531709933236187","nick":"A105897","role":"pusher",
-            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
-            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00000","group_nick":"Default Group"},
-            {"id":"N1531709933236188","nick":"A105898","role":"pusher",
-            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
-            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00001","group_nick":"Leadcore"},
-            {"id":"N1531709933236189","nick":"A105899","role":"pusher",
-            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
-            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00000","group_nick":"Default Group"},
-            {"id":"N1531709933236190","nick":"A105810","role":"pusher",
-            "device_name":"default","location":"Location Unknown","stream_status":"pushing_close",
-            "vendor_id":"V0001","vendor_nick":"Leadcore","group_id":"G00000","group_nick":"Default Group"}]
-    */
-
     init_Pull_nodes(node_obj)
-    //showList(list)
     createBaiduMap(list)
 })
 
@@ -292,11 +247,11 @@ function init_Pull_nodes(node_obj) {
             for(var item in json_rpc) {
                 if(item == "all_online") {
                     for(var i = 0; i < json_rpc[item].length; i++) {
-                       list.push(json_rpc["payload"][item][i])
+                       list.push(json_rpc[item][i])
                     }
                 } else if(item == "new_online") {
                     for(var i = 0; i < json_rpc[item].length; i++) {
-                       list.push(json_rpc["payload"][item][i])
+                       list.push(json_rpc[item][i])
                     }
                 } else if(item == "new_offline") {
                     for(var i = 0; i < json_rpc[item].length; i++) {
@@ -309,7 +264,6 @@ function init_Pull_nodes(node_obj) {
                 }
             }
             showList(list)
-
         })
         cmproxy.connect(node_obj.account, node_obj.account, function(msg) {
             console.log("this is in connect listener...")
