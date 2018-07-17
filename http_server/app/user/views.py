@@ -151,11 +151,5 @@ def view(account):
 
 @user.route('/user/player', methods=['GET', 'POST'])
 def player():
-    account = request.args.get('account')
-    print(account)
-    # print(url)
-    # cur_user = User.objects(account="A491625").first()
-    # if cur_user is None:
-    #    flash(messages.user_not_found)
-    #    return "error"
-    return render_template('user/player.html', target=account)
+    target = request.args.get('target')
+    return render_template('user/player.html', target=target)

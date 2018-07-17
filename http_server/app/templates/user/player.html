@@ -196,11 +196,12 @@ $(document).ready(function() {
 window.addEventListener("storage", function(e) {
     var target_url = localStorage.getItem('target_url')
     var node_url = target_url.split('_')
+    var target_id = node_url[0] + "_" + node_url[1]
     console.log(node_url)
-    if(node_url[0] == target_node && node_url[1] == "URL") {
-        startlive(node_url[2])
+    if(target_id == target_node && node_url[2] == "URL") {
+        startlive(node_url[3])
     }
-});
+})
 
 function getTime() {
     var dateObj = new Date();
@@ -242,8 +243,6 @@ function startlive(url) {
     console.log(url)
     player.dispose();
     player = createPlayer(url)
-    //player = createPlayer("rtmp://live.hkstv.hk.lxdns.com/live/hks")
-    //player = createPlayer("http://cloud.video.taobao.com/play/u/2554695624/p/1/e/6/t/1/fv/102/28552077.mp4");
     player.on('ready',function(e) {
         console.log(e);
         player.play();
@@ -256,16 +255,16 @@ function startlive(url) {
 function startlive_action(target) {
     console.log(target)
     target_node = target
-    var target_action = target + "_" + "startlive"
+    var target_action = "startlive" + "_" + target
     console.log(target_action)
-    localStorage.setItem('action', target_action)
+    localStorage.setItem('startlive', target_action)
 }
 
 function stoplive_action(target) {
     console.log(target)
-    var target_action = target + "_" + "startlive"
+    var target_action = "stoplive" + "_" + target
     console.log(target_action)
-    localStorage.setItem('action', target_action)
+    localStorage.setItem('stoplive', target_action)
     player.stop();
     player.dispose();
     window.location.reload();

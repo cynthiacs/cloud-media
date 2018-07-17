@@ -207,25 +207,35 @@
 var map = null
 var list = []
 window.addEventListener("storage", function(e) {
-    var action = localStorage.getItem('action')
-    var node_act = action.split('_')
-    console.log(node_act)
-    if(node_act[1] == "startlive") {
-        localStorage.removeItem('action');
-        var target_url = node_act[0] + "_" + "URL" + "_" + "rtmp://live.hkstv.hk.lxdns.com/live/hks"
-        localStorage.setItem('target_url', target_url)
-        /*cmproxy.start_push_media(node_act[0], "30s", function(msg) {
-            console.log(msg)
-            var target_url = node_act[0] + "_" + "URL" + "_" + "rtmp://live.hkstv.hk.lxdns.com/live/hks"
-            localStorage.setItem('target_url', target_url)
-        })*/
-    }
-    else if(node_act[1] == "stoplive") {
-        cmproxy.stop_push_media(node_act[0], function(msg) {
-            console.log(msg)
-            //var target_url = node_act[0] + "_" + "STOP" + "_" + msg["url"]
+    var start_action = localStorage.getItem('startlive')
+    var stop_action = localStorage.getItem('stoplive')
+    if(start_action != null) {
+        var node_start_act = start_action.split('_')
+        console.log(node_start_act)
+        if(node_start_act[0] == "startlive") {
+            localStorage.setItem('startlive', null);
+            //var target_url = node_start_act[1] + "_" + node_start_act[2] + "_" + "URL" + "_" + "rtmp://live.hkstv.hk.lxdns.com/live/hks"
             //localStorage.setItem('target_url', target_url)
-        })
+            cmproxy.start_push_media(node_start_act[1], node_start_act[2], "90s", function(msg) {
+                console.log("start push media listener")
+                console.log(msg)
+                json_rpc = JSON.parse(msg)
+                var target_url = node_act[1] + node_act[2] + "_" + "URL" + "_" + json_rpc["url"]
+                localStorage.setItem('target_url', target_url)
+            })
+        }
+    }
+
+    if(stop_action != null) {
+        var node_stop_act = stop_action.split('_')
+        console.log(node_stop_act)
+        if(node_stop_act[0] == "stoplive") {
+            cmproxy.stop_push_media(node_stop_act[1], node_stop_act[2], function(msg) {
+                console.log("stop push media listener")
+                console.log(msg)
+                localStorage.setItem('stoplive', null)
+            })
+        }
     }
 })
 
@@ -273,7 +283,7 @@ function init_Pull_nodes(node_obj) {
                     }
                 }
             }
-            showList(list)
+            updateList(list)
         })
         cmproxy.connect(node_obj.account, node_obj.account, "Unknow Location", function(msg) {
             console.log("this is in connect listener...")
@@ -283,7 +293,7 @@ function init_Pull_nodes(node_obj) {
     })
 }
 
-function showList(userlist) {
+function updateList(userlist) {
     str = ''
     var userlist_cp = userlist.concat()
     var group_list = []
