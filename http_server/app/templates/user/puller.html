@@ -220,8 +220,12 @@ window.addEventListener("storage", function(e) {
                 console.log("start push media listener")
                 console.log(msg)
                 json_rpc = JSON.parse(msg)
-                var target_url = node_act[1] + node_act[2] + "_" + "URL" + "_" + json_rpc["url"]
-                localStorage.setItem('target_url', target_url)
+                var json_target_url_obj = {}
+                json_target_url_obj["target_id"] = node_start_act[1] + "_" + node_start_act[2]
+                json_target_url_obj["URL"] = json_rpc["result"]["url"]
+                console.log(json_target_url_obj)
+                //var target_url =  + "URL" + "_" + json_rpc["url"]
+                localStorage.setItem('target_url', JSON.stringify(json_target_url_obj))
             })
         }
     }

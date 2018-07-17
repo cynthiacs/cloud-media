@@ -195,11 +195,12 @@ $(document).ready(function() {
 
 window.addEventListener("storage", function(e) {
     var target_url = localStorage.getItem('target_url')
-    var node_url = target_url.split('_')
-    var target_id = node_url[0] + "_" + node_url[1]
-    console.log(node_url)
-    if(target_id == target_node && node_url[2] == "URL") {
-        startlive(node_url[3])
+    var json_target_url_obj = JSON.parse(target_url)
+    //var node_url = target_url.split('_')
+    //var target_id = node_url[0] + "_" + node_url[1]
+    console.log(json_target_url_obj)
+    if(json_target_url_obj["target_id"] == target_node) {
+        startlive(json_target_url_obj["URL"])
     }
 })
 
