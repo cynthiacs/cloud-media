@@ -226,7 +226,7 @@ window.addEventListener("storage", function(e) {
                 })
             }
         }
-    } else if((e.key == 'stoplive') {
+    } else if(e.key == 'stoplive') {
         var stop_action = localStorage.getItem('stoplive')
         if(stop_action != null) {
             var node_stop_act = stop_action.split('_')
