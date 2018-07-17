@@ -56,6 +56,7 @@
 	body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";}
 	#allmap{width:100%;height:500px;}
 	p{margin-left:5px; font-size:14px;}
+
     </style>
     <script type="text/javascript"
             src="http://api.map.baidu.com/api?v=2.0&ak=SBMwGhsPVie6UHSO6GnjN4VKpdjThHyG"></script>
@@ -256,8 +257,17 @@ function init_Pull_nodes(node_obj) {
                 } else if(item == "new_offline") {
                     for(var i = 0; i < json_rpc[item].length; i++) {
                         for(var j = 0; j < list.length; j++) {
-                            if(json_rpc[i]["id"] == list[j]["id"]) {
-                                list.remove(j)
+                            if(json_rpc[item][i]["id"] == list[j]["id"]) {
+                                list.splice(j, 1)
+                            }
+                        }
+                    }
+                } else if(item == "new_update") {
+                    for(var i = 0; i < json_rpc[item].length; i++) {
+                        for(var j = 0; j < list.length; j++) {
+                            if(json_rpc[item][i]["id"] == list[j]["id"]) {
+                                list.splice(j, 1)
+                                list.push(json_rpc[item][i])
                             }
                         }
                     }
@@ -265,7 +275,7 @@ function init_Pull_nodes(node_obj) {
             }
             showList(list)
         })
-        cmproxy.connect(node_obj.account, node_obj.account, function(msg) {
+        cmproxy.connect(node_obj.account, node_obj.account, "Unknow Location", function(msg) {
             console.log("this is in connect listener...")
             console.log(msg)
             jrpc = JSON.parse(msg)
@@ -305,7 +315,7 @@ function showList(userlist) {
         str += '<ul class="submenu">'
         for(var n = 0; n < userlist_cp.length; n++) {
             if(userlist_cp[n]["group_id"] == group_list[m][0]) {
-                target = userlist_cp[n]["id"]
+                target = userlist_cp[n]["id"] + "_" + userlist_cp[n]["group_id"]
                 str += '<li>'
                 str += '<a href="/user/player?target='+target+'" target="_blank">'
                 str += '<i class="menu-icon fa fa-caret-right"></i>'
@@ -358,4 +368,5 @@ function openInfo(content,e) {
     var infoWindow = new BMap.InfoWindow(content,opts)
     map.openInfoWindow(infoWindow,point)
 }
+
 </script>
