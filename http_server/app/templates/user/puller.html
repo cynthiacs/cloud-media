@@ -213,7 +213,7 @@ window.addEventListener("storage", function(e) {
         var node_start_act = start_action.split('_')
         console.log(node_start_act)
         if(node_start_act[0] == "startlive") {
-            localStorage.setItem('startlive', null);
+            //localStorage.setItem('startlive', null)
             //var target_url = node_start_act[1] + "_" + node_start_act[2] + "_" + "URL" + "_" + "rtmp://live.hkstv.hk.lxdns.com/live/hks"
             //localStorage.setItem('target_url', target_url)
             cmproxy.start_push_media(node_start_act[1], node_start_act[2], "90s", function(msg) {
@@ -233,7 +233,7 @@ window.addEventListener("storage", function(e) {
             cmproxy.stop_push_media(node_stop_act[1], node_stop_act[2], function(msg) {
                 console.log("stop push media listener")
                 console.log(msg)
-                localStorage.setItem('stoplive', null)
+                //localStorage.setItem('stoplive', null)
             })
         }
     }

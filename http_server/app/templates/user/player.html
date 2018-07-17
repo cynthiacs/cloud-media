@@ -257,6 +257,7 @@ function startlive_action(target) {
     target_node = target
     var target_action = "startlive" + "_" + target
     console.log(target_action)
+    localStorage.setItem('startlive', null)
     localStorage.setItem('startlive', target_action)
 }
 
@@ -264,6 +265,7 @@ function stoplive_action(target) {
     console.log(target)
     var target_action = "stoplive" + "_" + target
     console.log(target_action)
+    localStorage.setItem('stoplive', null)
     localStorage.setItem('stoplive', target_action)
     player.stop();
     player.dispose();
