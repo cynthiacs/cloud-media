@@ -63,7 +63,7 @@
 
     <!-- [Ali player] -->
     <link rel="stylesheet" href="//g.alicdn.com/de/prismplayer/2.7.1/skins/default/aliplayer-min.css"/>
-    <script type="text/javascript" src="//g.alicdn.com/de/prismplayer/2.7.1/aliplayer-min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="//g.alicdn.com/de/prismplayer/2.7.1/aliplayer-min.js"></script>
     <!-- [end] -->
 </head>
 
@@ -190,7 +190,6 @@ var target_node = null
 $(document).ready(function() {
     getTime();
     createBaiduMap();
-    //player = createPlayer(null);
 })
 
 window.addEventListener("storage", function(e) {
@@ -204,7 +203,6 @@ window.addEventListener("storage", function(e) {
 
 function getTime() {
     var dateObj = new Date();
-
     var year = dateObj.getFullYear();
     var month = dateObj.getMonth() + 1;
     var date = dateObj.getDate();
@@ -241,10 +239,6 @@ function getTime() {
 function startlive(url) {
     console.log(url)
     player = createPlayer(url)
-    player.on('ready',function(e) {
-        console.log(e);
-        player.play();
-    });
     console.log("开始播放");
     document.getElementById("startlive").disabled=true;
     document.getElementById("stoplive").disabled=false;
@@ -257,6 +251,7 @@ function startlive_action(target) {
     console.log(target_action)
     localStorage.setItem('startlive', null)
     localStorage.setItem('startlive', target_action)
+    //startlive("rtmp://live.hkstv.hk.lxdns.com/live/hks")
 }
 
 function stoplive_action(target) {
@@ -272,16 +267,58 @@ function stoplive_action(target) {
 
 function createPlayer(source) {
     return new Aliplayer({
-    id: "J_prismPlayer",
-         isLive:true,
-         width:"100%",
-         height:"500px",
-         useFlashPrism:true,
-         source:source
-         },function(player) {
-            console.log("播放器创建了。");
-         }
-    );
+        "id": "J_prismPlayer",
+        "source": source,
+        "width": "100%",
+        "height": "500px",
+        "autoplay": true,
+        "isLive": true,
+        "rePlay": false,
+        "showBuffer": true,
+        "snapshot": false,
+        "showBarTime": 5000,
+        "useFlashPrism": true,
+        "skinLayout": [
+        {
+            "name": "errorDisplay",
+            "align": "tlabs",
+            "x": 0,
+            "y": 0
+        },
+        {
+            "name": "infoDisplay"
+        },
+        {
+            "name": "controlBar",
+            "align": "blabs",
+            "x": 0,
+            "y": 0,
+            "children": [
+            {
+                "name": "liveDisplay",
+                "align": "tlabs",
+                "x": 15,
+                "y": 25
+            },
+            {
+                "name": "fullScreenButton",
+                "align": "tr",
+                "x": 10,
+                "y": 25
+            },
+            {
+                "name": "volume",
+                "align": "tr",
+                "x": 10,
+                "y": 25
+            }
+            ]
+        }
+        ]
+    }, function (player) {
+        console.log("播放器创建了。");
+     }
+    )
 }
 
 function createBaiduMap() {
