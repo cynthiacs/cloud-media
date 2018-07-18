@@ -247,7 +247,7 @@ function displayTime() {
     var newTime = hours + ":" + minutes + ":" + seconds;
     document.getElementById("curdate").innerHTML = newDate;
     document.getElementById("curtime").innerHTML = newTime;
-    setTimeout('getTime()', 500);
+    setTimeout('displayTime()', 500);
 }
 
 function startlive(url) {
