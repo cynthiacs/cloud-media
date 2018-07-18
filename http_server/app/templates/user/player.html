@@ -188,20 +188,34 @@ var player = null
 var target_node = null
 
 $(document).ready(function() {
-    getTime();
-    createBaiduMap();
+    displayTime();
+    init_BaiduMap();
 })
 
 window.addEventListener("storage", function(e) {
-    var target_url = localStorage.getItem('target_url')
-    var json_target_url_obj = JSON.parse(target_url)
-    console.log(json_target_url_obj)
-    if(json_target_url_obj["target_id"] == target_node) {
-        startlive(json_target_url_obj["URL"])
+    console.log("key: " + e.key + "oldValue: "+ e.oldValue + "newValue: " + e.newValue)
+    if(e.key == 'target_url') {
+        var target_url = localStorage.getItem('target_url')
+        if(target_url != null) {
+            var json_target_url_obj = JSON.parse(target_url)
+            console.log(json_target_url_obj)
+            if(json_target_url_obj["target_id"] == target_node) {
+                startlive(json_target_url_obj["URL"])
+            }
+        }
+    } else if(e.key == 'notifystoplive') {
+        var target_id = localStorage.getItem('notifystoplive')
+        if(target_id != null) {
+            var notify_stop_act = target_id.split('_')
+            if(notify_stop_act[0] == "notifystoplive" && notify_stop_act[1] == target_node) {
+                var target_id = notify_stop_act[1] + "_" + notify_stop_act[2]
+                stoplive_action(target_id)
+            }
+        }
     }
 })
 
-function getTime() {
+function displayTime() {
     var dateObj = new Date();
     var year = dateObj.getFullYear();
     var month = dateObj.getMonth() + 1;
@@ -251,7 +265,6 @@ function startlive_action(target) {
     console.log(target_action)
     localStorage.setItem('startlive', null)
     localStorage.setItem('startlive', target_action)
-    //startlive("rtmp://live.hkstv.hk.lxdns.com/live/hks")
 }
 
 function stoplive_action(target) {
@@ -321,7 +334,7 @@ function createPlayer(source) {
     )
 }
 
-function createBaiduMap() {
+function init_BaiduMap() {
     var allmap = document.getElementById("allmap");
     var node = allmap.dataset.node;
     console.log(node)

@@ -222,6 +222,7 @@ window.addEventListener("storage", function(e) {
                     json_target_url_obj["target_id"] = node_start_act[1] + "_" + node_start_act[2]
                     json_target_url_obj["URL"] = json_rpc["result"]["url"]
                     console.log(json_target_url_obj)
+                    localStorage.setItem('target_url', null)
                     localStorage.setItem('target_url', JSON.stringify(json_target_url_obj))
                 })
             }
@@ -278,6 +279,15 @@ function init_Pull_nodes(node_obj) {
                     for(var i = 0; i < json_rpc[item].length; i++) {
                         for(var j = 0; j < list.length; j++) {
                             if(json_rpc[item][i]["id"] == list[j]["id"]) {
+                                if(json_rpc[item][i]["stream_status"] == "publish_done") {
+                                    var target_id = "notifystoplive" + "_" + json_rpc[item][i]["id"] + "_" + json_rpc[item][i]["group_id"]
+                                    console.log(target_id)
+                                    localStorage.setItem('notifystoplive', null)
+                                    localStorage.setItem('notifystoplive', target_id)
+                                } else if(json_rpc[item][i]["stream_status"] == "publish") {
+                                    var target_id = json_rpc[item][i]["id"] + "_" + json_rpc[item][i]["group_id"]
+                                    console.log(target_id)
+                                }
                                 list.splice(j, 1)
                                 list.push(json_rpc[item][i])
                             }
