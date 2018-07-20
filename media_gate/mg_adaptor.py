@@ -170,13 +170,15 @@ class MgAdaptor(object):
         data["payload"] = eval(payload)
         data_str = str(data)
         data_str = data_str.replace("\'", "\"")
-        print(data_str)
+        #print(data_str)
         for s in self._sessions:
             t = s.node_tag.split('_')
+            print("session.node_tag:%s vs broadcast topic: %s" % (s.node_tag, t))
             if vid == '*' or \
                 t[0] == vid and gid == '*' or \
                 t[0] == vid and t[1] == gid and nid == '*' or \
                 t[0] == vid and t[1] == gid and t[2] == nid:
+                print("send: %s" % (data_str, ))
                 await s.ws.send(data_str)
 
 

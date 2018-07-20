@@ -88,6 +88,7 @@ def _publish_one_pusher_to_all(source_tag, add_remove_update, node_info=None):
     else:
         to_who = "%s_%s_*" % (vid, gid)
 
+    del node_info['_id']
     payload = '{"%s":[%s]}' % (add_remove_update, node_info)
     media_controller.publish("%s/%s/%s" % (to_who, CONTROLLER_TAG, _TOPIC_NODES_CHANGE),
                              payload, qos=2, retain=False)
@@ -106,6 +107,10 @@ def _publish_all_pusher_to_one(source_tag):
         default_role_info = online_nodes.find_role(tag, _ROLE_PUSHER)
         #role_info = {**role_info, **default_role_info} # for dict
         role_info = role_info + default_role_info
+
+    for item in role_info:
+        if '_id' in item:
+            del item['_id']
 
     payload = '{"%s": %s}' % (_CHANGE_ALL_ONLINE, str(role_info))
     media_controller.publish("%s/%s/%s" % (source_tag, CONTROLLER_TAG, _TOPIC_NODES_CHANGE),
@@ -229,7 +234,7 @@ def hook_4_start_push_media(fsession):
     if stream_status == _NODE_STATUS_PUBLISH:
         logger_mc.debug("%s status is %s, reply url direct, no need to forward" %
                         (target_node_tag, stream_status))
-        reply_payload = "{'url':'%s'}" % fsession.pull_url
+        reply_payload = '{"url":"%s"}' % fsession.pull_url
         fsession.sync_reply(reply_payload)
         ret = None
     elif stream_status == _NODE_STATUS_PUSHING \
@@ -237,7 +242,7 @@ def hook_4_start_push_media(fsession):
         logger_mc.debug("%s status is %s, waiting aliyun's signal, no need to forward" %
                         (target_node_tag, stream_status))
 
-        final_result = "{'url':'%s'}" % fsession.pull_url
+        final_result = '{"url":"%s"}' % fsession.pull_url
         stag = fsession.async_reply('publish', final_result)
         ret = stag
     else:
@@ -260,7 +265,7 @@ def hook_4_start_push_media_reply(fsession, reply_result):
     if reply_result == "OK":
         stream_cookie.join_stream(fsession.stream_tag, fsession._source_tag)
 
-        final_result = "{'url':'%s'}" % fsession.pull_url
+        final_result = '{"url":"%s"}' % fsession.pull_url
         return fsession.async_reply('publish', final_result)
     else:
         return fsession.sync_reply(reply_result)
@@ -297,6 +302,10 @@ def hook_4_stop_push_media(fsession):
 def handle_nodes_will(mqtt_msg):
     logger_mc.debug('@handle_nodes_will')
     logger_mc.debug(repr(mqtt_msg))
+    if mqtt_msg.payload is b'':
+        logger_mc.warning("payload is none, who send it?")
+        return
+
     payload = json.loads(str(mqtt_msg.payload, encoding="utf-8"))
     node_tag = payload['who']
     result = online_nodes.find_one(node_tag)

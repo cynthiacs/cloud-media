@@ -322,7 +322,7 @@ class SessionManager(object):
         for s in self._pending_sessions:
             if stag in s.pending_replies:
                 print('pending replies for stag %s found in session %s' % (stag, s.session_tag))
-                final_result = "{'url':'%s'}" % s.pull_url
+                final_result = '{"url":"%s"}' % s.pull_url
                 s.send_reply(final_result)
 
         self._pending_sessions = [s for s in self._pending_sessions if stag not in s.pending_replies]

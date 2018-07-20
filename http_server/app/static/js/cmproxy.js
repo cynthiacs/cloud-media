@@ -77,6 +77,20 @@ function CMProxy(pubkey=null) {
         this._encrypt = new JSEncrypt();
         this._encrypt.setPublicKey(pubkey);
     }
+
+    this._onmessage = (evt)=>{
+        console.log('onmessage:' + evt.data + ', type:' + typeof(evt.data));
+
+        var jstring = JSON.parse(evt.data.toString())
+
+        if('id' in jstring) {
+            this._handle_reply(jstring);
+        } else if ('action' in jstring) {
+            this._handle_notify(jstring);
+        } else {
+            console.log('unknown message');
+        }
+    }
 }
 
 CMProxy.prototype.login = function(account, password, listener) {
@@ -213,15 +227,15 @@ CMProxy.prototype._send_request = function(method, params, listener) {
     ++this.serial;
 }
 
-CMProxy.prototype._handle_reply = function(jrpc) {
+CMProxy.prototype._handle_reply = function(jrpc){
     var id = jrpc["id"];
-    var listener = cmproxy.waiting_replies[id];
+    var listener = this.waiting_replies[id];
     if (listener == null) {
         console.log('unknown reply?');
         return;
     }
 
-    var request = cmproxy.sent_requests[id];
+    var request = this.sent_requests[id];
     if ('error' in jrpc) {
         var text = '{\"error\":' + JSON.stringify(jrpc["error"]) + '}';
         listener(text);
@@ -230,13 +244,13 @@ CMProxy.prototype._handle_reply = function(jrpc) {
             this.my_info = null;
         }
     } else if ('result' in jrpc) {
-        if(id in cmproxy.waiting_replies) {
+        if(id in this.waiting_replies) {
             console.log('id is found in waiting replies');
             var result = jrpc["result"];
             switch(request) {
             case 'Login':
-                cmproxy.cm_user.set_user_info(result);
-                cmproxy.cm_user.print_user_info();
+                this.cm_user.set_user_info(result);
+                this.cm_user.print_user_info();
             case 'StartPushMedia':
 
             default:
@@ -249,8 +263,8 @@ CMProxy.prototype._handle_reply = function(jrpc) {
         console.log('unknown waiting replies for id:' + id);
     }
 
-    delete cmproxy.waiting_replies[id];
-    delete cmproxy.sent_requests[id];
+    delete this.waiting_replies[id];
+    delete this.sent_requests[id];
 }
 
 CMProxy.prototype._handle_notify = function(jstr) {
@@ -274,20 +288,23 @@ CMProxy.prototype._handle_notify = function(jstr) {
     }
 }
 
-CMProxy.prototype._onmessage = function(evt) {
-    console.log('onmessage:' + evt.data + ', type:' + typeof(evt.data));
+/*
+CMProxy.prototype._onmessage = function(evt){
+    return (evt)=>{
+        console.log('onmessage:' + evt.data + ', type:' + typeof(evt.data));
 
-    var jstring = JSON.parse(evt.data.toString())
+        var jstring = JSON.parse(evt.data.toString())
 
-    if('id' in jstring) {
-        //this._handle_reply(jstring);
-        cmproxy._handle_reply(jstring);
-    } else if ('action' in jstring) {
-        cmproxy._handle_notify(jstring);
-    } else {
-        console.log('unknown message');
+        if('id' in jstring) {
+            this._handle_reply(jstring);
+        } else if ('action' in jstring) {
+            this._handle_notify(jstring);
+        } else {
+            console.log('unknown message');
+        }
     }
 }
+*/
 
 CMProxy.prototype._update_cm_field = function(field, new_value, listener) {
     var method = 'UpdateField';

@@ -15,7 +15,7 @@ def get_id():
 
 def _mqtt_publish(topic, payload):
     mqttc = mqtt.Client()
-    mqttc.connect("139.224.128.15", 1883, 60)
+    mqttc.connect("47.100.125.222", 1883, 60)
 
     mqttc.loop_start()
     infot = mqttc.publish(topic, payload, qos=2, retain=False)
