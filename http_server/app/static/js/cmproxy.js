@@ -71,6 +71,9 @@ function CMProxy(pubkey=null) {
     this.on_stream_exception = null;
     this.on_server_reset = null;
     this.cm_user = null;
+    this.onopen = null;
+    this.onclose = null;
+    this.onerror = null;
 
     this._encrypt = null;
     if(pubkey != null) {
@@ -91,6 +94,25 @@ function CMProxy(pubkey=null) {
             console.log('unknown message');
         }
     }
+
+    this._onopen = ()=> {
+        console.log('_onopen');
+        if(this.onopen != null)
+            this.onopen();
+    }
+
+    this._onclose = ()=> {
+        console.log('_onclose');
+        if(this.onclose != null)
+            this.onclose();
+    }
+
+    this._onerror = (error)=> {
+        console.log('_onerror');
+        if(this.onerror != null)
+            this.onerror(error);
+    }
+
 }
 
 CMProxy.prototype.login = function(account, password, listener) {
@@ -109,17 +131,20 @@ CMProxy.prototype.logout = function(account, listener) {
 
 CMProxy.prototype.set_onopen = function(foo) {
     console.log('set onopen');
-    this.ws.onpen = foo
+    this.onopen = foo;
+    //this.ws.onpen = foo
 }
 
 CMProxy.prototype.set_onclose = function(foo) {
     console.log('set onclose');
-    this.ws.onclose = foo
+    this.onclose = foo;
+    //this.ws.onclose = foo
 }
 
 CMProxy.prototype.set_onerror = function(foo) {
     console.log('set onerror');
-    this.ws.onerror = foo
+    this.onerror = foo;
+    //this.ws.onerror = foo
 }
 
 CMProxy.prototype.set_nodeslist_change_listener = function(listener) {
@@ -324,17 +349,17 @@ CMProxy.prototype._onerror = function(error) {
     console.log('onerror');
 }
 
-CMProxy.prototype._connect = function(host, port) {
+CMProxy.prototype.ws_connect = function(host, port) {
     var ws_addr = "ws://" + host + ":" + port
     this.ws = new WebSocket(ws_addr)
 
+    this.ws.onmessage = this._onmessage
     this.ws.onopen = this._onopen
     this.ws.onclose = this._onclose
-    this.ws.onmessage = this._onmessage
     this.ws.onerror = this._onerror
 }
 
-CMProxy.prototype._close = function() {
+CMProxy.prototype.close = function() {
     if (this.ws != null) {
         this.ws.close();
         this.ws = null;
@@ -352,7 +377,20 @@ var cm_pubkey = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC9ymEH5ac+mMQLitp6y+j4vrS
 var cmproxy = null;
 //cmproxy = new CMProxy(cm_pubkey);
 if (cmproxy != null)
-    cmproxy._close();
+    cmproxy.close();
 cmproxy = new CMProxy();
 //cmproxy._connect('127.0.0.1', '9001')
-cmproxy._connect('www.yangxudong.com', '9001')
+
+cmproxy.ws_connect('www.yangxudong.com', '9001')
+
+cmproxy.set_onopen(function() {
+    console.log("my set open callback");
+});
+
+cmproxy.set_onclose(function() {
+    console.log("my set close callback");
+});
+
+cmproxy.set_onerror(function(error) {
+    console.log("my set error callback");
+});
