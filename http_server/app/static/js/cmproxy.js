@@ -374,6 +374,7 @@ var cm_pubkey = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC9ymEH5ac+mMQLitp6y+j4vrS
 + 'HC3ixbMm2aj6m8gzaL2sD5I8OwK/Dl58mHT1XENYWRueWW6Nb3/aejuRaMUO4sVW'
 + '6H0YJHIUnlGHqAU4Nf3iHh0aw5dDNil26rf/zUsZ2PHZJy7kQv6oPMF9EcnhzP7J'
 + '0R4tYwEl39BPeN46vQIDAQAB'
+/*
 var cmproxy = null;
 //cmproxy = new CMProxy(cm_pubkey);
 if (cmproxy != null)
@@ -394,3 +395,4 @@ cmproxy.set_onclose(function() {
 cmproxy.set_onerror(function(error) {
     console.log("my set error callback");
 });
+*/
