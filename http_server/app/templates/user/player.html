@@ -193,7 +193,7 @@ $(document).ready(function() {
 })
 
 window.addEventListener("storage", function(e) {
-    console.log("key: " + e.key + "oldValue: "+ e.oldValue + "newValue: " + e.newValue)
+    console.log("key: " + e.key + " oldValue: "+ e.oldValue + " newValue: " + e.newValue)
     if(e.key == 'target_url') {
         var target_url = localStorage.getItem('target_url')
         if(target_url != null) {
@@ -207,9 +207,11 @@ window.addEventListener("storage", function(e) {
         var target_id = localStorage.getItem('notifystoplive')
         if(target_id != null) {
             var notify_stop_act = target_id.split('_')
-            if(notify_stop_act[0] == "notifystoplive" && notify_stop_act[1] == target_node) {
-                var target_id = notify_stop_act[1] + "_" + notify_stop_act[2]
-                stoplive_action(target_id)
+            console.log(notify_stop_act)
+            console.log(target_node)
+            var target = notify_stop_act[1] + "_" + notify_stop_act[2]
+            if(notify_stop_act[0] == "notifystoplive" && target == target_node) {
+                stoplive_action(target_node)
             }
         }
     }
@@ -330,7 +332,7 @@ function createPlayer(source) {
         ]
     }, function (player) {
         console.log("播放器创建了。");
-     }
+       }
     )
 }
 

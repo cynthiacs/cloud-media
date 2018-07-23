@@ -206,8 +206,23 @@
 <script type="text/javascript">
 var map = null
 var list = []
+var cmproxy = null
+var node_obj = null
+
+window.onbeforeunload=function(e) {
+    var e = window.event||e;
+    if (cmproxy != null) {
+        cmproxy.logout(node_obj.account, function(msg) {
+            console.log("this is in logout's listener... when reply arrives!")
+            console.log(msg)
+            cmproxy.close()
+        })
+    }
+    e.returnValue = ("确定离开当前的页面嚒？")
+}
+
 window.addEventListener("storage", function(e) {
-    console.log("key: " + e.key + "oldValue: "+ e.oldValue + "newValue: " + e.newValue)
+    console.log("key: " + e.key + " oldValue: "+ e.oldValue + " newValue: " + e.newValue)
     if(e.key == 'startlive') {
         var start_action = localStorage.getItem('startlive')
         if(start_action != null) {
@@ -243,8 +258,24 @@ window.addEventListener("storage", function(e) {
 })
 
 $(document).ready(function() {
-    var node_obj = {{ node|safe }}
-    init_Pull_nodes(node_obj)
+    node_obj = {{ node|safe }}
+
+    cmproxy = new CMProxy();
+    cmproxy.ws_connect('www.yangxudong.com', '9001')
+
+    cmproxy.set_onopen(function() {
+        console.log("my set open callback")
+        init_Pull_nodes(node_obj)
+    })
+
+    cmproxy.set_onclose(function() {
+        console.log("my set close callback")
+        cmproxy = null
+    })
+
+    cmproxy.set_onerror(function(error) {
+        console.log("my set error callback")
+    })
     createBaiduMap(list)
 })
 
@@ -366,7 +397,7 @@ function createBaiduMap(userlist) {
 		var content = json_data[i][2]
 		map.addOverlay(marker)
 		pointArray[i] = new BMap.Point(json_data[i][0], json_data[i][1])
-		addClickHandler(content,marker)
+		addClickHandler(content, marker)
 	}
     map.setViewport(pointArray)
 }
